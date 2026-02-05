@@ -395,6 +395,75 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_sms: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string
+          patient_card_id: string | null
+          phone_number: string
+          reminder_type: string
+          scheduled_for: string
+          sent_at: string | null
+          source_id: string
+          source_type: string
+          status: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message: string
+          patient_card_id?: string | null
+          phone_number: string
+          reminder_type?: string
+          scheduled_for: string
+          sent_at?: string | null
+          source_id: string
+          source_type: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          patient_card_id?: string | null
+          phone_number?: string
+          reminder_type?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          source_id?: string
+          source_type?: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_sms_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_sms_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       score_entries: {
         Row: {
           calculated_score: number | null
@@ -492,6 +561,39 @@ export type Database = {
           shift_date?: string
           shift_type?: string
           start_time?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sms_preferences: {
+        Row: {
+          auto_schedule_1h: boolean
+          auto_schedule_24h: boolean
+          created_at: string
+          default_phone_field: string | null
+          id: string
+          twilio_phone_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_schedule_1h?: boolean
+          auto_schedule_24h?: boolean
+          created_at?: string
+          default_phone_field?: string | null
+          id?: string
+          twilio_phone_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_schedule_1h?: boolean
+          auto_schedule_24h?: boolean
+          created_at?: string
+          default_phone_field?: string | null
+          id?: string
+          twilio_phone_number?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
