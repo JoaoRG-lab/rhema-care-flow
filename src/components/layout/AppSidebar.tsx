@@ -12,6 +12,7 @@
    Stethoscope,
    Syringe,
   Palette,
+  BadgeCheck,
  } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
  import { cn } from '@/lib/utils';
@@ -71,6 +72,18 @@
  
        {/* Footer */}
        <div className="border-t border-sidebar-border p-3 space-y-1">
+          <Link
+            to="/verification-request"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+              location.pathname === '/verification-request'
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+            )}
+          >
+            <BadgeCheck className="h-5 w-5" />
+            Get Verified
+          </Link>
           <Link
             to="/style-guide"
             className={cn(
