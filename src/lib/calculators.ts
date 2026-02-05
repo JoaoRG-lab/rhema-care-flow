@@ -71,7 +71,7 @@
      category: 'disease-activity',
      diseases: ['ra'],
      formula: '0.56×√TJC + 0.28×√SJC + 0.36×ln(CRP+1) + 0.014×GH + 0.96',
-     implemented: false,
+    implemented: true,
    },
    {
      id: 'cdai',

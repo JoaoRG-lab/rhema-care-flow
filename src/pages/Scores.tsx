@@ -28,6 +28,7 @@
  import { CDAICalculator } from '@/components/scores/CDAICalculator';
  import { BASDAICalculator } from '@/components/scores/BASDAICalculator';
  import { SLEDAICalculator } from '@/components/scores/SLEDAICalculator';
+import { DAS28CRPCalculator } from '@/components/scores/DAS28CRPCalculator';
  import { Alert, AlertDescription } from '@/components/ui/alert';
  import { toast } from 'sonner';
  
@@ -87,6 +88,8 @@
      switch (calcId) {
        case 'das28-esr':
          return <DAS28Calculator />;
+      case 'das28-crp':
+        return <DAS28CRPCalculator />;
        case 'cdai':
          return <CDAICalculator />;
        case 'basdai':
