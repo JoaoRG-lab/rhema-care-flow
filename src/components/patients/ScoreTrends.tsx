@@ -6,6 +6,8 @@
  import { TrendingUp } from 'lucide-react';
  import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
  import { TrendAnalysisAssistant } from './TrendAnalysisAssistant';
+ import { ScoreComparison } from './ScoreComparison';
+ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
  import type { ScoreEntry } from '@/types/clinical';
  
  interface ScoreTrendsProps {
@@ -85,7 +87,7 @@
    }, [] as Array<{ date: string; [key: string]: any }>);
  
    return (
-     <div className="space-y-6">
+     <div className="space-y-4 md:space-y-6">
        {/* AI Assistant */}
        <TrendAnalysisAssistant 
          scores={scores} 
@@ -93,94 +95,112 @@
          diagnosisTags={diagnosisTags || null}
        />
  
-       {/* Chart */}
-       <Card>
-         <CardHeader>
-           <CardTitle className="text-base flex items-center gap-2">
-             <TrendingUp className="h-4 w-4 text-primary" />
-             Score Trends Over Time
-           </CardTitle>
-           <CardDescription>Disease activity indices tracked for this patient</CardDescription>
-         </CardHeader>
-         <CardContent>
-           <div className="h-[300px]">
-             <ResponsiveContainer width="100%" height="100%">
-               <LineChart data={chartData}>
-                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                 <XAxis 
-                   dataKey="date" 
-                   tick={{ fontSize: 12 }} 
-                   tickLine={false}
-                   axisLine={false}
-                 />
-                 <YAxis 
-                   tick={{ fontSize: 12 }} 
-                   tickLine={false}
-                   axisLine={false}
-                 />
-                 <Tooltip 
-                   contentStyle={{ 
-                     backgroundColor: 'hsl(var(--card))',
-                     border: '1px solid hsl(var(--border))',
-                     borderRadius: '8px',
-                   }}
-                 />
-                 <Legend />
-                 {scoreTypes.map((type) => (
-                   <Line
-                     key={type}
-                     type="monotone"
-                     dataKey={type}
-                     stroke={SCORE_COLORS[type] || 'hsl(var(--primary))'}
-                     strokeWidth={2}
-                     dot={{ fill: SCORE_COLORS[type] || 'hsl(var(--primary))', strokeWidth: 2 }}
-                     connectNulls
-                   />
-                 ))}
-               </LineChart>
-             </ResponsiveContainer>
-           </div>
-         </CardContent>
-       </Card>
+       {/* Tabs for different views */}
+       <Tabs defaultValue="trends" className="w-full">
+         <TabsList className="grid w-full grid-cols-3 mb-4">
+           <TabsTrigger value="trends">Trends</TabsTrigger>
+           <TabsTrigger value="compare">Compare</TabsTrigger>
+           <TabsTrigger value="history">History</TabsTrigger>
+         </TabsList>
  
-       {/* Score History Table */}
-       <Card>
-         <CardHeader>
-           <CardTitle className="text-base">Score History</CardTitle>
-         </CardHeader>
-         <CardContent>
-           <div className="relative overflow-x-auto">
-             <table className="w-full text-sm">
-               <thead>
-                 <tr className="border-b">
-                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Date</th>
-                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Score Type</th>
-                   <th className="text-right py-2 px-3 font-medium text-muted-foreground">Value</th>
-                 </tr>
-               </thead>
-               <tbody>
-                 {scores.slice().reverse().map((score) => (
-                   <tr key={score.id} className="border-b last:border-0">
-                     <td className="py-2 px-3">{format(new Date(score.created_at), 'MMM d, yyyy')}</td>
-                     <td className="py-2 px-3">
-                       <span 
-                         className="inline-block px-2 py-0.5 rounded text-xs font-medium"
-                         style={{ 
-                           backgroundColor: `${SCORE_COLORS[score.score_type] || 'hsl(var(--primary))'}20`,
-                           color: SCORE_COLORS[score.score_type] || 'hsl(var(--primary))'
-                         }}
-                       >
-                         {score.score_type}
-                       </span>
-                     </td>
-                     <td className="py-2 px-3 text-right font-medium">{score.calculated_score}</td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
-           </div>
-         </CardContent>
-       </Card>
+         {/* Trends Tab */}
+         <TabsContent value="trends" className="mt-0">
+           <Card>
+             <CardHeader>
+               <CardTitle className="text-base flex items-center gap-2">
+                 <TrendingUp className="h-4 w-4 text-primary" />
+                 Score Trends Over Time
+               </CardTitle>
+               <CardDescription>Disease activity indices tracked for this patient</CardDescription>
+             </CardHeader>
+             <CardContent>
+               <div className="h-[300px]">
+                 <ResponsiveContainer width="100%" height="100%">
+                   <LineChart data={chartData}>
+                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                     <XAxis 
+                       dataKey="date" 
+                       tick={{ fontSize: 12 }} 
+                       tickLine={false}
+                       axisLine={false}
+                     />
+                     <YAxis 
+                       tick={{ fontSize: 12 }} 
+                       tickLine={false}
+                       axisLine={false}
+                     />
+                     <Tooltip 
+                       contentStyle={{ 
+                         backgroundColor: 'hsl(var(--card))',
+                         border: '1px solid hsl(var(--border))',
+                         borderRadius: '8px',
+                       }}
+                     />
+                     <Legend />
+                     {scoreTypes.map((type) => (
+                       <Line
+                         key={type}
+                         type="monotone"
+                         dataKey={type}
+                         stroke={SCORE_COLORS[type] || 'hsl(var(--primary))'}
+                         strokeWidth={2}
+                         dot={{ fill: SCORE_COLORS[type] || 'hsl(var(--primary))', strokeWidth: 2 }}
+                         connectNulls
+                       />
+                     ))}
+                   </LineChart>
+                 </ResponsiveContainer>
+               </div>
+             </CardContent>
+           </Card>
+         </TabsContent>
+ 
+         {/* Compare Tab */}
+         <TabsContent value="compare" className="mt-0">
+           <ScoreComparison scores={scores} />
+         </TabsContent>
+ 
+         {/* History Tab */}
+         <TabsContent value="history" className="mt-0">
+           <Card>
+             <CardHeader>
+               <CardTitle className="text-base">Score History</CardTitle>
+             </CardHeader>
+             <CardContent>
+               <div className="relative overflow-x-auto">
+                 <table className="w-full text-sm">
+                   <thead>
+                     <tr className="border-b">
+                       <th className="text-left py-2 px-3 font-medium text-muted-foreground">Date</th>
+                       <th className="text-left py-2 px-3 font-medium text-muted-foreground">Score Type</th>
+                       <th className="text-right py-2 px-3 font-medium text-muted-foreground">Value</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {scores.slice().reverse().map((score) => (
+                       <tr key={score.id} className="border-b last:border-0">
+                         <td className="py-2 px-3">{format(new Date(score.created_at), 'MMM d, yyyy')}</td>
+                         <td className="py-2 px-3">
+                           <span 
+                             className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                             style={{ 
+                               backgroundColor: `${SCORE_COLORS[score.score_type] || 'hsl(var(--primary))'}20`,
+                               color: SCORE_COLORS[score.score_type] || 'hsl(var(--primary))'
+                             }}
+                           >
+                             {score.score_type}
+                           </span>
+                         </td>
+                         <td className="py-2 px-3 text-right font-medium">{score.calculated_score}</td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             </CardContent>
+           </Card>
+         </TabsContent>
+       </Tabs>
      </div>
    );
  }
