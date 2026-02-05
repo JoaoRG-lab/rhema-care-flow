@@ -46,7 +46,7 @@ import { useAuditLog } from '@/hooks/useAuditLog';
    const fetchPatient = async () => {
      if (!user || !id) return;
      const { data, error } = await supabase
-       .from('patient_cards')
+        .from('patient_cards_secure')
        .select('*')
        .eq('id', id)
        .eq('user_id', user.id)
@@ -59,7 +59,7 @@ import { useAuditLog } from '@/hooks/useAuditLog';
        toast.error('Patient not found');
        navigate('/patients');
      } else {
-       setPatient(data);
+        setPatient(data as PatientCard);
       // Log patient card access for audit trail
       logAccess({
         action: 'view',

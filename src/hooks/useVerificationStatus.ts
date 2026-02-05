@@ -31,8 +31,8 @@ import type { ContributorType } from '@/components/ui/VerifiedBadge';
  
        try {
          const { data, error } = await supabase
-           .from('verification_requests')
-          .select('status, tier, contributor_type, full_name')
+            .from('verification_requests_secure')
+           .select('status, tier, full_name')
            .eq('user_id', user.id)
            .order('created_at', { ascending: false })
            .limit(1)
@@ -41,10 +41,10 @@ import type { ContributorType } from '@/components/ui/VerifiedBadge';
          if (error) throw error;
  
          setVerificationStatus({
-           status: data?.status as VerificationStatus['status'] ?? null,
-           tier: data?.tier as VerificationTier ?? null,
-          contributorType: (data?.contributor_type as ContributorType) ?? null,
-          fullName: data?.full_name ?? null,
+            status: (data?.status as VerificationStatus['status']) ?? null,
+            tier: (data?.tier as VerificationTier) ?? null,
+           contributorType: null, // Not available in secure view
+           fullName: data?.full_name ?? null,
            loading: false,
          });
        } catch (error) {

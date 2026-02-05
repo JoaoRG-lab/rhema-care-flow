@@ -46,12 +46,12 @@
    const fetchInfusions = async () => {
      if (!user) return;
      const { data, error } = await supabase
-       .from('infusion_events')
+        .from('infusion_events_secure')
        .select('*')
        .eq('user_id', user.id)
        .order('next_date', { ascending: true });
  
-     if (data) setInfusions(data);
+      if (data) setInfusions(data as InfusionEvent[]);
      if (error) toast.error('Failed to load infusions');
      setLoading(false);
    };

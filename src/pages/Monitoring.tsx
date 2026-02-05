@@ -71,12 +71,33 @@
    const fetchEvents = async () => {
      if (!user) return;
      const { data, error } = await supabase
-       .from('monitoring_events')
-       .select('*, patient_cards(patient_code)')
+        .from('monitoring_events_secure')
+         .select('*')
        .eq('user_id', user.id)
        .order('due_date', { ascending: true });
  
-     if (data) setEvents(data);
+      if (data) {
+         // Fetch patient codes separately to avoid join issues with views
+         const patientIds = [...new Set(data.filter(e => e.patient_card_id).map(e => e.patient_card_id!))];
+         let patientMap: Record<string, string> = {};
+         
+         if (patientIds.length > 0) {
+           const { data: patientData } = await supabase
+             .from('patient_cards_secure')
+             .select('id, patient_code')
+             .in('id', patientIds);
+           
+           if (patientData) {
+             patientMap = Object.fromEntries(patientData.map(p => [p.id, p.patient_code]));
+           }
+         }
+         
+         const mappedEvents = data.map((e: any) => ({
+           ...e,
+           patient_cards: e.patient_card_id ? { patient_code: patientMap[e.patient_card_id] || 'Unknown' } : null
+         }));
+         setEvents(mappedEvents as MonitoringEvent[]);
+      }
      if (error) toast.error('Failed to load events');
      setLoading(false);
    };
@@ -84,11 +105,11 @@
    const fetchPatients = async () => {
      if (!user) return;
      const { data } = await supabase
-       .from('patient_cards')
+        .from('patient_cards_secure')
        .select('id, patient_code')
        .eq('user_id', user.id)
        .order('patient_code');
-     if (data) setPatients(data);
+      if (data) setPatients(data as PatientCard[]);
    };
  
    useEffect(() => {

@@ -72,14 +72,14 @@ export function VisitHistory({ patientId, refreshKey, patientCode, diagnosisTags
    const fetchVisits = async () => {
      if (!user) return;
      const { data, error } = await supabase
-       .from('visits')
+        .from('visits_secure')
        .select('*')
        .eq('patient_card_id', patientId)
        .eq('user_id', user.id)
        .order('visit_date', { ascending: false });
  
       if (data) {
-        setVisits(data);
+         setVisits(data as Visit[]);
         // Log visit history access
         if (data.length > 0) {
           logAccess({

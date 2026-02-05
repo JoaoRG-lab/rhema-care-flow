@@ -85,8 +85,9 @@
    const fetchRequests = async () => {
      try {
        setLoading(true);
+        // Use base table for admin - admins need all fields and have proper RLS access
        const { data, error } = await supabase
-         .from('verification_requests')
+          .from('verification_requests')
          .select('*')
          .order('submitted_at', { ascending: false });
  
