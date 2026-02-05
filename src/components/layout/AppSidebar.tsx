@@ -14,12 +14,23 @@
    Palette,
    BadgeCheck,
    ShieldCheck,
+  ChevronUp,
+  User,
  } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
  import { cn } from '@/lib/utils';
-import { VerifiedIcon } from '@/components/ui/VerifiedBadge';
+import { VerifiedBadge, VerifiedIcon } from '@/components/ui/VerifiedBadge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
  
  const navItems = [
    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,7 +47,34 @@ import { VerifiedIcon } from '@/components/ui/VerifiedBadge';
    const location = useLocation();
    const { signOut, user } = useAuth();
   const { isAdmin } = useUserRole();
-  const { tier } = useVerificationStatus();
+  const { tier, fullName, contributorType } = useVerificationStatus();
+
+  // Get initials from name or email
+  const getInitials = () => {
+    if (fullName) {
+      return fullName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Get display name
+  const getDisplayName = () => {
+    if (fullName) {
+      if (contributorType === 'clinical' && !fullName.toLowerCase().startsWith('dr')) {
+        return `Dr. ${fullName}`;
+      }
+      return fullName;
+    }
+    return user?.email?.split('@')[0] || 'User';
+  };
  
    return (
      <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground flex flex-col">
@@ -128,21 +166,92 @@ import { VerifiedIcon } from '@/components/ui/VerifiedBadge';
            <Settings className="h-5 w-5" />
            Settings
          </Link>
-         <button
-           onClick={signOut}
-           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
-         >
-           <LogOut className="h-5 w-5" />
-           Sign Out
-         </button>
-         {user && (
-            <div className="px-3 py-2 flex items-center gap-2">
-              <span className="text-xs text-sidebar-foreground/50 truncate flex-1">
-                {user.email}
-              </span>
-              {tier && <VerifiedIcon tier={tier} size="sm" />}
-           </div>
-         )}
+
+        {/* Profile Dropdown */}
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={undefined} />
+                  <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-medium truncate text-sidebar-foreground">
+                    {getDisplayName()}
+                  </p>
+                  <p className="text-xs text-sidebar-foreground/50 truncate">
+                    {user.email}
+                  </p>
+                </div>
+                <ChevronUp className="h-4 w-4 text-sidebar-foreground/50" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-56 bg-popover border shadow-lg"
+              sideOffset={8}
+            >
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{getDisplayName()}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  {tier && (
+                    <div className="pt-1">
+                      <VerifiedBadge tier={tier} size="sm" />
+                    </div>
+                  )}
+                  {!tier && (
+                    <p className="text-xs text-muted-foreground">Not yet verified</p>
+                  )}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile & Settings
+                </Link>
+              </DropdownMenuItem>
+              {!tier && (
+                <DropdownMenuItem asChild>
+                  <Link to="/verification-request" className="cursor-pointer">
+                    <BadgeCheck className="mr-2 h-4 w-4" />
+                    Get Verified
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link to="/admin" className="cursor-pointer">
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Admin Panel
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={signOut}
+                className="text-destructive focus:text-destructive cursor-pointer"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
        </div>
      </aside>
    );
