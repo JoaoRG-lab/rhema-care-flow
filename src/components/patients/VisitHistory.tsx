@@ -1,10 +1,23 @@
  import { useEffect, useState } from 'react';
  import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
  import { Badge } from '@/components/ui/badge';
+ import { Button } from '@/components/ui/button';
+ import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+ } from '@/components/ui/alert-dialog';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { format } from 'date-fns';
- import { Calendar, FlaskConical, Image, ArrowRight } from 'lucide-react';
+ import { Calendar, FlaskConical, Image, ArrowRight, Pencil, Trash2 } from 'lucide-react';
+ import { toast } from 'sonner';
+ import { EditVisitDialog } from './EditVisitDialog';
  
  import type { Json } from '@/integrations/supabase/types';
  
@@ -28,6 +41,9 @@
    const { user } = useAuth();
    const [visits, setVisits] = useState<Visit[]>([]);
    const [loading, setLoading] = useState(true);
+   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
+   const [deletingVisitId, setDeletingVisitId] = useState<string | null>(null);
+   const [isDeleting, setIsDeleting] = useState(false);
  
    const fetchVisits = async () => {
      if (!user) return;
@@ -40,6 +56,26 @@
  
      if (data) setVisits(data);
      setLoading(false);
+   };
+ 
+   const handleDeleteVisit = async () => {
+     if (!deletingVisitId) return;
+     setIsDeleting(true);
+ 
+     const { error } = await supabase
+       .from('visits')
+       .delete()
+       .eq('id', deletingVisitId);
+ 
+     setIsDeleting(false);
+     setDeletingVisitId(null);
+ 
+     if (error) {
+       toast.error('Failed to delete visit');
+     } else {
+       toast.success('Visit deleted');
+       fetchVisits();
+     }
    };
  
    useEffect(() => {
@@ -78,15 +114,33 @@
                  <Calendar className="h-4 w-4 text-primary" />
                  {format(new Date(visit.visit_date), 'MMMM d, yyyy')}
                </CardTitle>
-               {visit.disease_activity && Object.keys(visit.disease_activity).length > 0 && (
-               <Badge variant="outline" className="font-normal">
-                 {typeof visit.disease_activity === 'object' && visit.disease_activity !== null && !Array.isArray(visit.disease_activity) && 
-                   Object.entries(visit.disease_activity).map(([key, value]) => (
-                     <span key={key} className="mr-2">{key}: {String(value)}</span>
-                   ))
-                 }
-               </Badge>
-               )}
+              <div className="flex items-center gap-2">
+                {visit.disease_activity && Object.keys(visit.disease_activity).length > 0 && (
+                  <Badge variant="outline" className="font-normal">
+                    {typeof visit.disease_activity === 'object' && visit.disease_activity !== null && !Array.isArray(visit.disease_activity) && 
+                      Object.entries(visit.disease_activity).map(([key, value]) => (
+                        <span key={key} className="mr-2">{key}: {String(value)}</span>
+                      ))
+                    }
+                  </Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setEditingVisit(visit)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => setDeletingVisitId(visit.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
              </div>
            </CardHeader>
            <CardContent className="space-y-3">
@@ -138,6 +192,36 @@
            </CardContent>
          </Card>
        ))}
+       
+       {editingVisit && (
+         <EditVisitDialog
+           visit={editingVisit}
+           open={!!editingVisit}
+           onOpenChange={(open) => !open && setEditingVisit(null)}
+           onVisitUpdated={fetchVisits}
+         />
+       )}
+       
+       <AlertDialog open={!!deletingVisitId} onOpenChange={(open) => !open && setDeletingVisitId(null)}>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>Delete Visit</AlertDialogTitle>
+             <AlertDialogDescription>
+               Are you sure you want to delete this visit? This action cannot be undone.
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <AlertDialogFooter>
+             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+             <AlertDialogAction
+               onClick={handleDeleteVisit}
+               disabled={isDeleting}
+               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+             >
+               {isDeleting ? 'Deleting...' : 'Delete'}
+             </AlertDialogAction>
+           </AlertDialogFooter>
+         </AlertDialogContent>
+       </AlertDialog>
      </div>
    );
  }
