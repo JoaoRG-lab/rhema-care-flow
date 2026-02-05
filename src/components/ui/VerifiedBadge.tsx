@@ -1,9 +1,10 @@
  import { cn } from "@/lib/utils";
  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
  import { Badge } from "@/components/ui/badge";
- import { CheckCircle, Shield, Award, Star } from "lucide-react";
+import { CheckCircle, Shield, Award, Star, Code, Handshake } from "lucide-react";
  
- export type VerificationTier = "bronze" | "silver" | "gold" | "expert" | null;
+export type VerificationTier = "bronze" | "silver" | "gold" | "expert" | "developer" | "partner" | null;
+export type ContributorType = "clinical" | "developer" | "partner";
  
  interface VerifiedBadgeProps {
    tier: VerificationTier;
@@ -52,6 +53,22 @@
      className: "bg-primary/10 text-primary border-primary/30 dark:bg-primary/20 dark:border-primary/40",
      iconClassName: "text-primary",
    },
+  developer: {
+    icon: Code,
+    label: "Developer",
+    emoji: "💻",
+    description: "Verified developer contributing to RheumaFlow platform",
+    className: "bg-violet-100 text-violet-800 border-violet-300 dark:bg-violet-900/30 dark:text-violet-200 dark:border-violet-700",
+    iconClassName: "text-violet-600 dark:text-violet-400",
+  },
+  partner: {
+    icon: Handshake,
+    label: "Partner",
+    emoji: "🤝",
+    description: "Verified partner organization or integration contributor",
+    className: "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-700",
+    iconClassName: "text-emerald-600 dark:text-emerald-400",
+  },
  };
  
  const sizeConfig = {
