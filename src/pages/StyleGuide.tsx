@@ -16,8 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
-const CSS_VARIABLES = `/* RheumaFlow Design System - CSS Variables */
-/* Generated: ${new Date().toISOString().split('T')[0]} */
+const CSS_VARIABLES_CONTENT = `/* RheumaFlow Design System - CSS Variables */
 
 :root {
   /* Core Colors */
@@ -105,6 +104,11 @@ const CSS_VARIABLES = `/* RheumaFlow Design System - CSS Variables */
   --destructive-foreground: 0 0% 100%;
 }
 `;
+
+const getCSSVariablesWithDate = () => {
+  const date = new Date().toISOString().split('T')[0];
+  return CSS_VARIABLES_CONTENT.replace('/* RheumaFlow Design System - CSS Variables */', `/* RheumaFlow Design System - CSS Variables */\n/* Generated: ${date} */`);
+};
 
 const DESIGN_TOKENS_JSON = {
   "$schema": "https://design-tokens.org/schema.json",
@@ -403,7 +407,8 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
   };
 
   const handleExportCSS = () => {
-    const blob = new Blob([CSS_VARIABLES], { type: "text/css" });
+    const cssContent = getCSSVariablesWithDate();
+    const blob = new Blob([cssContent], { type: "text/css" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
