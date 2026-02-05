@@ -7,6 +7,7 @@
  import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
  import { supabase } from '@/integrations/supabase/client';
  import { toast } from 'sonner';
+import { useAuditLog } from '@/hooks/useAuditLog';
  
  interface PatientCard {
    id: string;
@@ -31,6 +32,7 @@
  const RISK_OPTIONS = ['pregnancy', 'infection', 'TB+', 'HBV+'];
  
  export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdated }: EditPatientDialogProps) {
+  const { logAccess } = useAuditLog();
    const [patientCode, setPatientCode] = useState(patient.patient_code);
    const [mrnLast4, setMrnLast4] = useState(patient.mrn_last4 || '');
    const [diagnosisTags, setDiagnosisTags] = useState<string[]>(patient.diagnosis_tags || []);
@@ -81,6 +83,12 @@
        toast.error('Failed to update patient');
      } else {
        toast.success('Patient updated');
+        logAccess({
+          action: 'update',
+          resourceType: 'patient_card',
+          resourceId: patient.id,
+          metadata: { patient_code: patientCode }
+        });
        onPatientUpdated();
        onOpenChange(false);
      }

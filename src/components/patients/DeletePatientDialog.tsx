@@ -1,5 +1,4 @@
  import { useState } from 'react';
- import { Button } from '@/components/ui/button';
  import {
    AlertDialog,
    AlertDialogAction,
@@ -12,6 +11,7 @@
  } from '@/components/ui/alert-dialog';
  import { supabase } from '@/integrations/supabase/client';
  import { toast } from 'sonner';
+import { useAuditLog } from '@/hooks/useAuditLog';
  
  interface DeletePatientDialogProps {
    patientId: string;
@@ -28,6 +28,7 @@
    onOpenChange, 
    onDeleted 
  }: DeletePatientDialogProps) {
+  const { logAccess } = useAuditLog();
    const [deleting, setDeleting] = useState(false);
  
    const handleDelete = async () => {
@@ -50,6 +51,12 @@
        toast.error('Failed to delete patient');
      } else {
        toast.success('Patient deleted');
+        logAccess({
+          action: 'delete',
+          resourceType: 'patient_card',
+          resourceId: patientId,
+          metadata: { patient_code: patientCode }
+        });
        onDeleted();
      }
    };
