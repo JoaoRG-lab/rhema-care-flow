@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { CodeBlock } from "@/components/ui/CodeBlock";
 
 const CSS_VARIABLES_CONTENT = `/* RheumaFlow Design System - CSS Variables */
 
@@ -845,9 +846,10 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
                   </div>
                   <div className="flex-1 min-h-0">
                     <ScrollArea className="h-[50vh] rounded-md border bg-muted/30">
-                      <pre className="p-4 text-sm font-mono whitespace-pre-wrap break-words">
-                        <code>{getPreviewContent()}</code>
-                      </pre>
+                      <CodeBlock 
+                        code={getPreviewContent()} 
+                        language={previewTab as "json" | "css" | "scss" | "md"} 
+                      />
                     </ScrollArea>
                   </div>
                 </Tabs>
