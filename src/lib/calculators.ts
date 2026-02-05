@@ -216,7 +216,7 @@
      description: 'Classification Criteria for Psoriatic Arthritis',
      category: 'classification',
      diseases: ['psa'],
-     implemented: false,
+     implemented: true,
    },
    {
      id: 'acr-fibromyalgia',
