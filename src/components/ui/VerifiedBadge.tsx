@@ -10,7 +10,7 @@ import { CheckCircle, Shield, Award, Star, Code, Handshake } from "lucide-react"
  interface VerifiedBadgeProps {
    tier: VerificationTier;
    showLabel?: boolean;
-   size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
    className?: string;
  }
  
@@ -73,6 +73,10 @@ import { CheckCircle, Shield, Award, Star, Code, Handshake } from "lucide-react"
  };
  
  const sizeConfig = {
+  xs: {
+    badge: "text-[10px] px-1 py-0 gap-0.5",
+    icon: "h-2.5 w-2.5",
+  },
    sm: {
      badge: "text-xs px-1.5 py-0.5 gap-1",
      icon: "h-3 w-3",
@@ -163,7 +167,7 @@ import { CheckCircle, Shield, Award, Star, Code, Handshake } from "lucide-react"
    className 
  }: { 
    status: "pending" | "under_review" | "approved" | "rejected";
-   size?: "sm" | "md" | "lg";
+   size?: "xs" | "sm" | "md" | "lg";
    className?: string;
  }) {
    const sizeStyles = sizeConfig[size];

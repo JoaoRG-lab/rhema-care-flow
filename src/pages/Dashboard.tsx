@@ -26,6 +26,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
    Clock,
  } from 'lucide-react';
  import { format, addDays, isAfter, isBefore } from 'date-fns';
+ import { useIsMobile } from '@/hooks/use-mobile';
  
  export default function Dashboard() {
    const { user } = useAuth();
@@ -34,6 +35,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
    const [monitoringAlerts, setMonitoringAlerts] = useState<MonitoringEvent[]>([]);
    const [upcomingFollowups, setUpcomingFollowups] = useState<PatientCard[]>([]);
    const [loading, setLoading] = useState(true);
+   const isMobile = useIsMobile();
  
    useEffect(() => {
      if (!user) return;
@@ -132,76 +134,76 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
    return (
      <AppLayout>
-       <div className="p-6 lg:p-8">
+       <div className="p-4 md:p-6 lg:p-8">
          {/* Header */}
-         <div className="flex items-center justify-between mb-8">
+         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
            <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-foreground">{getGreeting()}</h1>
+            <div className="flex items-center gap-2 md:gap-3 mb-1 flex-wrap">
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">{getGreeting()}</h1>
               {tier && <VerifiedBadge tier={tier} size="sm" />}
             </div>
-            <p className="text-muted-foreground">
-              Today's Clinic • {format(new Date(), 'EEEE, MMMM d, yyyy')}
+            <p className="text-sm md:text-base text-muted-foreground">
+              {isMobile ? format(new Date(), 'MMM d, yyyy') : `Today's Clinic • ${format(new Date(), 'EEEE, MMMM d, yyyy')}`}
             </p>
            </div>
            <Link to="/patients">
-             <Button className="gap-2">
+             <Button className="gap-2 w-full sm:w-auto">
                <Plus className="h-4 w-4" />
-               New Patient Card
+               {isMobile ? 'New Patient' : 'New Patient Card'}
              </Button>
            </Link>
          </div>
  
          {/* Verification Prompt for unverified users */}
          {tier === null && (
-           <div className="mb-6">
+           <div className="mb-4 md:mb-6">
              <VerificationPrompt status={status} />
            </div>
          )}
  
          {/* Welcome Card with Tier-based Actions */}
-         <div className="mb-8">
+         <div className="mb-6 md:mb-8">
            <WelcomeCard tier={tier} fullName={fullName} />
          </div>
  
          {/* Stats Grid */}
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
            <StatCard
-             title="Active Patients"
+             title={isMobile ? 'Patients' : 'Active Patients'}
              value={patients.length}
              icon={<Users className="h-5 w-5" />}
            />
            <StatCard
-             title="Monitoring Alerts"
+             title={isMobile ? 'Alerts' : 'Monitoring Alerts'}
              value={overdueCount}
              icon={<AlertTriangle className="h-5 w-5" />}
-             description={overdueCount > 0 ? 'Action required' : 'All clear'}
+             description={isMobile ? undefined : (overdueCount > 0 ? 'Action required' : 'All clear')}
              trend={overdueCount > 0 ? 'down' : 'up'}
            />
            <StatCard
-             title="This Week Followups"
+             title={isMobile ? 'Follow-ups' : 'This Week Followups'}
              value={upcomingFollowups.length}
              icon={<Calendar className="h-5 w-5" />}
            />
            <StatCard
-             title="Infusions Scheduled"
+             title={isMobile ? 'Infusions' : 'Infusions Scheduled'}
              value={0}
              icon={<Syringe className="h-5 w-5" />}
            />
          </div>
  
          {/* Main Content Grid */}
-         <div className="grid lg:grid-cols-2 gap-6">
+         <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
            {/* Monitoring Alerts */}
            <Card>
              <CardHeader className="flex flex-row items-center justify-between">
-               <CardTitle className="text-lg flex items-center gap-2">
-                 <AlertTriangle className="h-5 w-5 text-warning" />
+               <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                 <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-warning" />
                  Monitoring Alerts
                </CardTitle>
                <Link to="/monitoring">
                  <Button variant="ghost" size="sm" className="gap-1">
-                   View all <ChevronRight className="h-4 w-4" />
+                   {isMobile ? '' : 'View all'} <ChevronRight className="h-4 w-4" />
                  </Button>
                </Link>
              </CardHeader>
@@ -243,13 +245,13 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
            {/* Upcoming Followups */}
            <Card>
              <CardHeader className="flex flex-row items-center justify-between">
-               <CardTitle className="text-lg flex items-center gap-2">
-                 <Calendar className="h-5 w-5 text-primary" />
-                 Upcoming Follow-ups
+               <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                 <Calendar className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                 {isMobile ? 'Follow-ups' : 'Upcoming Follow-ups'}
                </CardTitle>
                <Link to="/patients">
                  <Button variant="ghost" size="sm" className="gap-1">
-                   View all <ChevronRight className="h-4 w-4" />
+                   {isMobile ? '' : 'View all'} <ChevronRight className="h-4 w-4" />
                  </Button>
                </Link>
              </CardHeader>
@@ -286,8 +288,8 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
            {/* Quick Clinic Checklist */}
            <Card>
              <CardHeader>
-               <CardTitle className="text-lg flex items-center gap-2">
-                 <CheckSquare className="h-5 w-5 text-success" />
+               <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                 <CheckSquare className="h-4 w-4 md:h-5 md:w-5 text-success" />
                  Clinic Day Checklist
                </CardTitle>
              </CardHeader>
@@ -315,7 +317,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
            {/* Disease Distribution */}
            <Card>
              <CardHeader>
-               <CardTitle className="text-lg">Patient Distribution</CardTitle>
+               <CardTitle className="text-base md:text-lg">Patient Distribution</CardTitle>
              </CardHeader>
              <CardContent>
                <div className="flex flex-wrap gap-2">
