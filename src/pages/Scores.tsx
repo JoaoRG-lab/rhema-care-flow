@@ -36,6 +36,7 @@ import { SDAICalculator } from '@/components/scores/SDAICalculator';
  import { CASPARCalculator } from '@/components/scores/CASPARCalculator';
  import { DAPSACalculator } from '@/components/scores/DAPSACalculator';
  import { MDACalculator } from '@/components/scores/MDACalculator';
+ import { ACRResponseCalculator } from '@/components/scores/ACRResponseCalculator';
  import { Alert, AlertDescription } from '@/components/ui/alert';
  import { toast } from 'sonner';
  
@@ -116,6 +117,8 @@ import { SDAICalculator } from '@/components/scores/SDAICalculator';
          return <DAPSACalculator />;
        case 'mda':
          return <MDACalculator />;
+       case 'acr-response':
+         return <ACRResponseCalculator />;
        default:
          return null;
      }
