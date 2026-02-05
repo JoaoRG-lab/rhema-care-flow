@@ -9,6 +9,7 @@
  import { useAuth } from '@/contexts/AuthContext';
  import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
  import { ArrowLeftRight } from 'lucide-react';
+import { Zap } from 'lucide-react';
  import { format } from 'date-fns';
  import { toast } from 'sonner';
  import { VisitHistory } from '@/components/patients/VisitHistory';
@@ -18,6 +19,7 @@
  import { TreatmentResponseTimeline } from '@/components/patients/TreatmentResponseTimeline';
  import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
  import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
+import { QuickScoreEntry } from '@/components/patients/QuickScoreEntry';
 import { useAuditLog } from '@/hooks/useAuditLog';
  import { useSwipeGesture } from '@/hooks/useSwipeGesture';
  import { useIsMobile } from '@/hooks/use-mobile';
@@ -214,6 +216,12 @@ import { useAuditLog } from '@/hooks/useAuditLog';
                </div>
              </div>
               <div className="flex gap-2">
+                <QuickScoreEntry
+                  patientId={patient.id}
+                  patientCode={patient.patient_code}
+                  diagnosisTags={patient.diagnosis_tags}
+                  onScoreSaved={() => setRefreshKey(prev => prev + 1)}
+                />
                 <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
