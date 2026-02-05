@@ -9,7 +9,111 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
  import { Label } from "@/components/ui/label";
  import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Info, AlertTriangle, Sun, Moon, Monitor } from "lucide-react";
+import { Download } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+
+const STYLE_GUIDE_MARKDOWN = `# RheumaFlow Design System
+
+**Version 1.0** | Medical-Tech Professional Theme
+
+---
+
+## Color Palette (HSL)
+
+### Core Colors
+| Token | HSL Value | Usage |
+|-------|-----------|-------|
+| --background | 210 20% 98% | Page backgrounds |
+| --foreground | 215 25% 15% | Primary text |
+| --primary | 185 65% 30% | Main brand (Deep Teal) |
+| --accent | 185 55% 92% | Highlights (Soft Cyan) |
+| --muted | 210 15% 95% | Subtle backgrounds |
+| --muted-foreground | 215 15% 45% | Secondary text |
+
+### Disease Category Colors
+| Disease | Token | HSL Value |
+|---------|-------|-----------|
+| RA | --ra | 210 75% 50% (Blue) |
+| SLE | --sle | 280 60% 55% (Purple) |
+| SpA | --spa | 185 65% 40% (Teal) |
+| PsA | --psa | 35 90% 50% (Amber) |
+| Vasculitis | --vasculitis | 0 65% 50% (Rose) |
+| FM | --fm | 320 55% 55% (Pink) |
+
+### Status Colors
+| Status | Token | HSL Value |
+|--------|-------|-----------|
+| Success | --success | 150 60% 40% |
+| Warning | --warning | 40 90% 50% |
+| Info | --info | 200 75% 50% |
+| Destructive | --destructive | 0 72% 51% |
+
+---
+
+## Typography
+
+**Font Family:** Inter, system-ui, sans-serif
+
+| Element | Classes |
+|---------|---------|
+| H1 | text-4xl font-bold tracking-tight |
+| H2 | text-2xl font-semibold |
+| H3 | text-xl font-semibold |
+| H4 | text-lg font-medium |
+| Body | text-base |
+| Small | text-sm text-muted-foreground |
+
+---
+
+## Spacing Scale
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| gap-2 | 8px | Tight spacing |
+| gap-3 | 12px | Compact elements |
+| gap-4 | 16px | Standard gap |
+| gap-6 | 24px | Section spacing |
+| gap-8 | 32px | Large sections |
+
+---
+
+## Shadows
+
+| Class | Usage |
+|-------|-------|
+| shadow-soft | Subtle cards |
+| shadow-medium | Elevated elements |
+| shadow-elevated | Modals, dropdowns |
+
+---
+
+## Component Classes
+
+- \`.stat-card\` - Standard metric display
+- \`.glass\` - Glassmorphism effect
+- \`.gradient-text\` - Primary gradient on text
+- \`.tag-ra\`, \`.tag-sle\`, etc. - Disease category tags
+- \`.status-completed\`, \`.status-pending\`, \`.status-overdue\` - Status badges
+
+---
+
+## Button Variants
+
+| Variant | Usage |
+|---------|-------|
+| Primary | Main actions |
+| Secondary | Alternate actions |
+| Outline | Tertiary actions |
+| Ghost | Subtle actions |
+| Destructive | Delete, cancel |
+| Link | Inline links |
+
+---
+
+*RheumaFlow Design System v1.0*
+*Generated: ${new Date().toLocaleDateString()}*
+`;
  
  const ColorSwatch = ({ name, variable, description }: { name: string; variable: string; description?: string }) => (
    <div className="flex items-center gap-3 p-2">
@@ -34,6 +138,19 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
  export default function StyleGuide() {
   const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+
+  const handleExport = () => {
+    const blob = new Blob([STYLE_GUIDE_MARKDOWN], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "RheumaFlow-Style-Guide.md";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Style guide exported successfully");
+  };
 
   useEffect(() => {
     const root = document.documentElement;
@@ -94,6 +211,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
             <Badge variant={resolvedTheme === "dark" ? "secondary" : "outline"} className="ml-2">
               {resolvedTheme === "dark" ? "Dark Mode" : "Light Mode"}
             </Badge>
+            <Button variant="outline" size="sm" className="gap-2 ml-2" onClick={handleExport}>
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
           </div>
          </div>
  
