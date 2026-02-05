@@ -19,6 +19,7 @@
  import { Paperclip } from 'lucide-react';
  import { toast } from 'sonner';
  import { EditVisitDialog } from './EditVisitDialog';
+import DOMPurify from 'dompurify';
  
  import type { Json } from '@/integrations/supabase/types';
  
@@ -206,7 +207,7 @@
                  </p>
                  <div 
                    className="text-sm prose prose-sm max-w-none" 
-                   dangerouslySetInnerHTML={{ __html: visit.next_steps }} 
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(visit.next_steps) }} 
                  />
                </div>
              )}
