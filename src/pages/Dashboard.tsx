@@ -15,6 +15,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import { QuickPatientSearch } from '@/components/clinical/QuickPatientSearch';
  import { VoiceNoteButton } from '@/components/clinical/VoiceNoteButton';
  import { ContributeKnowledge } from '@/components/dashboard/ContributeKnowledge';
+import { PatientStatistics } from '@/components/dashboard/PatientStatistics';
  import { usePullToRefresh } from '@/hooks/usePullToRefresh';
  import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
  import {
@@ -246,6 +247,9 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  
          {/* Main Content Grid */}
          <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
+            {/* Patient Statistics - Full Width */}
+            <PatientStatistics />
+ 
            {/* Monitoring Alerts */}
            <Card>
              <CardHeader className="flex flex-row items-center justify-between">
