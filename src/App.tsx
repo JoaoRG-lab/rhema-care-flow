@@ -23,6 +23,7 @@
  const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide"));
 const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
+ const AdminPanel = lazy(() => import("./pages/AdminPanel"));
  
  const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/style-guide" element={<StyleGuide />} />
                 <Route path="/verification-request" element={<ProtectedRoute><VerificationRequest /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

@@ -11,10 +11,12 @@
    LogOut,
    Stethoscope,
    Syringe,
-  Palette,
-  BadgeCheck,
+   Palette,
+   BadgeCheck,
+   ShieldCheck,
  } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
  import { cn } from '@/lib/utils';
  
  const navItems = [
@@ -31,6 +33,7 @@
  export function AppSidebar() {
    const location = useLocation();
    const { signOut, user } = useAuth();
+  const { isAdmin } = useUserRole();
  
    return (
      <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground flex flex-col">
@@ -72,6 +75,20 @@
  
        {/* Footer */}
        <div className="border-t border-sidebar-border p-3 space-y-1">
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                location.pathname === '/admin'
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+              )}
+            >
+              <ShieldCheck className="h-5 w-5" />
+              Admin Panel
+            </Link>
+          )}
           <Link
             to="/verification-request"
             className={cn(
