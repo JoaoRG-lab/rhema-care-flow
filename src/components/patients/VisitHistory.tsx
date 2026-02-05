@@ -1,4 +1,4 @@
- import { useEffect, useState } from 'react';
+ import { useState } from 'react';
  import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
  import { Badge } from '@/components/ui/badge';
  import { Button } from '@/components/ui/button';
@@ -13,14 +13,12 @@
    AlertDialogTitle,
  } from '@/components/ui/alert-dialog';
  import { supabase } from '@/integrations/supabase/client';
- import { useAuth } from '@/contexts/AuthContext';
  import { format } from 'date-fns';
  import { Calendar, FlaskConical, Image, ArrowRight, Pencil, Trash2 } from 'lucide-react';
  import { Paperclip } from 'lucide-react';
- import { toast } from 'sonner';
  import { EditVisitDialog } from './EditVisitDialog';
 import DOMPurify from 'dompurify';
-import { useAuditLog } from '@/hooks/useAuditLog';
+ import { useVisits } from '@/hooks/useVisits';
 import { VisitSummaryAssistant } from './VisitSummaryAssistant';
  
  import type { Visit } from '@/types/clinical';
@@ -33,13 +31,9 @@ import { VisitSummaryAssistant } from './VisitSummaryAssistant';
  }
  
 export function VisitHistory({ patientId, refreshKey, patientCode, diagnosisTags }: VisitHistoryProps) {
-   const { user } = useAuth();
-  const { logAccess } = useAuditLog();
-   const [visits, setVisits] = useState<Visit[]>([]);
-   const [loading, setLoading] = useState(true);
+   const { visits, loading, deleteVisit, isDeleting, refetch } = useVisits({ patientId, refreshKey });
    const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
    const [deletingVisitId, setDeletingVisitId] = useState<string | null>(null);
-   const [isDeleting, setIsDeleting] = useState(false);
  
    const handleDownloadAttachment = async (path: string) => {
      const { data } = await supabase.storage
@@ -57,59 +51,11 @@ export function VisitHistory({ patientId, refreshKey, patientCode, diagnosisTags
      return match ? match[1] : fileName;
    };
  
-   const fetchVisits = async () => {
-     if (!user) return;
-     const { data, error } = await supabase
-        .from('visits_secure')
-       .select('*')
-       .eq('patient_card_id', patientId)
-       .eq('user_id', user.id)
-       .order('visit_date', { ascending: false });
- 
-      if (data) {
-         setVisits(data as Visit[]);
-        // Log visit history access
-        if (data.length > 0) {
-          logAccess({
-            action: 'view',
-            resourceType: 'visit',
-            resourceId: patientId,
-            metadata: { visit_count: data.length }
-          });
-        }
-      }
-     setLoading(false);
-   };
- 
    const handleDeleteVisit = async () => {
      if (!deletingVisitId) return;
-     setIsDeleting(true);
- 
-     const { error } = await supabase
-       .from('visits')
-       .delete()
-       .eq('id', deletingVisitId);
- 
-     setIsDeleting(false);
+     await deleteVisit(deletingVisitId);
      setDeletingVisitId(null);
- 
-     if (error) {
-       toast.error('Failed to delete visit');
-     } else {
-       toast.success('Visit deleted');
-        logAccess({
-          action: 'delete',
-          resourceType: 'visit',
-          resourceId: deletingVisitId,
-          metadata: { patient_id: patientId }
-        });
-       fetchVisits();
-     }
    };
- 
-   useEffect(() => {
-     fetchVisits();
-   }, [user, patientId, refreshKey]);
  
    if (loading) {
      return (
@@ -257,7 +203,7 @@ export function VisitHistory({ patientId, refreshKey, patientCode, diagnosisTags
            visit={editingVisit}
            open={!!editingVisit}
            onOpenChange={(open) => !open && setEditingVisit(null)}
-           onVisitUpdated={fetchVisits}
+           onVisitUpdated={refetch}
          />
        )}
        
