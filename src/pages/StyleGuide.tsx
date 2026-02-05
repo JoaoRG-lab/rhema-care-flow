@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Eye } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
  import { Button } from "@/components/ui/button";
  import { Badge } from "@/components/ui/badge";
@@ -12,9 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AlertCircle, CheckCircle, Info, AlertTriangle, Sun, Moon, Monitor } from "lucide-react";
 import { Download, FileJson, Copy, Check, Filter } from "lucide-react";
 import { FileCode } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
 const CSS_VARIABLES_CONTENT = `/* RheumaFlow Design System - CSS Variables */
@@ -556,6 +558,9 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewTab, setPreviewTab] = useState<"md" | "json" | "css" | "scss">("css");
+  const [copied, setCopied] = useState(false);
 
   // Categories for filtering
   const categories = [
@@ -619,6 +624,64 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
 
   const hasVisibleSections = showCoreColors || showDiseaseColors || showRiskTags || showStatusColors || 
     showTypography || showShadows || showButtons || showForms || showAlerts || showUtility || showSpacing;
+
+  // Get preview content based on active tab
+  const getPreviewContent = () => {
+    switch (previewTab) {
+      case "md":
+        return STYLE_GUIDE_MARKDOWN;
+      case "json":
+        return JSON.stringify(DESIGN_TOKENS_JSON, null, 2);
+      case "css":
+        return getCSSVariablesWithDate();
+      case "scss":
+        return getSCSSVariablesWithDate();
+      default:
+        return "";
+    }
+  };
+
+  const getPreviewFilename = () => {
+    switch (previewTab) {
+      case "md":
+        return "RheumaFlow-Style-Guide.md";
+      case "json":
+        return "design-tokens.json";
+      case "css":
+        return "rheumaflow-tokens.css";
+      case "scss":
+        return "_rheumaflow-tokens.scss";
+      default:
+        return "export.txt";
+    }
+  };
+
+  const handleCopyPreview = async () => {
+    await navigator.clipboard.writeText(getPreviewContent());
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadPreview = () => {
+    const content = getPreviewContent();
+    const mimeTypes: Record<string, string> = {
+      md: "text/markdown",
+      json: "application/json",
+      css: "text/css",
+      scss: "text/x-scss",
+    };
+    const blob = new Blob([content], { type: mimeTypes[previewTab] });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = getPreviewFilename();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`${getPreviewFilename()} downloaded`);
+  };
 
   const handleExport = () => {
     const blob = new Blob([STYLE_GUIDE_MARKDOWN], { type: "text/markdown" });
@@ -733,6 +796,64 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
             <Badge variant={resolvedTheme === "dark" ? "secondary" : "outline"} className="ml-2">
               {resolvedTheme === "dark" ? "Dark Mode" : "Light Mode"}
             </Badge>
+
+            {/* Preview Dialog */}
+            <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 ml-2">
+                  <Eye className="h-4 w-4" />
+                  Preview
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+                <DialogHeader>
+                  <DialogTitle>Export Preview</DialogTitle>
+                  <DialogDescription>
+                    Preview and download design tokens in your preferred format
+                  </DialogDescription>
+                </DialogHeader>
+                <Tabs value={previewTab} onValueChange={(v) => setPreviewTab(v as typeof previewTab)} className="flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <TabsList>
+                      <TabsTrigger value="css" className="gap-1.5">
+                        <FileCode className="h-3.5 w-3.5" />
+                        CSS
+                      </TabsTrigger>
+                      <TabsTrigger value="scss" className="gap-1.5">
+                        <FileCode className="h-3.5 w-3.5" />
+                        SCSS
+                      </TabsTrigger>
+                      <TabsTrigger value="json" className="gap-1.5">
+                        <FileJson className="h-3.5 w-3.5" />
+                        JSON
+                      </TabsTrigger>
+                      <TabsTrigger value="md" className="gap-1.5">
+                        <Download className="h-3.5 w-3.5" />
+                        Markdown
+                      </TabsTrigger>
+                    </TabsList>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={handleCopyPreview} className="gap-1.5">
+                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied ? "Copied" : "Copy"}
+                      </Button>
+                      <Button size="sm" onClick={handleDownloadPreview} className="gap-1.5">
+                        <Download className="h-4 w-4" />
+                        Download {getPreviewFilename()}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-h-0">
+                    <ScrollArea className="h-[50vh] rounded-md border bg-muted/30">
+                      <pre className="p-4 text-sm font-mono whitespace-pre-wrap break-words">
+                        <code>{getPreviewContent()}</code>
+                      </pre>
+                    </ScrollArea>
+                  </div>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 ml-2">
