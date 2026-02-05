@@ -101,7 +101,7 @@
      category: 'disease-activity',
      diseases: ['ra'],
      formula: 'TJC + SJC + PGA + EGA + CRP',
-     implemented: false,
+    implemented: true,
    },
    {
      id: 'basdai',
