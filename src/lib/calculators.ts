@@ -170,7 +170,7 @@
      category: 'classification',
      diseases: ['ra'],
      reference: 'Aletaha et al. 2010',
-     implemented: false,
+    implemented: true,
    },
    {
      id: 'slicc-sle',

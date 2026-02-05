@@ -29,6 +29,7 @@
  import { BASDAICalculator } from '@/components/scores/BASDAICalculator';
  import { SLEDAICalculator } from '@/components/scores/SLEDAICalculator';
 import { DAS28CRPCalculator } from '@/components/scores/DAS28CRPCalculator';
+import { ACREULARRACalculator } from '@/components/scores/ACREULARRACalculator';
  import { Alert, AlertDescription } from '@/components/ui/alert';
  import { toast } from 'sonner';
  
@@ -96,6 +97,8 @@ import { DAS28CRPCalculator } from '@/components/scores/DAS28CRPCalculator';
          return <BASDAICalculator />;
        case 'sledai':
          return <SLEDAICalculator />;
+      case 'acr-eular-ra':
+        return <ACREULARRACalculator />;
        default:
          return null;
      }
