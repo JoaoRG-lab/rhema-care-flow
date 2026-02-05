@@ -19,6 +19,7 @@
    BookOpen,
    Heart,
    GraduationCap,
+   FileText,
  } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -43,6 +44,7 @@ import {
    { path: '/scores', label: 'Scores & Tools', icon: Activity },
    { path: '/monitoring', label: 'Monitoring', icon: Shield },
    { path: '/infusions', label: 'Infusions', icon: Syringe },
+   { path: '/education', label: 'Education', icon: FileText },
    { path: '/calendar', label: 'Calendar', icon: Calendar },
    { path: '/tasks', label: 'Tasks', icon: CheckSquare },
    { path: '/focus', label: 'Focus', icon: Timer },

@@ -50,6 +50,69 @@ export type Database = {
         }
         Relationships: []
       }
+      education_content: {
+        Row: {
+          author_id: string
+          category: string
+          content: string
+          content_type: string
+          created_at: string
+          diagnosis_tags: string[] | null
+          external_url: string | null
+          featured_image_url: string | null
+          id: string
+          is_featured: boolean
+          is_published: boolean
+          published_at: string | null
+          reading_time_minutes: number | null
+          slug: string
+          summary: string | null
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          author_id: string
+          category: string
+          content: string
+          content_type?: string
+          created_at?: string
+          diagnosis_tags?: string[] | null
+          external_url?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          published_at?: string | null
+          reading_time_minutes?: number | null
+          slug: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          content?: string
+          content_type?: string
+          created_at?: string
+          diagnosis_tags?: string[] | null
+          external_url?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          published_at?: string | null
+          reading_time_minutes?: number | null
+          slug?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       focus_sessions: {
         Row: {
           completed_at: string
@@ -1057,6 +1120,7 @@ export type Database = {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       decrypt_sensitive_data: { Args: { p_encrypted: string }; Returns: string }
       encrypt_sensitive_data: { Args: { p_data: string }; Returns: string }
+      generate_slug: { Args: { title: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
