@@ -33,6 +33,7 @@ import { DAS28CRPCalculator } from '@/components/scores/DAS28CRPCalculator';
 import { ACREULARRACalculator } from '@/components/scores/ACREULARRACalculator';
 import { DAS28ComparisonCalculator } from '@/components/scores/DAS28ComparisonCalculator';
 import { SDAICalculator } from '@/components/scores/SDAICalculator';
+ import { CASPARCalculator } from '@/components/scores/CASPARCalculator';
  import { Alert, AlertDescription } from '@/components/ui/alert';
  import { toast } from 'sonner';
  
@@ -107,6 +108,8 @@ import { SDAICalculator } from '@/components/scores/SDAICalculator';
          return <SLEDAICalculator />;
       case 'acr-eular-ra':
         return <ACREULARRACalculator />;
+       case 'caspar':
+         return <CASPARCalculator />;
        default:
          return null;
      }
