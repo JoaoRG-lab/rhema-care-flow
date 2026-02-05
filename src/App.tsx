@@ -24,6 +24,7 @@
 const StyleGuide = lazy(() => import("./pages/StyleGuide"));
 const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
  const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
  
  const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
                 <Route path="/style-guide" element={<StyleGuide />} />
                 <Route path="/verification-request" element={<ProtectedRoute><VerificationRequest /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+               <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
