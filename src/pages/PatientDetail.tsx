@@ -16,6 +16,7 @@
  import { PatientMonitoring } from '@/components/patients/PatientMonitoring';
  import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
  import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
+import { useAuditLog } from '@/hooks/useAuditLog';
  
  interface PatientCard {
    id: string;
@@ -34,6 +35,7 @@
    const { id } = useParams<{ id: string }>();
    const navigate = useNavigate();
    const { user } = useAuth();
+  const { logAccess } = useAuditLog();
    const [patient, setPatient] = useState<PatientCard | null>(null);
    const [loading, setLoading] = useState(true);
    const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
@@ -58,6 +60,13 @@
        navigate('/patients');
      } else {
        setPatient(data);
+      // Log patient card access for audit trail
+      logAccess({
+        action: 'view',
+        resourceType: 'patient_card',
+        resourceId: data.id,
+        metadata: { patient_code: data.patient_code }
+      });
      }
      setLoading(false);
    };
