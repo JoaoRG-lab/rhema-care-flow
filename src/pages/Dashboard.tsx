@@ -7,6 +7,8 @@
  import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
+import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import {
    Users,
    AlertTriangle,
@@ -37,6 +39,7 @@
  
  export default function Dashboard() {
    const { user } = useAuth();
+  const { tier } = useVerificationStatus();
    const [patients, setPatients] = useState<PatientCard[]>([]);
    const [monitoringAlerts, setMonitoringAlerts] = useState<MonitoringEvent[]>([]);
    const [upcomingFollowups, setUpcomingFollowups] = useState<PatientCard[]>([]);
@@ -96,7 +99,10 @@
          {/* Header */}
          <div className="flex items-center justify-between mb-8">
            <div>
-             <h1 className="text-2xl font-bold text-foreground">Today's Clinic</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-foreground">Today's Clinic</h1>
+                {tier && <VerifiedBadge tier={tier} size="sm" />}
+              </div>
              <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
            </div>
            <Link to="/patients">

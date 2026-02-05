@@ -17,7 +17,9 @@
  } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useVerificationStatus } from '@/hooks/useVerificationStatus';
  import { cn } from '@/lib/utils';
+import { VerifiedIcon } from '@/components/ui/VerifiedBadge';
  
  const navItems = [
    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -34,6 +36,7 @@ import { useUserRole } from '@/hooks/useUserRole';
    const location = useLocation();
    const { signOut, user } = useAuth();
   const { isAdmin } = useUserRole();
+  const { tier } = useVerificationStatus();
  
    return (
      <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground flex flex-col">
@@ -133,8 +136,11 @@ import { useUserRole } from '@/hooks/useUserRole';
            Sign Out
          </button>
          {user && (
-           <div className="px-3 py-2 text-xs text-sidebar-foreground/50 truncate">
-             {user.email}
+            <div className="px-3 py-2 flex items-center gap-2">
+              <span className="text-xs text-sidebar-foreground/50 truncate flex-1">
+                {user.email}
+              </span>
+              {tier && <VerifiedIcon tier={tier} size="sm" />}
            </div>
          )}
        </div>
