@@ -10,6 +10,7 @@
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
+ import { VerificationPrompt } from '@/components/dashboard/VerificationPrompt';
  import {
    Users,
    AlertTriangle,
@@ -40,7 +41,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  
  export default function Dashboard() {
    const { user } = useAuth();
-  const { tier, contributorType, fullName } = useVerificationStatus();
+   const { status, tier, contributorType, fullName } = useVerificationStatus();
    const [patients, setPatients] = useState<PatientCard[]>([]);
    const [monitoringAlerts, setMonitoringAlerts] = useState<MonitoringEvent[]>([]);
    const [upcomingFollowups, setUpcomingFollowups] = useState<PatientCard[]>([]);
@@ -160,6 +161,13 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
              </Button>
            </Link>
          </div>
+ 
+         {/* Verification Prompt for unverified users */}
+         {tier === null && (
+           <div className="mb-6">
+             <VerificationPrompt status={status} />
+           </div>
+         )}
  
          {/* Welcome Card with Tier-based Actions */}
          <div className="mb-8">
