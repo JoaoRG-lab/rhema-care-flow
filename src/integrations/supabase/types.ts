@@ -513,9 +513,11 @@ export type Database = {
           department: string | null
           documents: string[] | null
           email: string
+          email_encrypted: string | null
           expertise_areas: string[] | null
           expertise_statement: string | null
           full_name: string
+          full_name_encrypted: string | null
           github_username: string | null
           guideline_contributions: string | null
           id: string
@@ -530,6 +532,7 @@ export type Database = {
           moc_status: string | null
           notable_publications: string[] | null
           orcid_id: string | null
+          orcid_id_encrypted: string | null
           partnership_type: string | null
           portfolio_url: string | null
           position: string | null
@@ -557,9 +560,11 @@ export type Database = {
           department?: string | null
           documents?: string[] | null
           email: string
+          email_encrypted?: string | null
           expertise_areas?: string[] | null
           expertise_statement?: string | null
           full_name: string
+          full_name_encrypted?: string | null
           github_username?: string | null
           guideline_contributions?: string | null
           id?: string
@@ -574,6 +579,7 @@ export type Database = {
           moc_status?: string | null
           notable_publications?: string[] | null
           orcid_id?: string | null
+          orcid_id_encrypted?: string | null
           partnership_type?: string | null
           portfolio_url?: string | null
           position?: string | null
@@ -601,9 +607,11 @@ export type Database = {
           department?: string | null
           documents?: string[] | null
           email?: string
+          email_encrypted?: string | null
           expertise_areas?: string[] | null
           expertise_statement?: string | null
           full_name?: string
+          full_name_encrypted?: string | null
           github_username?: string | null
           guideline_contributions?: string | null
           id?: string
@@ -618,6 +626,7 @@ export type Database = {
           moc_status?: string | null
           notable_publications?: string[] | null
           orcid_id?: string | null
+          orcid_id_encrypted?: string | null
           partnership_type?: string | null
           portfolio_url?: string | null
           position?: string | null
@@ -923,6 +932,7 @@ export type Database = {
           institution: string | null
           institutional_email: string | null
           license_number: string | null
+          orcid_id: string | null
           position: string | null
           reviewed_at: string | null
           status: Database["public"]["Enums"]["verification_status"] | null
@@ -936,13 +946,14 @@ export type Database = {
           certification_credential?: never
           created_at?: string | null
           department?: string | null
-          email?: string | null
+          email?: never
           expertise_areas?: string[] | null
-          full_name?: string | null
+          full_name?: never
           id?: string | null
           institution?: string | null
           institutional_email?: never
           license_number?: never
+          orcid_id?: never
           position?: string | null
           reviewed_at?: string | null
           status?: Database["public"]["Enums"]["verification_status"] | null
@@ -956,13 +967,14 @@ export type Database = {
           certification_credential?: never
           created_at?: string | null
           department?: string | null
-          email?: string | null
+          email?: never
           expertise_areas?: string[] | null
-          full_name?: string | null
+          full_name?: never
           id?: string | null
           institution?: string | null
           institutional_email?: never
           license_number?: never
+          orcid_id?: never
           position?: string | null
           reviewed_at?: string | null
           status?: Database["public"]["Enums"]["verification_status"] | null
