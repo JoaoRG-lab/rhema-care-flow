@@ -10,10 +10,101 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
  import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Info, AlertTriangle, Sun, Moon, Monitor } from "lucide-react";
 import { Download, FileJson, Copy, Check } from "lucide-react";
+import { FileCode } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+
+const CSS_VARIABLES = `/* RheumaFlow Design System - CSS Variables */
+/* Generated: ${new Date().toISOString().split('T')[0]} */
+
+:root {
+  /* Core Colors */
+  --background: 210 20% 98%;
+  --foreground: 215 25% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 215 25% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 215 25% 15%;
+  --muted: 210 15% 95%;
+  --muted-foreground: 215 15% 45%;
+  --border: 210 20% 88%;
+  --input: 210 20% 88%;
+  --ring: 185 65% 35%;
+
+  /* Brand Colors */
+  --primary: 185 65% 30%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 15% 93%;
+  --secondary-foreground: 215 25% 25%;
+  --accent: 185 55% 92%;
+  --accent-foreground: 185 65% 25%;
+
+  /* Status Colors */
+  --success: 150 60% 40%;
+  --warning: 40 90% 50%;
+  --info: 200 75% 50%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Disease Category Colors */
+  --ra: 210 75% 50%;
+  --sle: 280 60% 55%;
+  --spa: 185 65% 40%;
+  --psa: 35 90% 50%;
+  --vasculitis: 0 65% 50%;
+  --fm: 320 55% 55%;
+
+  /* Sidebar Colors */
+  --sidebar-background: 215 25% 15%;
+  --sidebar-foreground: 210 20% 90%;
+  --sidebar-primary: 185 65% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 215 25% 22%;
+  --sidebar-accent-foreground: 210 20% 90%;
+  --sidebar-border: 215 25% 25%;
+  --sidebar-ring: 185 65% 45%;
+
+  /* Border Radius */
+  --radius: 0.5rem;
+
+  /* Shadows */
+  --shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 4px 16px -4px rgba(0, 0, 0, 0.1);
+  --shadow-elevated: 0 8px 32px -8px rgba(0, 0, 0, 0.12);
+}
+
+.dark {
+  /* Dark Mode Core Colors */
+  --background: 215 30% 10%;
+  --foreground: 210 20% 95%;
+  --card: 215 30% 14%;
+  --card-foreground: 210 20% 95%;
+  --popover: 215 30% 14%;
+  --popover-foreground: 210 20% 95%;
+  --muted: 215 25% 18%;
+  --muted-foreground: 215 15% 60%;
+  --border: 215 25% 22%;
+  --input: 215 25% 22%;
+  --ring: 185 60% 45%;
+
+  /* Dark Mode Brand Colors */
+  --primary: 185 60% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 215 25% 22%;
+  --secondary-foreground: 210 20% 90%;
+  --accent: 215 30% 20%;
+  --accent-foreground: 185 55% 75%;
+
+  /* Status Colors (slightly adjusted for dark mode) */
+  --success: 150 55% 45%;
+  --warning: 40 85% 55%;
+  --info: 200 70% 55%;
+  --destructive: 0 65% 55%;
+  --destructive-foreground: 0 0% 100%;
+}
+`;
 
 const DESIGN_TOKENS_JSON = {
   "$schema": "https://design-tokens.org/schema.json",
@@ -311,6 +402,19 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
     toast.success("Design tokens JSON exported for Figma");
   };
 
+  const handleExportCSS = () => {
+    const blob = new Blob([CSS_VARIABLES], { type: "text/css" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "rheumaflow-tokens.css";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("CSS variables exported for developers");
+  };
+
   useEffect(() => {
     const root = document.documentElement;
     
@@ -385,6 +489,10 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
                 <DropdownMenuItem onClick={handleExportJSON} className="gap-2">
                   <FileJson className="h-4 w-4" />
                   Design Tokens (.json)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportCSS} className="gap-2">
+                  <FileCode className="h-4 w-4" />
+                  CSS Variables (.css)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
