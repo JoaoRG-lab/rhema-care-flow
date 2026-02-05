@@ -36,13 +36,13 @@
    const fetchScores = async () => {
      if (!user) return;
      const { data, error } = await supabase
-       .from('score_entries')
+        .from('score_entries_secure')
        .select('id, score_type, calculated_score, created_at')
        .eq('patient_card_id', patientId)
        .eq('user_id', user.id)
        .order('created_at', { ascending: true });
  
-     if (data) setScores(data);
+      if (data) setScores(data as ScoreEntry[]);
      setLoading(false);
    };
  

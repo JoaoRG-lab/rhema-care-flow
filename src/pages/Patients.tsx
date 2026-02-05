@@ -54,12 +54,12 @@ import { useAuditLog } from '@/hooks/useAuditLog';
    const fetchPatients = async () => {
      if (!user) return;
      const { data, error } = await supabase
-       .from('patient_cards')
+        .from('patient_cards_secure')
        .select('*')
        .eq('user_id', user.id)
        .order('created_at', { ascending: false });
  
-     if (data) setPatients(data);
+      if (data) setPatients(data as PatientCard[]);
      if (error) toast.error('Failed to load patients');
      setLoading(false);
    };
