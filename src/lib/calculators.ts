@@ -150,7 +150,7 @@
      category: 'disease-activity',
      diseases: ['psa'],
      formula: 'TJC + SJC + Pain VAS + PGA + CRP',
-     implemented: false,
+     implemented: true,
    },
    {
      id: 'mda',
