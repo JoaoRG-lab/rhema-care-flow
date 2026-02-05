@@ -363,6 +363,114 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_requests: {
+        Row: {
+          certification_credential: string | null
+          certification_date: string | null
+          certification_expiry: string | null
+          certifying_body: string | null
+          clinical_trial_roles: string | null
+          created_at: string
+          department: string | null
+          documents: string[] | null
+          email: string
+          expertise_areas: string[] | null
+          expertise_statement: string | null
+          full_name: string
+          guideline_contributions: string | null
+          id: string
+          institution: string | null
+          institutional_email: string | null
+          license_expiry: string | null
+          license_issuing_authority: string | null
+          license_number: string | null
+          license_status: string | null
+          moc_status: string | null
+          notable_publications: string[] | null
+          orcid_id: string | null
+          position: string | null
+          publication_count: number | null
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          status: Database["public"]["Enums"]["verification_status"]
+          submitted_at: string
+          tier: Database["public"]["Enums"]["verification_tier"] | null
+          updated_at: string
+          user_id: string
+          years_in_practice: number | null
+        }
+        Insert: {
+          certification_credential?: string | null
+          certification_date?: string | null
+          certification_expiry?: string | null
+          certifying_body?: string | null
+          clinical_trial_roles?: string | null
+          created_at?: string
+          department?: string | null
+          documents?: string[] | null
+          email: string
+          expertise_areas?: string[] | null
+          expertise_statement?: string | null
+          full_name: string
+          guideline_contributions?: string | null
+          id?: string
+          institution?: string | null
+          institutional_email?: string | null
+          license_expiry?: string | null
+          license_issuing_authority?: string | null
+          license_number?: string | null
+          license_status?: string | null
+          moc_status?: string | null
+          notable_publications?: string[] | null
+          orcid_id?: string | null
+          position?: string | null
+          publication_count?: number | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          submitted_at?: string
+          tier?: Database["public"]["Enums"]["verification_tier"] | null
+          updated_at?: string
+          user_id: string
+          years_in_practice?: number | null
+        }
+        Update: {
+          certification_credential?: string | null
+          certification_date?: string | null
+          certification_expiry?: string | null
+          certifying_body?: string | null
+          clinical_trial_roles?: string | null
+          created_at?: string
+          department?: string | null
+          documents?: string[] | null
+          email?: string
+          expertise_areas?: string[] | null
+          expertise_statement?: string | null
+          full_name?: string
+          guideline_contributions?: string | null
+          id?: string
+          institution?: string | null
+          institutional_email?: string | null
+          license_expiry?: string | null
+          license_issuing_authority?: string | null
+          license_number?: string | null
+          license_status?: string | null
+          moc_status?: string | null
+          notable_publications?: string[] | null
+          orcid_id?: string | null
+          position?: string | null
+          publication_count?: number | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          submitted_at?: string
+          tier?: Database["public"]["Enums"]["verification_tier"] | null
+          updated_at?: string
+          user_id?: string
+          years_in_practice?: number | null
+        }
+        Relationships: []
+      }
       visits: {
         Row: {
           actions: string[] | null
@@ -421,7 +529,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      verification_status: "pending" | "under_review" | "approved" | "rejected"
+      verification_tier: "bronze" | "silver" | "gold" | "expert"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -548,6 +657,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      verification_status: ["pending", "under_review", "approved", "rejected"],
+      verification_tier: ["bronze", "silver", "gold", "expert"],
+    },
   },
 } as const

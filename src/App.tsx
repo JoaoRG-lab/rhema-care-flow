@@ -22,6 +22,7 @@
  const NotFound = lazy(() => import("./pages/NotFound"));
  const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide"));
+const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
  
  const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const StyleGuide = lazy(() => import("./pages/StyleGuide"));
                 <Route path="/focus" element={<ProtectedRoute><Focus /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/style-guide" element={<StyleGuide />} />
+                <Route path="/verification-request" element={<ProtectedRoute><VerificationRequest /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
