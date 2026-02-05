@@ -11,16 +11,20 @@
    TrendingUp, 
    Activity,
    ArrowRightLeft,
-   Info
+   Info,
+   Download,
  } from 'lucide-react';
  import { format } from 'date-fns';
  import { cn } from '@/lib/utils';
  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+ import { exportScoreComparisonPDF } from '@/lib/pdfExport';
+ import { toast } from 'sonner';
  import type { ScoreEntry } from '@/types/clinical';
  
  interface ScoreComparisonProps {
    scores: ScoreEntry[];
    scoreType?: string;
+   patientCode?: string;
  }
  
  // Clinical thresholds for disease activity states
@@ -113,7 +117,7 @@
    return { state: 'high', label: 'High Activity', color: 'text-destructive', bg: 'bg-destructive/10' };
  };
  
- export function ScoreComparison({ scores, scoreType }: ScoreComparisonProps) {
+ export function ScoreComparison({ scores, scoreType, patientCode = 'Unknown' }: ScoreComparisonProps) {
    const scoreTypes = useMemo(() => [...new Set(scores.map(s => s.score_type))], [scores]);
    const [selectedType, setSelectedType] = useState(scoreType || scoreTypes[0] || '');
    const [baselineId, setBaselineId] = useState<string>('');
@@ -183,6 +187,50 @@
      };
    }, [baselineScore, comparisonScore, selectedType]);
  
+   const handleExportPDF = () => {
+     if (!comparison || !baselineScore || !comparisonScore) {
+       toast.error('No comparison data to export');
+       return;
+     }
+ 
+     try {
+       const clinicalSummary = comparison.improved
+         ? `Improvement of ${Math.abs(comparison.delta).toFixed(1)} points (${Math.abs(comparison.percentChange).toFixed(0)}%) over ${comparison.daysBetween} days.${comparison.mcidAchieved ? ' This exceeds the minimal clinically important difference.' : ''}`
+         : comparison.worsened
+           ? `Worsening of ${Math.abs(comparison.delta).toFixed(1)} points (${Math.abs(comparison.percentChange).toFixed(0)}%) over ${comparison.daysBetween} days.${comparison.mcidAchieved ? ' This represents a clinically meaningful change.' : ''}`
+           : `Stable disease activity over ${comparison.daysBetween} days.`;
+ 
+       exportScoreComparisonPDF({
+         patientCode,
+         scoreType: selectedType,
+         baseline: {
+           score: baselineScore.calculated_score ?? 0,
+           date: format(new Date(baselineScore.created_at), 'MMM d, yyyy'),
+           state: comparison.baselineState.label,
+         },
+         followup: {
+           score: comparisonScore.calculated_score ?? 0,
+           date: format(new Date(comparisonScore.created_at), 'MMM d, yyyy'),
+           state: comparison.comparisonState.label,
+         },
+         delta: comparison.delta,
+         percentChange: comparison.percentChange,
+         mcidAchieved: comparison.mcidAchieved,
+         mcidThreshold: SCORE_THRESHOLDS[selectedType]?.mcid || 0,
+         daysBetween: comparison.daysBetween,
+         eularResponse: comparison.eularResponse
+           ? { label: comparison.eularResponse.label, description: comparison.eularResponse.description }
+           : undefined,
+         clinicalSummary,
+       });
+ 
+       toast.success('PDF exported successfully');
+     } catch (error) {
+       console.error('PDF export error:', error);
+       toast.error('Failed to export PDF');
+     }
+   };
+ 
    if (scores.length === 0) {
      return (
        <Card>
@@ -205,16 +253,35 @@
              </CardTitle>
              <CardDescription>Compare disease activity between visits</CardDescription>
            </div>
-           <Select value={selectedType} onValueChange={setSelectedType}>
-             <SelectTrigger className="w-[160px]">
-               <SelectValue placeholder="Select score" />
-             </SelectTrigger>
-             <SelectContent>
-               {scoreTypes.map(type => (
-                 <SelectItem key={type} value={type}>{type}</SelectItem>
-               ))}
-             </SelectContent>
-           </Select>
+           <div className="flex items-center gap-2">
+             <Select value={selectedType} onValueChange={setSelectedType}>
+               <SelectTrigger className="w-[140px]">
+                 <SelectValue placeholder="Select score" />
+               </SelectTrigger>
+               <SelectContent>
+                 {scoreTypes.map(type => (
+                   <SelectItem key={type} value={type}>{type}</SelectItem>
+                 ))}
+               </SelectContent>
+             </Select>
+             {comparison && (
+               <TooltipProvider>
+                 <Tooltip>
+                   <TooltipTrigger asChild>
+                     <Button 
+                       variant="outline" 
+                       size="icon"
+                       onClick={handleExportPDF}
+                       className="shrink-0"
+                     >
+                       <Download className="h-4 w-4" />
+                     </Button>
+                   </TooltipTrigger>
+                   <TooltipContent>Export as PDF</TooltipContent>
+                 </Tooltip>
+               </TooltipProvider>
+             )}
+           </div>
          </div>
        </CardHeader>
        <CardContent className="space-y-4">
