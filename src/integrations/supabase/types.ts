@@ -85,8 +85,10 @@ export type Database = {
           interval_days: number
           next_date: string
           notes: string | null
+          notes_encrypted: string | null
           patient_card_id: string | null
           pre_checklist: Json | null
+          pre_checklist_encrypted: string | null
           updated_at: string
           user_id: string
         }
@@ -97,8 +99,10 @@ export type Database = {
           interval_days: number
           next_date: string
           notes?: string | null
+          notes_encrypted?: string | null
           patient_card_id?: string | null
           pre_checklist?: Json | null
+          pre_checklist_encrypted?: string | null
           updated_at?: string
           user_id: string
         }
@@ -109,8 +113,10 @@ export type Database = {
           interval_days?: number
           next_date?: string
           notes?: string | null
+          notes_encrypted?: string | null
           patient_card_id?: string | null
           pre_checklist?: Json | null
+          pre_checklist_encrypted?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -331,6 +337,7 @@ export type Database = {
           calculated_score: number | null
           created_at: string
           data_json: Json
+          data_json_encrypted: string | null
           id: string
           patient_card_id: string | null
           score_type: string
@@ -341,6 +348,7 @@ export type Database = {
           calculated_score?: number | null
           created_at?: string
           data_json: Json
+          data_json_encrypted?: string | null
           id?: string
           patient_card_id?: string | null
           score_type: string
@@ -351,6 +359,7 @@ export type Database = {
           calculated_score?: number | null
           created_at?: string
           data_json?: Json
+          data_json_encrypted?: string | null
           id?: string
           patient_card_id?: string | null
           score_type?: string
@@ -377,6 +386,13 @@ export type Database = {
             columns: ["visit_id"]
             isOneToOne: false
             referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "score_entries_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -486,6 +502,7 @@ export type Database = {
       verification_requests: {
         Row: {
           certification_credential: string | null
+          certification_credential_encrypted: string | null
           certification_date: string | null
           certification_expiry: string | null
           certifying_body: string | null
@@ -504,9 +521,11 @@ export type Database = {
           id: string
           institution: string | null
           institutional_email: string | null
+          institutional_email_encrypted: string | null
           license_expiry: string | null
           license_issuing_authority: string | null
           license_number: string | null
+          license_number_encrypted: string | null
           license_status: string | null
           moc_status: string | null
           notable_publications: string[] | null
@@ -527,6 +546,7 @@ export type Database = {
         }
         Insert: {
           certification_credential?: string | null
+          certification_credential_encrypted?: string | null
           certification_date?: string | null
           certification_expiry?: string | null
           certifying_body?: string | null
@@ -545,9 +565,11 @@ export type Database = {
           id?: string
           institution?: string | null
           institutional_email?: string | null
+          institutional_email_encrypted?: string | null
           license_expiry?: string | null
           license_issuing_authority?: string | null
           license_number?: string | null
+          license_number_encrypted?: string | null
           license_status?: string | null
           moc_status?: string | null
           notable_publications?: string[] | null
@@ -568,6 +590,7 @@ export type Database = {
         }
         Update: {
           certification_credential?: string | null
+          certification_credential_encrypted?: string | null
           certification_date?: string | null
           certification_expiry?: string | null
           certifying_body?: string | null
@@ -586,9 +609,11 @@ export type Database = {
           id?: string
           institution?: string | null
           institutional_email?: string | null
+          institutional_email_encrypted?: string | null
           license_expiry?: string | null
           license_issuing_authority?: string | null
           license_number?: string | null
+          license_number_encrypted?: string | null
           license_status?: string | null
           moc_status?: string | null
           notable_publications?: string[] | null
@@ -615,10 +640,12 @@ export type Database = {
           attachments: string[] | null
           created_at: string
           disease_activity: Json | null
+          disease_activity_encrypted: string | null
           id: string
           imaging: string[] | null
           labs_ordered: string[] | null
           next_steps: string | null
+          next_steps_encrypted: string | null
           patient_card_id: string
           user_id: string
           visit_date: string
@@ -628,10 +655,12 @@ export type Database = {
           attachments?: string[] | null
           created_at?: string
           disease_activity?: Json | null
+          disease_activity_encrypted?: string | null
           id?: string
           imaging?: string[] | null
           labs_ordered?: string[] | null
           next_steps?: string | null
+          next_steps_encrypted?: string | null
           patient_card_id: string
           user_id: string
           visit_date?: string
@@ -641,10 +670,12 @@ export type Database = {
           attachments?: string[] | null
           created_at?: string
           disease_activity?: Json | null
+          disease_activity_encrypted?: string | null
           id?: string
           imaging?: string[] | null
           labs_ordered?: string[] | null
           next_steps?: string | null
+          next_steps_encrypted?: string | null
           patient_card_id?: string
           user_id?: string
           visit_date?: string
@@ -668,6 +699,60 @@ export type Database = {
       }
     }
     Views: {
+      infusion_events_secure: {
+        Row: {
+          created_at: string | null
+          drug: string | null
+          id: string | null
+          interval_days: number | null
+          next_date: string | null
+          notes: string | null
+          patient_card_id: string | null
+          pre_checklist: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          drug?: string | null
+          id?: string | null
+          interval_days?: number | null
+          next_date?: string | null
+          notes?: never
+          patient_card_id?: string | null
+          pre_checklist?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          drug?: string | null
+          id?: string | null
+          interval_days?: number | null
+          next_date?: string | null
+          notes?: never
+          patient_card_id?: string | null
+          pre_checklist?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "infusion_events_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "infusion_events_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monitoring_events_secure: {
         Row: {
           completed_at: string | null
@@ -763,6 +848,188 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      score_entries_secure: {
+        Row: {
+          calculated_score: number | null
+          created_at: string | null
+          data_json: Json | null
+          id: string | null
+          patient_card_id: string | null
+          score_type: string | null
+          user_id: string | null
+          visit_id: string | null
+        }
+        Insert: {
+          calculated_score?: number | null
+          created_at?: string | null
+          data_json?: never
+          id?: string | null
+          patient_card_id?: string | null
+          score_type?: string | null
+          user_id?: string | null
+          visit_id?: string | null
+        }
+        Update: {
+          calculated_score?: number | null
+          created_at?: string | null
+          data_json?: never
+          id?: string | null
+          patient_card_id?: string | null
+          score_type?: string | null
+          user_id?: string | null
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "score_entries_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "score_entries_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "score_entries_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "score_entries_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_requests_secure: {
+        Row: {
+          certification_credential: string | null
+          created_at: string | null
+          department: string | null
+          email: string | null
+          expertise_areas: string[] | null
+          full_name: string | null
+          id: string | null
+          institution: string | null
+          institutional_email: string | null
+          license_number: string | null
+          position: string | null
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["verification_status"] | null
+          submitted_at: string | null
+          tier: Database["public"]["Enums"]["verification_tier"] | null
+          updated_at: string | null
+          user_id: string | null
+          years_in_practice: number | null
+        }
+        Insert: {
+          certification_credential?: never
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          expertise_areas?: string[] | null
+          full_name?: string | null
+          id?: string | null
+          institution?: string | null
+          institutional_email?: never
+          license_number?: never
+          position?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["verification_status"] | null
+          submitted_at?: string | null
+          tier?: Database["public"]["Enums"]["verification_tier"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          years_in_practice?: number | null
+        }
+        Update: {
+          certification_credential?: never
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          expertise_areas?: string[] | null
+          full_name?: string | null
+          id?: string | null
+          institution?: string | null
+          institutional_email?: never
+          license_number?: never
+          position?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["verification_status"] | null
+          submitted_at?: string | null
+          tier?: Database["public"]["Enums"]["verification_tier"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          years_in_practice?: number | null
+        }
+        Relationships: []
+      }
+      visits_secure: {
+        Row: {
+          actions: string[] | null
+          attachments: string[] | null
+          created_at: string | null
+          disease_activity: Json | null
+          id: string | null
+          imaging: string[] | null
+          labs_ordered: string[] | null
+          next_steps: string | null
+          patient_card_id: string | null
+          user_id: string | null
+          visit_date: string | null
+        }
+        Insert: {
+          actions?: string[] | null
+          attachments?: string[] | null
+          created_at?: string | null
+          disease_activity?: never
+          id?: string | null
+          imaging?: string[] | null
+          labs_ordered?: string[] | null
+          next_steps?: never
+          patient_card_id?: string | null
+          user_id?: string | null
+          visit_date?: string | null
+        }
+        Update: {
+          actions?: string[] | null
+          attachments?: string[] | null
+          created_at?: string | null
+          disease_activity?: never
+          id?: string | null
+          imaging?: string[] | null
+          labs_ordered?: string[] | null
+          next_steps?: never
+          patient_card_id?: string | null
+          user_id?: string | null
+          visit_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
