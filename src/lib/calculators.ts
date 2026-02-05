@@ -73,6 +73,16 @@
      formula: '0.56×√TJC + 0.28×√SJC + 0.36×ln(CRP+1) + 0.014×GH + 0.96',
     implemented: true,
    },
+  {
+    id: 'das28-comparison',
+    name: 'DAS28-ESR vs DAS28-CRP Comparison',
+    shortName: 'DAS28 Compare',
+    description: 'Compare ESR and CRP-based Disease Activity Scores side by side',
+    category: 'disease-activity',
+    diseases: ['ra'],
+    reference: 'Useful when both markers are available',
+    implemented: true,
+  },
    {
      id: 'cdai',
      name: 'CDAI',
