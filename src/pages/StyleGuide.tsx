@@ -111,6 +111,180 @@ const getCSSVariablesWithDate = () => {
   return CSS_VARIABLES_CONTENT.replace('/* RheumaFlow Design System - CSS Variables */', `/* RheumaFlow Design System - CSS Variables */\n/* Generated: ${date} */`);
 };
 
+const SCSS_VARIABLES_CONTENT = `// RheumaFlow Design System - SCSS Variables
+
+// =============================================================================
+// Core Colors
+// =============================================================================
+
+$background: hsl(210, 20%, 98%);
+$foreground: hsl(215, 25%, 15%);
+$card: hsl(0, 0%, 100%);
+$card-foreground: hsl(215, 25%, 15%);
+$popover: hsl(0, 0%, 100%);
+$popover-foreground: hsl(215, 25%, 15%);
+$muted: hsl(210, 15%, 95%);
+$muted-foreground: hsl(215, 15%, 45%);
+$border: hsl(210, 20%, 88%);
+$input: hsl(210, 20%, 88%);
+$ring: hsl(185, 65%, 35%);
+
+// =============================================================================
+// Brand Colors
+// =============================================================================
+
+$primary: hsl(185, 65%, 30%);
+$primary-foreground: hsl(0, 0%, 100%);
+$secondary: hsl(210, 15%, 93%);
+$secondary-foreground: hsl(215, 25%, 25%);
+$accent: hsl(185, 55%, 92%);
+$accent-foreground: hsl(185, 65%, 25%);
+
+// =============================================================================
+// Status Colors
+// =============================================================================
+
+$success: hsl(150, 60%, 40%);
+$warning: hsl(40, 90%, 50%);
+$info: hsl(200, 75%, 50%);
+$destructive: hsl(0, 72%, 51%);
+$destructive-foreground: hsl(0, 0%, 100%);
+
+// =============================================================================
+// Disease Category Colors
+// =============================================================================
+
+$ra: hsl(210, 75%, 50%);           // Rheumatoid Arthritis - Blue
+$sle: hsl(280, 60%, 55%);          // Lupus - Purple
+$spa: hsl(185, 65%, 40%);          // Spondyloarthritis - Teal
+$psa: hsl(35, 90%, 50%);           // Psoriatic Arthritis - Amber
+$vasculitis: hsl(0, 65%, 50%);     // Vasculitis - Rose
+$fm: hsl(320, 55%, 55%);           // Fibromyalgia - Pink
+
+// Disease color map for easy iteration
+$disease-colors: (
+  "ra": $ra,
+  "sle": $sle,
+  "spa": $spa,
+  "psa": $psa,
+  "vasculitis": $vasculitis,
+  "fm": $fm
+);
+
+// =============================================================================
+// Sidebar Colors
+// =============================================================================
+
+$sidebar-background: hsl(215, 25%, 15%);
+$sidebar-foreground: hsl(210, 20%, 90%);
+$sidebar-primary: hsl(185, 65%, 45%);
+$sidebar-primary-foreground: hsl(0, 0%, 100%);
+$sidebar-accent: hsl(215, 25%, 22%);
+$sidebar-accent-foreground: hsl(210, 20%, 90%);
+$sidebar-border: hsl(215, 25%, 25%);
+$sidebar-ring: hsl(185, 65%, 45%);
+
+// =============================================================================
+// Border Radius
+// =============================================================================
+
+$radius: 0.5rem;
+$radius-sm: 0.25rem;
+$radius-md: 0.375rem;
+$radius-lg: 0.5rem;
+$radius-full: 9999px;
+
+// =============================================================================
+// Shadows
+// =============================================================================
+
+$shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.08);
+$shadow-medium: 0 4px 16px -4px rgba(0, 0, 0, 0.1);
+$shadow-elevated: 0 8px 32px -8px rgba(0, 0, 0, 0.12);
+
+// =============================================================================
+// Typography
+// =============================================================================
+
+$font-family-sans: Inter, system-ui, sans-serif;
+
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-base: 1rem;     // 16px
+$font-size-lg: 1.125rem;   // 18px
+$font-size-xl: 1.25rem;    // 20px
+$font-size-2xl: 1.5rem;    // 24px
+$font-size-4xl: 2.25rem;   // 36px
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// =============================================================================
+// Spacing Scale
+// =============================================================================
+
+$spacing-1: 0.25rem;   // 4px
+$spacing-2: 0.5rem;    // 8px
+$spacing-3: 0.75rem;   // 12px
+$spacing-4: 1rem;      // 16px
+$spacing-6: 1.5rem;    // 24px
+$spacing-8: 2rem;      // 32px
+$spacing-12: 3rem;     // 48px
+
+// =============================================================================
+// Dark Mode Variables
+// =============================================================================
+
+$dark-background: hsl(215, 30%, 10%);
+$dark-foreground: hsl(210, 20%, 95%);
+$dark-card: hsl(215, 30%, 14%);
+$dark-card-foreground: hsl(210, 20%, 95%);
+$dark-popover: hsl(215, 30%, 14%);
+$dark-popover-foreground: hsl(210, 20%, 95%);
+$dark-muted: hsl(215, 25%, 18%);
+$dark-muted-foreground: hsl(215, 15%, 60%);
+$dark-border: hsl(215, 25%, 22%);
+$dark-input: hsl(215, 25%, 22%);
+$dark-ring: hsl(185, 60%, 45%);
+$dark-primary: hsl(185, 60%, 45%);
+$dark-primary-foreground: hsl(0, 0%, 100%);
+$dark-secondary: hsl(215, 25%, 22%);
+$dark-secondary-foreground: hsl(210, 20%, 90%);
+$dark-accent: hsl(215, 30%, 20%);
+$dark-accent-foreground: hsl(185, 55%, 75%);
+$dark-success: hsl(150, 55%, 45%);
+$dark-warning: hsl(40, 85%, 55%);
+$dark-info: hsl(200, 70%, 55%);
+$dark-destructive: hsl(0, 65%, 55%);
+$dark-destructive-foreground: hsl(0, 0%, 100%);
+
+// =============================================================================
+// Mixins
+// =============================================================================
+
+@mixin disease-tag($color) {
+  background-color: rgba($color, 0.1);
+  color: $color;
+  border: 1px solid rgba($color, 0.3);
+}
+
+@mixin status-badge($bg, $text) {
+  background-color: $bg;
+  color: $text;
+  padding: 0.125rem 0.625rem;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+`;
+
+const getSCSSVariablesWithDate = () => {
+  const date = new Date().toISOString().split('T')[0];
+  return SCSS_VARIABLES_CONTENT.replace('// RheumaFlow Design System - SCSS Variables', `// RheumaFlow Design System - SCSS Variables\n// Generated: ${date}`);
+};
+
 const DESIGN_TOKENS_JSON = {
   "$schema": "https://design-tokens.org/schema.json",
   "name": "RheumaFlow Design Tokens",
@@ -486,6 +660,20 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
     toast.success("CSS variables exported for developers");
   };
 
+  const handleExportSCSS = () => {
+    const scssContent = getSCSSVariablesWithDate();
+    const blob = new Blob([scssContent], { type: "text/x-scss" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "_rheumaflow-tokens.scss";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("SCSS variables exported for developers");
+  };
+
   useEffect(() => {
     const root = document.documentElement;
     
@@ -564,6 +752,10 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
                 <DropdownMenuItem onClick={handleExportCSS} className="gap-2">
                   <FileCode className="h-4 w-4" />
                   CSS Variables (.css)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportSCSS} className="gap-2">
+                  <FileCode className="h-4 w-4" />
+                  SCSS Variables (.scss)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
