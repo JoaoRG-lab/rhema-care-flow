@@ -1,4 +1,4 @@
- import { useEffect, useState } from 'react';
+ import { useEffect, useState, useCallback } from 'react';
  import { Link } from 'react-router-dom';
  import { AppLayout } from '@/components/layout/AppLayout';
  import { StatCard } from '@/components/ui/StatCard';
@@ -14,6 +14,8 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import { VerificationPrompt } from '@/components/dashboard/VerificationPrompt';
  import { QuickPatientSearch } from '@/components/clinical/QuickPatientSearch';
  import { VoiceNoteButton } from '@/components/clinical/VoiceNoteButton';
+ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+ import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
  import {
    DIAGNOSIS_OPTIONS,
  } from '@/config/clinical';
@@ -42,10 +44,9 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
    const [loading, setLoading] = useState(true);
    const isMobile = useIsMobile();
  
-   useEffect(() => {
+   const fetchData = useCallback(async () => {
      if (!user) return;
- 
-     const fetchData = async () => {
+     
        const today = new Date();
        const nextWeek = addDays(today, 7);
  
@@ -83,10 +84,20 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
        }
  
        setLoading(false);
-     };
- 
-     fetchData();
    }, [user]);
+ 
+   useEffect(() => {
+     if (!user) return;
+     fetchData();
+   }, [user, fetchData]);
+ 
+   // Pull to refresh
+   const { ref: pullRef, pullDistance, isRefreshing, progress, shouldTrigger } = usePullToRefresh<HTMLDivElement>({
+     onRefresh: async () => {
+       await fetchData();
+     },
+     enabled: isMobile,
+   });
  
    const overdueCount = monitoringAlerts.filter(m => 
      isBefore(new Date(m.due_date), new Date())
@@ -139,7 +150,21 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
    return (
      <AppLayout>
-       <div className="p-4 md:p-6 lg:p-8">
+       <div
+         ref={pullRef}
+         className="p-4 md:p-6 lg:p-8 relative overflow-auto"
+         style={{ minHeight: '100%' }}
+       >
+         {/* Pull to Refresh Indicator */}
+         {isMobile && (
+           <PullToRefreshIndicator
+             pullDistance={pullDistance}
+             isRefreshing={isRefreshing}
+             progress={progress}
+             shouldTrigger={shouldTrigger}
+           />
+         )}
+ 
          {/* Header */}
          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
            <div>
