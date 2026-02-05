@@ -55,14 +55,16 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
        const nextWeek = addDays(today, 7);
  
        // Fetch patient cards
-       const { data: patientData } = await supabase
-         .from('patient_cards')
+        // Use secure view for reading patient data with automatic decryption
+        const { data: patientData } = await supabase
+          .from('patient_cards_secure')
          .select('*')
          .eq('user_id', user.id);
  
        // Fetch overdue/upcoming monitoring
-       const { data: monitoringData } = await supabase
-         .from('monitoring_events')
+        // Use secure view for reading monitoring data with automatic decryption
+        const { data: monitoringData } = await supabase
+          .from('monitoring_events_secure')
          .select('*')
          .eq('user_id', user.id)
          .eq('status', 'pending')

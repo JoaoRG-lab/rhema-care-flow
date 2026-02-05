@@ -53,13 +53,13 @@
    const fetchEvents = async () => {
      if (!user) return;
      const { data, error } = await supabase
-       .from('monitoring_events')
+        .from('monitoring_events_secure')
        .select('*')
        .eq('patient_card_id', patientId)
        .eq('user_id', user.id)
        .order('due_date', { ascending: true });
  
-     if (data) setEvents(data);
+      if (data) setEvents(data as MonitoringEvent[]);
      setLoading(false);
    };
  

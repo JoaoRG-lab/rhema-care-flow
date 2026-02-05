@@ -192,7 +192,7 @@ type VerificationFormData = z.infer<typeof clinicalSchema> | z.infer<typeof deve
        }
        
        const { data } = await supabase
-         .from("verification_requests")
+          .from("verification_requests_secure")
          .select("*")
          .eq("user_id", user.id)
          .order("created_at", { ascending: false })

@@ -32,7 +32,7 @@
  
        // Fetch patient followups
        const { data: patients } = await supabase
-         .from('patient_cards')
+          .from('patient_cards_secure')
          .select('id, patient_code, next_followup_date')
          .eq('user_id', user.id)
          .gte('next_followup_date', monthStart)
@@ -53,7 +53,7 @@
  
        // Fetch infusions
        const { data: infusions } = await supabase
-         .from('infusion_events')
+          .from('infusion_events_secure')
          .select('id, drug, next_date')
          .eq('user_id', user.id)
          .gte('next_date', monthStart)
