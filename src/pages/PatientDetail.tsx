@@ -64,6 +64,7 @@
    const handleVisitAdded = () => {
      setRefreshKey(prev => prev + 1);
      setIsAddVisitOpen(false);
+     fetchPatient(); // Refresh patient data to update last_visit_date
    };
  
    if (loading) {
