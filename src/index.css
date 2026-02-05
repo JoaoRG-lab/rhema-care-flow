@@ -195,6 +195,41 @@
      @apply bg-clip-text text-transparent;
      background-image: var(--gradient-primary);
    }
+ 
+   /* Tiptap editor styles */
+   .ProseMirror {
+     @apply focus:outline-none;
+   }
+ 
+   .ProseMirror p.is-editor-empty:first-child::before {
+     @apply text-muted-foreground pointer-events-none float-left h-0;
+     content: attr(data-placeholder);
+   }
+ 
+   .ProseMirror ul,
+   .ProseMirror ol {
+     @apply pl-6 my-2;
+   }
+ 
+   .ProseMirror ul {
+     @apply list-disc;
+   }
+ 
+   .ProseMirror ol {
+     @apply list-decimal;
+   }
+ 
+   .ProseMirror li {
+     @apply my-1;
+   }
+ 
+   .ProseMirror strong {
+     @apply font-bold;
+   }
+ 
+   .ProseMirror em {
+     @apply italic;
+   }
  }
  
  @layer utilities {

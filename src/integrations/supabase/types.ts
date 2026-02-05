@@ -366,6 +366,7 @@ export type Database = {
       visits: {
         Row: {
           actions: string[] | null
+          attachments: string[] | null
           created_at: string
           disease_activity: Json | null
           id: string
@@ -378,6 +379,7 @@ export type Database = {
         }
         Insert: {
           actions?: string[] | null
+          attachments?: string[] | null
           created_at?: string
           disease_activity?: Json | null
           id?: string
@@ -390,6 +392,7 @@ export type Database = {
         }
         Update: {
           actions?: string[] | null
+          attachments?: string[] | null
           created_at?: string
           disease_activity?: Json | null
           id?: string

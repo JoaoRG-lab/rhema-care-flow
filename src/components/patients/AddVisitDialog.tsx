@@ -2,7 +2,8 @@
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
  import { Label } from '@/components/ui/label';
- import { Textarea } from '@/components/ui/textarea';
+ import { RichTextEditor } from '@/components/ui/RichTextEditor';
+ import { FileAttachments } from './FileAttachments';
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +30,7 @@
    const [nextSteps, setNextSteps] = useState('');
    const [diseaseScore, setDiseaseScore] = useState('');
    const [saving, setSaving] = useState(false);
+   const [attachments, setAttachments] = useState<string[]>([]);
  
    const toggleItem = (arr: string[], item: string, setter: (arr: string[]) => void) => {
      if (arr.includes(item)) {
@@ -54,6 +56,7 @@
        imaging,
        next_steps: nextSteps || null,
        disease_activity: diseaseActivity as any,
+       attachments,
      });
  
      // Also update the patient card's last_visit_date
@@ -82,6 +85,7 @@
      setImaging([]);
      setNextSteps('');
      setDiseaseScore('');
+     setAttachments([]);
    };
  
    return (
@@ -173,14 +177,23 @@
  
            <div>
              <Label htmlFor="nextSteps">Next Steps</Label>
-             <Textarea
-               id="nextSteps"
-               value={nextSteps}
-               onChange={(e) => setNextSteps(e.target.value)}
+             <RichTextEditor
+               content={nextSteps}
+               onChange={setNextSteps}
                placeholder="Follow-up plan, pending items..."
-               className="mt-1"
-               rows={3}
+               className="mt-1 min-h-[100px]"
              />
+           </div>
+ 
+           <div>
+             <Label>Attachments</Label>
+             <div className="mt-2">
+               <FileAttachments
+                 attachments={attachments}
+                 onChange={setAttachments}
+                 disabled={saving}
+               />
+             </div>
            </div>
  
            <Button type="submit" className="w-full" disabled={saving}>
