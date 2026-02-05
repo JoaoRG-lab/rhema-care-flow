@@ -34,6 +34,7 @@ import { ACREULARRACalculator } from '@/components/scores/ACREULARRACalculator';
 import { DAS28ComparisonCalculator } from '@/components/scores/DAS28ComparisonCalculator';
 import { SDAICalculator } from '@/components/scores/SDAICalculator';
  import { CASPARCalculator } from '@/components/scores/CASPARCalculator';
+ import { DAPSACalculator } from '@/components/scores/DAPSACalculator';
  import { Alert, AlertDescription } from '@/components/ui/alert';
  import { toast } from 'sonner';
  
@@ -110,6 +111,8 @@ import { SDAICalculator } from '@/components/scores/SDAICalculator';
         return <ACREULARRACalculator />;
        case 'caspar':
          return <CASPARCalculator />;
+       case 'dapsa':
+         return <DAPSACalculator />;
        default:
          return null;
      }
