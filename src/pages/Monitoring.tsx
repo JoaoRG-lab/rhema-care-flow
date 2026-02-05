@@ -9,9 +9,10 @@
  import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
- import { Shield, Plus, Check, Clock, AlertTriangle } from 'lucide-react';
+ import { Shield, Plus, Check, Clock, AlertTriangle, User } from 'lucide-react';
  import { format, isBefore } from 'date-fns';
  import { toast } from 'sonner';
+ import { Link } from 'react-router-dom';
  
  interface MonitoringEvent {
    id: string;
@@ -21,6 +22,12 @@
    completed_at: string | null;
    notes: string | null;
    patient_card_id: string | null;
+   patient_cards?: { patient_code: string } | null;
+ }
+ 
+ interface PatientCard {
+   id: string;
+   patient_code: string;
  }
  
  const EVENT_TYPES = [
@@ -51,6 +58,7 @@
  export default function Monitoring() {
    const { user } = useAuth();
    const [events, setEvents] = useState<MonitoringEvent[]>([]);
+   const [patients, setPatients] = useState<PatientCard[]>([]);
    const [isOpen, setIsOpen] = useState(false);
    const [loading, setLoading] = useState(true);
  
@@ -58,12 +66,13 @@
    const [eventType, setEventType] = useState('');
    const [dueDate, setDueDate] = useState('');
    const [notes, setNotes] = useState('');
+   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
  
    const fetchEvents = async () => {
      if (!user) return;
      const { data, error } = await supabase
        .from('monitoring_events')
-       .select('*')
+       .select('*, patient_cards(patient_code)')
        .eq('user_id', user.id)
        .order('due_date', { ascending: true });
  
@@ -72,8 +81,19 @@
      setLoading(false);
    };
  
+   const fetchPatients = async () => {
+     if (!user) return;
+     const { data } = await supabase
+       .from('patient_cards')
+       .select('id, patient_code')
+       .eq('user_id', user.id)
+       .order('patient_code');
+     if (data) setPatients(data);
+   };
+ 
    useEffect(() => {
      fetchEvents();
+     fetchPatients();
    }, [user]);
  
    const handleSubmit = async (e: React.FormEvent) => {
@@ -86,6 +106,7 @@
        due_date: dueDate,
        notes: notes || null,
        status: 'pending',
+       patient_card_id: selectedPatientId || null,
      });
  
      if (error) {
@@ -96,6 +117,7 @@
        setEventType('');
        setDueDate('');
        setNotes('');
+       setSelectedPatientId('');
        fetchEvents();
      }
    };
@@ -143,6 +165,20 @@
                </DialogHeader>
                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                  <div>
+                     <Label>Patient (Optional)</Label>
+                     <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+                       <SelectTrigger className="mt-1">
+                         <SelectValue placeholder="General (no patient)" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="">General (no patient)</SelectItem>
+                         {patients.map((patient) => (
+                           <SelectItem key={patient.id} value={patient.id}>{patient.patient_code}</SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div>
                    <Label>Event Type</Label>
                    <Select value={eventType} onValueChange={setEventType}>
                      <SelectTrigger className="mt-1">
@@ -227,6 +263,11 @@
                            <p className="text-xs text-muted-foreground">
                              Due: {format(new Date(event.due_date), 'MMM d, yyyy')}
                            </p>
+                             {event.patient_cards && (
+                               <Link to={`/patients/${event.patient_card_id}`} className="text-xs text-primary hover:underline">
+                                 {event.patient_cards.patient_code}
+                               </Link>
+                             )}
                          </div>
                          <Button size="sm" variant="outline" onClick={() => markComplete(event.id)}>
                            <Check className="h-4 w-4" />
@@ -254,6 +295,11 @@
                            <p className="text-xs text-muted-foreground">
                              Due: {format(new Date(event.due_date), 'MMM d, yyyy')}
                            </p>
+                             {event.patient_cards && (
+                               <Link to={`/patients/${event.patient_card_id}`} className="text-xs text-primary hover:underline">
+                                 {event.patient_cards.patient_code}
+                               </Link>
+                             )}
                          </div>
                          <Button size="sm" variant="outline" onClick={() => markComplete(event.id)}>
                            <Check className="h-4 w-4" />
@@ -280,6 +326,11 @@
                            <p className="text-xs text-muted-foreground">
                              Completed: {event.completed_at && format(new Date(event.completed_at), 'MMM d, yyyy')}
                            </p>
+                             {event.patient_cards && (
+                               <Link to={`/patients/${event.patient_card_id}`} className="text-xs text-primary hover:underline">
+                                 {event.patient_cards.patient_code}
+                               </Link>
+                             )}
                          </div>
                          <span className="status-completed text-xs px-2 py-1 rounded-full">Done</span>
                        </div>
