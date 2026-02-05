@@ -5,6 +5,7 @@
  import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
  import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
  import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+ import { PersonaProvider } from "@/contexts/PersonaContext";
  
  // Lazy load pages for code splitting
  const Landing = lazy(() => import("./pages/Landing"));
@@ -25,6 +26,8 @@ const StyleGuide = lazy(() => import("./pages/StyleGuide"));
 const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
  const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+ const AcademicWorkspace = lazy(() => import("./pages/AcademicWorkspace"));
+ const PatientPortal = lazy(() => import("./pages/PatientPortal"));
  
  const queryClient = new QueryClient();
 
@@ -55,6 +58,7 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
        <Sonner />
        <BrowserRouter>
          <AuthProvider>
+           <PersonaProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
@@ -74,9 +78,12 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
                 <Route path="/verification-request" element={<ProtectedRoute><VerificationRequest /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/academic" element={<ProtectedRoute><AcademicWorkspace /></ProtectedRoute>} />
+                <Route path="/patient-portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+           </PersonaProvider>
          </AuthProvider>
        </BrowserRouter>
      </TooltipProvider>

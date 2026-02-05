@@ -14,16 +14,20 @@
    BadgeCheck,
    ShieldCheck,
    User,
+   GraduationCap,
+   Heart,
  } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
  import { useUserRole } from '@/hooks/useUserRole';
  import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+ import { usePersona } from '@/contexts/PersonaContext';
  import { cn } from '@/lib/utils';
  import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import { Avatar, AvatarFallback } from '@/components/ui/avatar';
  import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
  import { Separator } from '@/components/ui/separator';
  import { ScrollArea } from '@/components/ui/scroll-area';
+ import { PersonaSwitcher } from './PersonaSwitcher';
  
  const navItems = [
    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,6 +40,19 @@
    { path: '/focus', label: 'Focus', icon: Timer },
  ];
  
+ const academicNavItems = [
+   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+   { path: '/academic', label: 'Research', icon: GraduationCap },
+   { path: '/patients', label: 'Cohort Data', icon: Users },
+   { path: '/scores', label: 'Calculators', icon: Activity },
+   { path: '/calendar', label: 'Calendar', icon: Calendar },
+ ];
+ 
+ const patientNavItems = [
+   { path: '/patient-portal', label: 'My Health', icon: Heart },
+   { path: '/calendar', label: 'Appointments', icon: Calendar },
+ ];
+ 
  interface MobileSidebarProps {
    open: boolean;
    onOpenChange: (open: boolean) => void;
@@ -46,6 +63,13 @@
    const { signOut, user } = useAuth();
    const { isAdmin } = useUserRole();
    const { tier, fullName, contributorType } = useVerificationStatus();
+   const { persona } = usePersona();
+ 
+   const currentNavItems = persona === 'academic' 
+     ? academicNavItems 
+     : persona === 'patient' 
+       ? patientNavItems 
+       : navItems;
  
    const getInitials = () => {
      if (fullName) {
@@ -75,13 +99,20 @@
      <Sheet open={open} onOpenChange={onOpenChange}>
        <SheetContent side="left" className="w-72 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border">
          <SheetHeader className="px-4 py-4 border-b border-sidebar-border">
-           <SheetTitle className="text-sidebar-foreground text-left">Navigation</SheetTitle>
+           <SheetTitle className="text-sidebar-foreground text-left">
+             {persona === 'academic' ? 'Academic Mode' : persona === 'patient' ? 'Patient Portal' : 'Clinical Workflow'}
+           </SheetTitle>
          </SheetHeader>
          
+         {/* Persona Switcher */}
+         <div className="border-b border-sidebar-border">
+           <PersonaSwitcher variant="sidebar" />
+         </div>
+ 
          <ScrollArea className="flex-1 h-[calc(100vh-180px)]">
            <nav className="py-4 px-3">
              <ul className="space-y-1">
-               {navItems.map((item) => {
+               {currentNavItems.map((item) => {
                  const isActive = location.pathname === item.path;
                  return (
                    <li key={item.path}>
