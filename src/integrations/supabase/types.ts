@@ -370,6 +370,8 @@ export type Database = {
           certification_expiry: string | null
           certifying_body: string | null
           clinical_trial_roles: string | null
+          company_name: string | null
+          contributor_type: string | null
           created_at: string
           department: string | null
           documents: string[] | null
@@ -377,6 +379,7 @@ export type Database = {
           expertise_areas: string[] | null
           expertise_statement: string | null
           full_name: string
+          github_username: string | null
           guideline_contributions: string | null
           id: string
           institution: string | null
@@ -388,12 +391,15 @@ export type Database = {
           moc_status: string | null
           notable_publications: string[] | null
           orcid_id: string | null
+          partnership_type: string | null
+          portfolio_url: string | null
           position: string | null
           publication_count: number | null
           reviewed_at: string | null
           reviewer_notes: string | null
           status: Database["public"]["Enums"]["verification_status"]
           submitted_at: string
+          technical_expertise: string[] | null
           tier: Database["public"]["Enums"]["verification_tier"] | null
           updated_at: string
           user_id: string
@@ -405,6 +411,8 @@ export type Database = {
           certification_expiry?: string | null
           certifying_body?: string | null
           clinical_trial_roles?: string | null
+          company_name?: string | null
+          contributor_type?: string | null
           created_at?: string
           department?: string | null
           documents?: string[] | null
@@ -412,6 +420,7 @@ export type Database = {
           expertise_areas?: string[] | null
           expertise_statement?: string | null
           full_name: string
+          github_username?: string | null
           guideline_contributions?: string | null
           id?: string
           institution?: string | null
@@ -423,12 +432,15 @@ export type Database = {
           moc_status?: string | null
           notable_publications?: string[] | null
           orcid_id?: string | null
+          partnership_type?: string | null
+          portfolio_url?: string | null
           position?: string | null
           publication_count?: number | null
           reviewed_at?: string | null
           reviewer_notes?: string | null
           status?: Database["public"]["Enums"]["verification_status"]
           submitted_at?: string
+          technical_expertise?: string[] | null
           tier?: Database["public"]["Enums"]["verification_tier"] | null
           updated_at?: string
           user_id: string
@@ -440,6 +452,8 @@ export type Database = {
           certification_expiry?: string | null
           certifying_body?: string | null
           clinical_trial_roles?: string | null
+          company_name?: string | null
+          contributor_type?: string | null
           created_at?: string
           department?: string | null
           documents?: string[] | null
@@ -447,6 +461,7 @@ export type Database = {
           expertise_areas?: string[] | null
           expertise_statement?: string | null
           full_name?: string
+          github_username?: string | null
           guideline_contributions?: string | null
           id?: string
           institution?: string | null
@@ -458,12 +473,15 @@ export type Database = {
           moc_status?: string | null
           notable_publications?: string[] | null
           orcid_id?: string | null
+          partnership_type?: string | null
+          portfolio_url?: string | null
           position?: string | null
           publication_count?: number | null
           reviewed_at?: string | null
           reviewer_notes?: string | null
           status?: Database["public"]["Enums"]["verification_status"]
           submitted_at?: string
+          technical_expertise?: string[] | null
           tier?: Database["public"]["Enums"]["verification_tier"] | null
           updated_at?: string
           user_id?: string
@@ -530,7 +548,13 @@ export type Database = {
     }
     Enums: {
       verification_status: "pending" | "under_review" | "approved" | "rejected"
-      verification_tier: "bronze" | "silver" | "gold" | "expert"
+      verification_tier:
+        | "bronze"
+        | "silver"
+        | "gold"
+        | "expert"
+        | "developer"
+        | "partner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -659,7 +683,14 @@ export const Constants = {
   public: {
     Enums: {
       verification_status: ["pending", "under_review", "approved", "rejected"],
-      verification_tier: ["bronze", "silver", "gold", "expert"],
+      verification_tier: [
+        "bronze",
+        "silver",
+        "gold",
+        "expert",
+        "developer",
+        "partner",
+      ],
     },
   },
 } as const
