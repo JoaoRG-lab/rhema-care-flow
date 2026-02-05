@@ -6,6 +6,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
  };
  
+// Rate limit: 20 requests per hour per user
+const RATE_LIMIT_MAX_REQUESTS = 20;
+const RATE_LIMIT_WINDOW_MINUTES = 60;
+
  serve(async (req) => {
    if (req.method === "OPTIONS") {
      return new Response(null, { headers: corsHeaders });
@@ -21,14 +25,21 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
       });
     }
 
-    const supabaseClient = createClient(
+    // Create service role client for rate limiting (bypasses RLS)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Create user client for authenticated operations
+    const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -38,6 +49,37 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
     const userId = claimsData.claims.sub;
     console.log("Analyze trends request from user:", userId);
+
+    // Check rate limit
+    const { data: rateLimitAllowed, error: rateLimitError } = await supabaseAdmin.rpc(
+      "check_rate_limit",
+      {
+        p_user_id: userId,
+        p_endpoint: "analyze-trends",
+        p_max_requests: RATE_LIMIT_MAX_REQUESTS,
+        p_window_minutes: RATE_LIMIT_WINDOW_MINUTES,
+      }
+    );
+
+    if (rateLimitError) {
+      console.error("Rate limit check error:", rateLimitError);
+      // Continue without rate limiting if there's an error checking
+    } else if (!rateLimitAllowed) {
+      console.log("Rate limit exceeded for user:", userId);
+      return new Response(
+        JSON.stringify({
+          error: "Rate limit exceeded. Maximum 20 requests per hour. Please try again later.",
+        }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": "3600",
+          },
+        }
+      );
+    }
 
      const { scores, patientCode, diagnosisTags } = await req.json();
      
