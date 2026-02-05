@@ -332,7 +332,8 @@
      description: 'American College of Rheumatology improvement criteria',
      category: 'monitoring',
      diseases: ['ra'],
-     implemented: false,
+     implemented: true,
+     reference: 'Felson et al. 1995',
    },
    {
      id: 'asas-response',
