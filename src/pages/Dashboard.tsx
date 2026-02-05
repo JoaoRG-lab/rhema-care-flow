@@ -14,6 +14,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import { VerificationPrompt } from '@/components/dashboard/VerificationPrompt';
  import { QuickPatientSearch } from '@/components/clinical/QuickPatientSearch';
  import { VoiceNoteButton } from '@/components/clinical/VoiceNoteButton';
+ import { ContributeKnowledge } from '@/components/dashboard/ContributeKnowledge';
  import { usePullToRefresh } from '@/hooks/usePullToRefresh';
  import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
  import {
@@ -386,6 +387,9 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
                </div>
              </CardContent>
            </Card>
+
+           {/* Contribute Knowledge */}
+           <ContributeKnowledge />
          </div>
        </div>
      </AppLayout>
