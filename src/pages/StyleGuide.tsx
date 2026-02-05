@@ -9,9 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
  import { Label } from "@/components/ui/label";
  import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Info, AlertTriangle, Sun, Moon, Monitor } from "lucide-react";
-import { Download, FileJson } from "lucide-react";
+import { Download, FileJson, Copy, Check } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 const DESIGN_TOKENS_JSON = {
@@ -199,25 +200,86 @@ const STYLE_GUIDE_MARKDOWN = `# RheumaFlow Design System
 *Generated: ${new Date().toLocaleDateString()}*
 `;
  
- const ColorSwatch = ({ name, variable, description }: { name: string; variable: string; description?: string }) => (
-   <div className="flex items-center gap-3 p-2">
-     <div 
-       className="w-12 h-12 rounded-lg border shadow-sm flex-shrink-0" 
-       style={{ backgroundColor: `hsl(var(${variable}))` }}
-     />
-     <div>
-       <p className="font-medium text-sm">{name}</p>
-       <p className="text-xs text-muted-foreground font-mono">{variable}</p>
-       {description && <p className="text-xs text-muted-foreground">{description}</p>}
-     </div>
-   </div>
- );
+const CopyButton = ({ value, label }: { value: string; label?: string }) => {
+  const [copied, setCopied] = useState(false);
+  
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    toast.success(`Copied ${label || value}`);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleCopy}
+          >
+            {copied ? (
+              <Check className="h-3 w-3 text-success" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{copied ? "Copied!" : `Copy ${label || value}`}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+const ColorSwatch = ({ name, variable, description }: { name: string; variable: string; description?: string }) => (
+  <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
+    <div 
+      className="w-12 h-12 rounded-lg border shadow-sm flex-shrink-0" 
+      style={{ backgroundColor: `hsl(var(${variable}))` }}
+    />
+    <div className="flex-1 min-w-0">
+      <p className="font-medium text-sm">{name}</p>
+      <p className="text-xs text-muted-foreground font-mono">{variable}</p>
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
+    </div>
+    <CopyButton value={variable} label="CSS variable" />
+  </div>
+);
  
- const DiseaseTag = ({ className, label }: { className: string; label: string }) => (
-   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${className}`}>
-     {label}
-   </span>
- );
+const DiseaseTag = ({ className, label }: { className: string; label: string }) => (
+  <div className="group inline-flex items-center gap-1">
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${className}`}>
+      {label}
+    </span>
+    <CopyButton value={className} label="class" />
+  </div>
+);
+
+const SpacingRow = ({ value, px, desc }: { value: string; px: string; desc: string }) => (
+  <div className="group flex items-center gap-4 p-1 rounded-md hover:bg-muted/50 transition-colors">
+    <div 
+      className="bg-primary h-4 rounded" 
+      style={{ width: `${parseInt(px)}px` }}
+    />
+    <span className="font-mono text-sm w-16">gap-{value}</span>
+    <span className="text-sm text-muted-foreground flex-1">{px} - {desc}</span>
+    <CopyButton value={`gap-${value}`} label="class" />
+  </div>
+);
+
+const ShadowCard = ({ name, description }: { name: string; description: string }) => (
+  <div className={`group relative p-6 bg-card rounded-lg ${name} border`}>
+    <p className="font-medium">{name}</p>
+    <p className="text-sm text-muted-foreground">{description}</p>
+    <div className="absolute top-2 right-2">
+      <CopyButton value={name} label="class" />
+    </div>
+  </div>
+);
  
  export default function StyleGuide() {
   const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
@@ -521,18 +583,9 @@ const STYLE_GUIDE_MARKDOWN = `# RheumaFlow Design System
            </div>
  
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             <div className="p-6 bg-card rounded-lg shadow-soft border">
-               <p className="font-medium">shadow-soft</p>
-               <p className="text-sm text-muted-foreground">Subtle cards</p>
-             </div>
-             <div className="p-6 bg-card rounded-lg shadow-medium border">
-               <p className="font-medium">shadow-medium</p>
-               <p className="text-sm text-muted-foreground">Elevated elements</p>
-             </div>
-             <div className="p-6 bg-card rounded-lg shadow-elevated border">
-               <p className="font-medium">shadow-elevated</p>
-               <p className="text-sm text-muted-foreground">Modals, dropdowns</p>
-             </div>
+             <ShadowCard name="shadow-soft" description="Subtle cards" />
+             <ShadowCard name="shadow-medium" description="Elevated elements" />
+             <ShadowCard name="shadow-elevated" description="Modals, dropdowns" />
            </div>
          </section>
  
@@ -688,22 +741,11 @@ const STYLE_GUIDE_MARKDOWN = `# RheumaFlow Design System
            <Card>
              <CardContent className="pt-6">
                <div className="space-y-3">
-                 {[
-                   { value: "2", px: "8px", desc: "Tight spacing" },
-                   { value: "3", px: "12px", desc: "Compact elements" },
-                   { value: "4", px: "16px", desc: "Standard gap" },
-                   { value: "6", px: "24px", desc: "Section spacing" },
-                   { value: "8", px: "32px", desc: "Large sections" },
-                 ].map((item) => (
-                   <div key={item.value} className="flex items-center gap-4">
-                     <div 
-                       className="bg-primary h-4 rounded" 
-                       style={{ width: `${parseInt(item.px)}px` }}
-                     />
-                     <span className="font-mono text-sm w-16">gap-{item.value}</span>
-                     <span className="text-sm text-muted-foreground">{item.px} - {item.desc}</span>
-                   </div>
-                 ))}
+                  <SpacingRow value="2" px="8px" desc="Tight spacing" />
+                  <SpacingRow value="3" px="12px" desc="Compact elements" />
+                  <SpacingRow value="4" px="16px" desc="Standard gap" />
+                  <SpacingRow value="6" px="24px" desc="Section spacing" />
+                  <SpacingRow value="8" px="32px" desc="Large sections" />
                </div>
              </CardContent>
            </Card>
