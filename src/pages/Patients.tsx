@@ -10,6 +10,7 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { Plus, Search, Calendar, User } from 'lucide-react';
+ import { useNavigate } from 'react-router-dom';
  import { format } from 'date-fns';
  import { toast } from 'sonner';
  
@@ -32,6 +33,7 @@
  
  export default function Patients() {
    const { user } = useAuth();
+   const navigate = useNavigate();
    const [patients, setPatients] = useState<PatientCard[]>([]);
    const [searchQuery, setSearchQuery] = useState('');
    const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
@@ -274,7 +276,11 @@
          ) : (
            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
              {filteredPatients.map((patient) => (
-               <Card key={patient.id} className="hover:shadow-md transition-shadow cursor-pointer">
+               <Card 
+                 key={patient.id} 
+                 className="hover:shadow-md transition-shadow cursor-pointer"
+                 onClick={() => navigate(`/patients/${patient.id}`)}
+               >
                  <CardHeader className="pb-2">
                    <div className="flex items-center justify-between">
                      <CardTitle className="text-base">{patient.patient_code}</CardTitle>

@@ -17,6 +17,7 @@
  import Focus from "./pages/Focus";
  import Settings from "./pages/Settings";
  import NotFound from "./pages/NotFound";
+ import PatientDetail from "./pages/PatientDetail";
  
  const queryClient = new QueryClient();
  
@@ -47,6 +48,7 @@
              <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
              <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+             <Route path="/patients/:id" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
              <Route path="/scores" element={<ProtectedRoute><Scores /></ProtectedRoute>} />
              <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
              <Route path="/infusions" element={<ProtectedRoute><Infusions /></ProtectedRoute>} />
