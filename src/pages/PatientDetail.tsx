@@ -7,14 +7,15 @@
  import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
- import { ArrowLeft, Calendar, Plus, Activity, ClipboardList, TrendingUp } from 'lucide-react';
- import { Shield } from 'lucide-react';
+ import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2 } from 'lucide-react';
  import { format } from 'date-fns';
  import { toast } from 'sonner';
  import { VisitHistory } from '@/components/patients/VisitHistory';
  import { ScoreTrends } from '@/components/patients/ScoreTrends';
  import { AddVisitDialog } from '@/components/patients/AddVisitDialog';
  import { PatientMonitoring } from '@/components/patients/PatientMonitoring';
+ import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
+ import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
  
  interface PatientCard {
    id: string;
@@ -37,6 +38,8 @@
    const [loading, setLoading] = useState(true);
    const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
    const [refreshKey, setRefreshKey] = useState(0);
+   const [isEditOpen, setIsEditOpen] = useState(false);
+   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
  
    const fetchPatient = async () => {
      if (!user || !id) return;
@@ -67,6 +70,14 @@
      setRefreshKey(prev => prev + 1);
      setIsAddVisitOpen(false);
      fetchPatient(); // Refresh patient data to update last_visit_date
+   };
+   
+   const handlePatientUpdated = () => {
+     fetchPatient();
+   };
+ 
+   const handlePatientDeleted = () => {
+     navigate('/patients');
    };
  
    if (loading) {
@@ -110,12 +121,22 @@
                  ))}
                </div>
              </div>
-             <AddVisitDialog 
-               patientId={patient.id} 
-               open={isAddVisitOpen} 
-               onOpenChange={setIsAddVisitOpen}
-               onVisitAdded={handleVisitAdded}
-             />
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setIsDeleteOpen(true)} className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+                <AddVisitDialog 
+                  patientId={patient.id} 
+                  open={isAddVisitOpen} 
+                  onOpenChange={setIsAddVisitOpen}
+                  onVisitAdded={handleVisitAdded}
+                />
+              </div>
            </div>
          </div>
  
@@ -213,6 +234,21 @@
              <PatientMonitoring patientId={patient.id} refreshKey={refreshKey} />
            </TabsContent>
          </Tabs>
+           
+           <EditPatientDialog 
+             patient={patient} 
+             open={isEditOpen} 
+             onOpenChange={setIsEditOpen}
+             onPatientUpdated={handlePatientUpdated}
+           />
+           
+           <DeletePatientDialog
+             patientId={patient.id}
+             patientCode={patient.patient_code}
+             open={isDeleteOpen}
+             onOpenChange={setIsDeleteOpen}
+             onDeleted={handlePatientDeleted}
+           />
        </div>
      </AppLayout>
    );
