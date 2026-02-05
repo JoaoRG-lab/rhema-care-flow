@@ -9,9 +9,93 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
  import { Label } from "@/components/ui/label";
  import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Info, AlertTriangle, Sun, Moon, Monitor } from "lucide-react";
-import { Download } from "lucide-react";
+import { Download, FileJson } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+
+const DESIGN_TOKENS_JSON = {
+  "$schema": "https://design-tokens.org/schema.json",
+  "name": "RheumaFlow Design Tokens",
+  "version": "1.0.0",
+  "color": {
+    "core": {
+      "background": { "value": "hsl(210, 20%, 98%)", "type": "color" },
+      "foreground": { "value": "hsl(215, 25%, 15%)", "type": "color" },
+      "card": { "value": "hsl(0, 0%, 100%)", "type": "color" },
+      "muted": { "value": "hsl(210, 15%, 95%)", "type": "color" },
+      "mutedForeground": { "value": "hsl(215, 15%, 45%)", "type": "color" },
+      "border": { "value": "hsl(210, 20%, 88%)", "type": "color" },
+      "ring": { "value": "hsl(185, 65%, 35%)", "type": "color" }
+    },
+    "brand": {
+      "primary": { "value": "hsl(185, 65%, 30%)", "type": "color" },
+      "primaryForeground": { "value": "hsl(0, 0%, 100%)", "type": "color" },
+      "accent": { "value": "hsl(185, 55%, 92%)", "type": "color" },
+      "accentForeground": { "value": "hsl(185, 65%, 25%)", "type": "color" },
+      "secondary": { "value": "hsl(210, 15%, 93%)", "type": "color" },
+      "secondaryForeground": { "value": "hsl(215, 25%, 25%)", "type": "color" }
+    },
+    "disease": {
+      "ra": { "value": "hsl(210, 75%, 50%)", "type": "color", "description": "Rheumatoid Arthritis" },
+      "sle": { "value": "hsl(280, 60%, 55%)", "type": "color", "description": "Lupus" },
+      "spa": { "value": "hsl(185, 65%, 40%)", "type": "color", "description": "Spondyloarthritis" },
+      "psa": { "value": "hsl(35, 90%, 50%)", "type": "color", "description": "Psoriatic Arthritis" },
+      "vasculitis": { "value": "hsl(0, 65%, 50%)", "type": "color", "description": "Vasculitis" },
+      "fm": { "value": "hsl(320, 55%, 55%)", "type": "color", "description": "Fibromyalgia" }
+    },
+    "status": {
+      "success": { "value": "hsl(150, 60%, 40%)", "type": "color" },
+      "warning": { "value": "hsl(40, 90%, 50%)", "type": "color" },
+      "info": { "value": "hsl(200, 75%, 50%)", "type": "color" },
+      "destructive": { "value": "hsl(0, 72%, 51%)", "type": "color" }
+    },
+    "sidebar": {
+      "background": { "value": "hsl(215, 25%, 15%)", "type": "color" },
+      "foreground": { "value": "hsl(210, 20%, 90%)", "type": "color" },
+      "primary": { "value": "hsl(185, 65%, 45%)", "type": "color" },
+      "accent": { "value": "hsl(215, 25%, 22%)", "type": "color" }
+    }
+  },
+  "spacing": {
+    "xs": { "value": "4px", "type": "spacing" },
+    "sm": { "value": "8px", "type": "spacing" },
+    "md": { "value": "12px", "type": "spacing" },
+    "base": { "value": "16px", "type": "spacing" },
+    "lg": { "value": "24px", "type": "spacing" },
+    "xl": { "value": "32px", "type": "spacing" },
+    "2xl": { "value": "48px", "type": "spacing" }
+  },
+  "borderRadius": {
+    "sm": { "value": "4px", "type": "borderRadius" },
+    "md": { "value": "6px", "type": "borderRadius" },
+    "lg": { "value": "8px", "type": "borderRadius" },
+    "full": { "value": "9999px", "type": "borderRadius" }
+  },
+  "typography": {
+    "fontFamily": { "sans": { "value": "Inter, system-ui, sans-serif", "type": "fontFamily" } },
+    "fontSize": {
+      "xs": { "value": "12px", "type": "fontSize" },
+      "sm": { "value": "14px", "type": "fontSize" },
+      "base": { "value": "16px", "type": "fontSize" },
+      "lg": { "value": "18px", "type": "fontSize" },
+      "xl": { "value": "20px", "type": "fontSize" },
+      "2xl": { "value": "24px", "type": "fontSize" },
+      "4xl": { "value": "36px", "type": "fontSize" }
+    },
+    "fontWeight": {
+      "normal": { "value": "400", "type": "fontWeight" },
+      "medium": { "value": "500", "type": "fontWeight" },
+      "semibold": { "value": "600", "type": "fontWeight" },
+      "bold": { "value": "700", "type": "fontWeight" }
+    }
+  },
+  "shadow": {
+    "soft": { "value": "0 2px 8px -2px rgba(0, 0, 0, 0.08)", "type": "boxShadow" },
+    "medium": { "value": "0 4px 16px -4px rgba(0, 0, 0, 0.1)", "type": "boxShadow" },
+    "elevated": { "value": "0 8px 32px -8px rgba(0, 0, 0, 0.12)", "type": "boxShadow" }
+  }
+};
 
 const STYLE_GUIDE_MARKDOWN = `# RheumaFlow Design System
 
@@ -152,6 +236,19 @@ const STYLE_GUIDE_MARKDOWN = `# RheumaFlow Design System
     toast.success("Style guide exported successfully");
   };
 
+  const handleExportJSON = () => {
+    const blob = new Blob([JSON.stringify(DESIGN_TOKENS_JSON, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "design-tokens.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Design tokens JSON exported for Figma");
+  };
+
   useEffect(() => {
     const root = document.documentElement;
     
@@ -211,10 +308,24 @@ const STYLE_GUIDE_MARKDOWN = `# RheumaFlow Design System
             <Badge variant={resolvedTheme === "dark" ? "secondary" : "outline"} className="ml-2">
               {resolvedTheme === "dark" ? "Dark Mode" : "Light Mode"}
             </Badge>
-            <Button variant="outline" size="sm" className="gap-2 ml-2" onClick={handleExport}>
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 ml-2">
+                  <Download className="h-4 w-4" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExport} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Markdown (.md)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportJSON} className="gap-2">
+                  <FileJson className="h-4 w-4" />
+                  Design Tokens (.json)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
          </div>
  

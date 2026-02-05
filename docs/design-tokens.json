@@ -1,0 +1,370 @@
+ {
+   "$schema": "https://design-tokens.org/schema.json",
+   "name": "RheumaFlow Design Tokens",
+   "version": "1.0.0",
+   "description": "Design tokens for RheumaFlow - Medical-Tech Professional Theme",
+   "color": {
+     "core": {
+       "background": {
+         "value": "hsl(210, 20%, 98%)",
+         "type": "color",
+         "description": "Page backgrounds"
+       },
+       "foreground": {
+         "value": "hsl(215, 25%, 15%)",
+         "type": "color",
+         "description": "Primary text"
+       },
+       "card": {
+         "value": "hsl(0, 0%, 100%)",
+         "type": "color",
+         "description": "Card surfaces"
+       },
+       "cardForeground": {
+         "value": "hsl(215, 25%, 15%)",
+         "type": "color",
+         "description": "Card text"
+       },
+       "muted": {
+         "value": "hsl(210, 15%, 95%)",
+         "type": "color",
+         "description": "Subtle backgrounds"
+       },
+       "mutedForeground": {
+         "value": "hsl(215, 15%, 45%)",
+         "type": "color",
+         "description": "Secondary text"
+       },
+       "border": {
+         "value": "hsl(210, 20%, 88%)",
+         "type": "color",
+         "description": "Borders and dividers"
+       },
+       "input": {
+         "value": "hsl(210, 20%, 88%)",
+         "type": "color",
+         "description": "Input borders"
+       },
+       "ring": {
+         "value": "hsl(185, 65%, 35%)",
+         "type": "color",
+         "description": "Focus rings"
+       }
+     },
+     "brand": {
+       "primary": {
+         "value": "hsl(185, 65%, 30%)",
+         "type": "color",
+         "description": "Deep Teal - Main brand color"
+       },
+       "primaryForeground": {
+         "value": "hsl(0, 0%, 100%)",
+         "type": "color",
+         "description": "Text on primary"
+       },
+       "accent": {
+         "value": "hsl(185, 55%, 92%)",
+         "type": "color",
+         "description": "Soft Cyan - Highlights"
+       },
+       "accentForeground": {
+         "value": "hsl(185, 65%, 25%)",
+         "type": "color",
+         "description": "Text on accent"
+       },
+       "secondary": {
+         "value": "hsl(210, 15%, 93%)",
+         "type": "color",
+         "description": "Secondary actions"
+       },
+       "secondaryForeground": {
+         "value": "hsl(215, 25%, 25%)",
+         "type": "color",
+         "description": "Text on secondary"
+       }
+     },
+     "disease": {
+       "ra": {
+         "value": "hsl(210, 75%, 50%)",
+         "type": "color",
+         "description": "Rheumatoid Arthritis - Blue"
+       },
+       "sle": {
+         "value": "hsl(280, 60%, 55%)",
+         "type": "color",
+         "description": "Systemic Lupus Erythematosus - Purple"
+       },
+       "spa": {
+         "value": "hsl(185, 65%, 40%)",
+         "type": "color",
+         "description": "Spondyloarthritis - Teal"
+       },
+       "psa": {
+         "value": "hsl(35, 90%, 50%)",
+         "type": "color",
+         "description": "Psoriatic Arthritis - Amber"
+       },
+       "vasculitis": {
+         "value": "hsl(0, 65%, 50%)",
+         "type": "color",
+         "description": "Vasculitis - Rose"
+       },
+       "fm": {
+         "value": "hsl(320, 55%, 55%)",
+         "type": "color",
+         "description": "Fibromyalgia - Pink"
+       }
+     },
+     "status": {
+       "success": {
+         "value": "hsl(150, 60%, 40%)",
+         "type": "color",
+         "description": "Success states"
+       },
+       "warning": {
+         "value": "hsl(40, 90%, 50%)",
+         "type": "color",
+         "description": "Warning states"
+       },
+       "info": {
+         "value": "hsl(200, 75%, 50%)",
+         "type": "color",
+         "description": "Informational"
+       },
+       "destructive": {
+         "value": "hsl(0, 72%, 51%)",
+         "type": "color",
+         "description": "Errors, deletions"
+       },
+       "destructiveForeground": {
+         "value": "hsl(0, 0%, 100%)",
+         "type": "color",
+         "description": "Text on destructive"
+       }
+     },
+     "sidebar": {
+       "background": {
+         "value": "hsl(215, 25%, 15%)",
+         "type": "color",
+         "description": "Sidebar background"
+       },
+       "foreground": {
+         "value": "hsl(210, 20%, 90%)",
+         "type": "color",
+         "description": "Sidebar text"
+       },
+       "primary": {
+         "value": "hsl(185, 65%, 45%)",
+         "type": "color",
+         "description": "Active sidebar items"
+       },
+       "accent": {
+         "value": "hsl(215, 25%, 22%)",
+         "type": "color",
+         "description": "Sidebar hover states"
+       },
+       "border": {
+         "value": "hsl(215, 25%, 25%)",
+         "type": "color",
+         "description": "Sidebar dividers"
+       }
+     },
+     "dark": {
+       "background": {
+         "value": "hsl(215, 30%, 10%)",
+         "type": "color",
+         "description": "Dark mode background"
+       },
+       "foreground": {
+         "value": "hsl(210, 20%, 95%)",
+         "type": "color",
+         "description": "Dark mode text"
+       },
+       "primary": {
+         "value": "hsl(185, 60%, 45%)",
+         "type": "color",
+         "description": "Dark mode primary"
+       },
+       "card": {
+         "value": "hsl(215, 30%, 14%)",
+         "type": "color",
+         "description": "Dark mode cards"
+       },
+       "muted": {
+         "value": "hsl(215, 25%, 18%)",
+         "type": "color",
+         "description": "Dark mode muted"
+       }
+     }
+   },
+   "spacing": {
+     "xs": {
+       "value": "4px",
+       "type": "spacing",
+       "description": "Extra small spacing"
+     },
+     "sm": {
+       "value": "8px",
+       "type": "spacing",
+       "description": "Small spacing - tight padding"
+     },
+     "md": {
+       "value": "12px",
+       "type": "spacing",
+       "description": "Medium spacing - compact elements"
+     },
+     "base": {
+       "value": "16px",
+       "type": "spacing",
+       "description": "Base spacing - standard gap"
+     },
+     "lg": {
+       "value": "24px",
+       "type": "spacing",
+       "description": "Large spacing - section spacing"
+     },
+     "xl": {
+       "value": "32px",
+       "type": "spacing",
+       "description": "Extra large spacing"
+     },
+     "2xl": {
+       "value": "48px",
+       "type": "spacing",
+       "description": "2x large spacing"
+     },
+     "3xl": {
+       "value": "64px",
+       "type": "spacing",
+       "description": "3x large spacing"
+     }
+   },
+   "borderRadius": {
+     "sm": {
+       "value": "4px",
+       "type": "borderRadius",
+       "description": "Small radius"
+     },
+     "md": {
+       "value": "6px",
+       "type": "borderRadius",
+       "description": "Medium radius"
+     },
+     "lg": {
+       "value": "8px",
+       "type": "borderRadius",
+       "description": "Large radius (default)"
+     },
+     "full": {
+       "value": "9999px",
+       "type": "borderRadius",
+       "description": "Fully rounded"
+     }
+   },
+   "typography": {
+     "fontFamily": {
+       "sans": {
+         "value": "Inter, system-ui, sans-serif",
+         "type": "fontFamily",
+         "description": "Primary font stack"
+       }
+     },
+     "fontSize": {
+       "xs": {
+         "value": "12px",
+         "type": "fontSize",
+         "description": "Caption text"
+       },
+       "sm": {
+         "value": "14px",
+         "type": "fontSize",
+         "description": "Small text"
+       },
+       "base": {
+         "value": "16px",
+         "type": "fontSize",
+         "description": "Body text"
+       },
+       "lg": {
+         "value": "18px",
+         "type": "fontSize",
+         "description": "H4 heading"
+       },
+       "xl": {
+         "value": "20px",
+         "type": "fontSize",
+         "description": "H3 heading"
+       },
+       "2xl": {
+         "value": "24px",
+         "type": "fontSize",
+         "description": "H2 heading"
+       },
+       "4xl": {
+         "value": "36px",
+         "type": "fontSize",
+         "description": "H1 heading"
+       }
+     },
+     "fontWeight": {
+       "normal": {
+         "value": "400",
+         "type": "fontWeight"
+       },
+       "medium": {
+         "value": "500",
+         "type": "fontWeight"
+       },
+       "semibold": {
+         "value": "600",
+         "type": "fontWeight"
+       },
+       "bold": {
+         "value": "700",
+         "type": "fontWeight"
+       }
+     },
+     "lineHeight": {
+       "tight": {
+         "value": "1.25",
+         "type": "lineHeight"
+       },
+       "normal": {
+         "value": "1.5",
+         "type": "lineHeight"
+       },
+       "relaxed": {
+         "value": "1.75",
+         "type": "lineHeight"
+       }
+     },
+     "letterSpacing": {
+       "tight": {
+         "value": "-0.025em",
+         "type": "letterSpacing",
+         "description": "Heading tracking"
+       },
+       "normal": {
+         "value": "0",
+         "type": "letterSpacing"
+       }
+     }
+   },
+   "shadow": {
+     "soft": {
+       "value": "0 2px 8px -2px rgba(0, 0, 0, 0.08)",
+       "type": "boxShadow",
+       "description": "Subtle cards"
+     },
+     "medium": {
+       "value": "0 4px 16px -4px rgba(0, 0, 0, 0.1)",
+       "type": "boxShadow",
+       "description": "Elevated elements"
+     },
+     "elevated": {
+       "value": "0 8px 32px -8px rgba(0, 0, 0, 0.12)",
+       "type": "boxShadow",
+       "description": "Modals, dropdowns"
+     }
+   }
+ }
