@@ -1,13 +1,23 @@
  import { useState } from "react";
- import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+ import {
+   Dialog,
+   DialogContent,
+   DialogDescription,
+   DialogFooter,
+   DialogHeader,
+   DialogTitle,
+   DialogTrigger,
+ } from "@/components/ui/dialog";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
  import { Textarea } from "@/components/ui/textarea";
- import { MessageSquare, Send, Loader2 } from "lucide-react";
+ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+ import { MessageSquare, Send, Loader2, FileText, PenLine } from "lucide-react";
  import { supabase } from "@/integrations/supabase/client";
  import { toast } from "sonner";
  import { z } from "zod";
+ import { SMSTemplateSelector } from "./SMSTemplateSelector";
  
  const phoneSchema = z.string()
    .min(10, "Phone number must be at least 10 digits")
@@ -22,14 +32,21 @@
    patientCode?: string;
    defaultPhone?: string;
    trigger?: React.ReactNode;
+   defaultValues?: Record<string, string>;
  }
  
- export function SendSMSDialog({ patientCode, defaultPhone = "", trigger }: SendSMSDialogProps) {
+ export function SendSMSDialog({
+   patientCode,
+   defaultPhone = "",
+   trigger,
+   defaultValues = {},
+ }: SendSMSDialogProps) {
    const [open, setOpen] = useState(false);
    const [phone, setPhone] = useState(defaultPhone);
    const [message, setMessage] = useState("");
    const [sending, setSending] = useState(false);
    const [errors, setErrors] = useState<{ phone?: string; message?: string }>({});
+   const [mode, setMode] = useState<"template" | "custom">("template");
  
    const validateForm = () => {
      const newErrors: { phone?: string; message?: string } = {};
@@ -81,6 +98,11 @@
    const charCount = message.length;
    const smsSegments = Math.ceil(charCount / 160) || 1;
  
+   const handleTemplateSelect = (templateMessage: string) => {
+     setMessage(templateMessage);
+     setMode("custom"); // Switch to custom to show the filled message
+   };
+ 
    return (
      <Dialog open={open} onOpenChange={setOpen}>
        <DialogTrigger asChild>
@@ -105,7 +127,7 @@
            </DialogDescription>
          </DialogHeader>
          
-         <div className="space-y-4 py-4">
+         <div className="space-y-4 py-2">
            <div className="space-y-2">
              <Label htmlFor="phone">Phone Number</Label>
              <Input
@@ -122,32 +144,49 @@
              {errors.phone && (
                <p className="text-sm text-destructive">{errors.phone}</p>
              )}
-             <p className="text-xs text-muted-foreground">
-               Use E.164 format (e.g., +1234567890)
-             </p>
            </div>
  
-           <div className="space-y-2">
-             <Label htmlFor="message">Message</Label>
-             <Textarea
-               id="message"
-               placeholder="Enter your message..."
-               value={message}
-               onChange={(e) => {
-                 setMessage(e.target.value);
-                 if (errors.message) setErrors((prev) => ({ ...prev, message: undefined }));
-               }}
-               className={`min-h-[120px] ${errors.message ? "border-destructive" : ""}`}
-               maxLength={1600}
-             />
-             {errors.message && (
-               <p className="text-sm text-destructive">{errors.message}</p>
-             )}
-             <div className="flex justify-between text-xs text-muted-foreground">
-               <span>{charCount}/1600 characters</span>
-               <span>{smsSegments} SMS segment{smsSegments > 1 ? "s" : ""}</span>
-             </div>
-           </div>
+           <Tabs value={mode} onValueChange={(v) => setMode(v as "template" | "custom")}>
+             <TabsList className="grid w-full grid-cols-2">
+               <TabsTrigger value="template" className="gap-2">
+                 <FileText className="h-4 w-4" />
+                 Templates
+               </TabsTrigger>
+               <TabsTrigger value="custom" className="gap-2">
+                 <PenLine className="h-4 w-4" />
+                 Custom
+               </TabsTrigger>
+             </TabsList>
+ 
+             <TabsContent value="template" className="mt-3">
+               <SMSTemplateSelector
+                 onSelect={handleTemplateSelect}
+                 defaultValues={defaultValues}
+               />
+             </TabsContent>
+ 
+             <TabsContent value="custom" className="mt-3 space-y-2">
+               <Label htmlFor="message">Message</Label>
+               <Textarea
+                 id="message"
+                 placeholder="Enter your message..."
+                 value={message}
+                 onChange={(e) => {
+                   setMessage(e.target.value);
+                   if (errors.message) setErrors((prev) => ({ ...prev, message: undefined }));
+                 }}
+                 className={`min-h-[120px] ${errors.message ? "border-destructive" : ""}`}
+                 maxLength={1600}
+               />
+               {errors.message && (
+                 <p className="text-sm text-destructive">{errors.message}</p>
+               )}
+               <div className="flex justify-between text-xs text-muted-foreground">
+                 <span>{charCount}/1600 characters</span>
+                 <span>{smsSegments} SMS segment{smsSegments > 1 ? "s" : ""}</span>
+               </div>
+             </TabsContent>
+           </Tabs>
          </div>
  
          <DialogFooter>
