@@ -1,17 +1,5 @@
  import { cn } from '@/lib/utils';
- 
- const tagStyles: Record<string, string> = {
-   RA: 'tag-ra',
-   SLE: 'tag-sle',
-   SpA: 'tag-spa',
-   PsA: 'tag-psa',
-   Vasculitis: 'tag-vasculitis',
-   FM: 'tag-fm',
-   biologic: 'tag-biologic',
-   infusion: 'tag-infusion',
-   pregnancy: 'tag-pregnancy',
-   infection: 'tag-infection',
- };
+ import { TAG_STYLES } from '@/config/clinical';
  
  interface DiagnosisTagProps {
    tag: string;
@@ -21,7 +9,7 @@
  }
  
  export function DiagnosisTag({ tag, size = 'sm', onClick, selected }: DiagnosisTagProps) {
-   const styleClass = tagStyles[tag] || 'bg-muted text-muted-foreground border-border';
+   const styleClass = TAG_STYLES[tag] || 'bg-muted text-muted-foreground border-border';
    
    return (
      <span

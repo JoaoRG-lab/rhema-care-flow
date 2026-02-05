@@ -11,6 +11,7 @@
  import { Shield, Plus, Check, Clock, AlertTriangle } from 'lucide-react';
  import { format, isBefore } from 'date-fns';
  import { toast } from 'sonner';
+ import { EVENT_TYPES } from '@/config/clinical';
  
  interface MonitoringEvent {
    id: string;
@@ -25,21 +26,6 @@
    patientId: string;
    refreshKey?: number;
  }
- 
- const EVENT_TYPES = [
-   'CBC',
-   'LFTs',
-   'Creatinine',
-   'Lipid Panel',
-   'TB Screening',
-   'HBV Screening',
-   'HCV Screening',
-   'Flu Vaccine',
-   'Pneumococcal Vaccine',
-   'COVID Vaccine',
-   'Eye Exam (HCQ)',
-   'Chest X-ray',
- ];
  
  export function PatientMonitoring({ patientId, refreshKey }: PatientMonitoringProps) {
    const { user } = useAuth();

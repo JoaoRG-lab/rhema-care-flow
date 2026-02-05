@@ -7,18 +7,9 @@
  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
  import { useInfusions, InfusionEvent } from '@/hooks/useInfusions';
+ import { BIOLOGIC_DRUGS } from '@/config/clinical';
  import { Syringe, Plus, Calendar, Clock } from 'lucide-react';
  import { format, differenceInDays } from 'date-fns';
- 
- const BIOLOGIC_DRUGS = [
-   { name: 'Infliximab', defaultInterval: 56 },
-   { name: 'Rituximab', defaultInterval: 180 },
-   { name: 'Abatacept IV', defaultInterval: 28 },
-   { name: 'Tocilizumab IV', defaultInterval: 28 },
-   { name: 'Belimumab', defaultInterval: 28 },
-   { name: 'Secukinumab', defaultInterval: 28 },
-   { name: 'Vedolizumab', defaultInterval: 56 },
- ];
  
  export default function Infusions() {
    const { infusions, loading, createInfusion, markCompleted } = useInfusions();

@@ -12,6 +12,9 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
  import { VerificationPrompt } from '@/components/dashboard/VerificationPrompt';
  import {
+   DIAGNOSIS_OPTIONS,
+ } from '@/config/clinical';
+ import {
    Users,
    AlertTriangle,
    Calendar,
@@ -331,7 +334,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
              </CardHeader>
              <CardContent>
                <div className="flex flex-wrap gap-2">
-                 {['RA', 'SLE', 'SpA', 'PsA', 'Vasculitis', 'FM'].map((dx) => {
+                  {[...DIAGNOSIS_OPTIONS].map((dx) => {
                    const count = patients.filter(p => 
                      p.diagnosis_tags.includes(dx)
                    ).length;

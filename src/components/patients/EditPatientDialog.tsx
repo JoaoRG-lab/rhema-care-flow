@@ -8,6 +8,7 @@
  import { supabase } from '@/integrations/supabase/client';
  import { toast } from 'sonner';
 import { useAuditLog } from '@/hooks/useAuditLog';
+ import { DIAGNOSIS_OPTIONS, THERAPY_OPTIONS, RISK_OPTIONS } from '@/config/clinical';
  
  interface PatientCard {
    id: string;
@@ -26,10 +27,6 @@ import { useAuditLog } from '@/hooks/useAuditLog';
    onOpenChange: (open: boolean) => void;
    onPatientUpdated: () => void;
  }
- 
- const DIAGNOSIS_OPTIONS = ['RA', 'SLE', 'SpA', 'PsA', 'Vasculitis', 'FM'];
- const THERAPY_OPTIONS = ['biologic', 'infusion', 'MTX', 'LEF', 'HCQ', 'JAK-i'];
- const RISK_OPTIONS = ['pregnancy', 'infection', 'TB+', 'HBV+'];
  
  export function EditPatientDialog({ patient, open, onOpenChange, onPatientUpdated }: EditPatientDialogProps) {
   const { logAccess } = useAuditLog();

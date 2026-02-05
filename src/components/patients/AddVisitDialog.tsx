@@ -9,6 +9,7 @@
  import { useAuth } from '@/contexts/AuthContext';
  import { Plus } from 'lucide-react';
  import { toast } from 'sonner';
+ import { ACTION_OPTIONS, LAB_OPTIONS, IMAGING_OPTIONS } from '@/config/clinical';
  
  interface AddVisitDialogProps {
    patientId: string;
@@ -16,10 +17,6 @@
    onOpenChange: (open: boolean) => void;
    onVisitAdded: () => void;
  }
- 
- const ACTION_OPTIONS = ['Medication started', 'Medication adjusted', 'Medication stopped', 'Injection given', 'Referral made', 'Imaging ordered', 'Labs ordered'];
- const LAB_OPTIONS = ['CBC', 'CMP', 'LFTs', 'ESR', 'CRP', 'RF', 'Anti-CCP', 'ANA', 'dsDNA', 'Complement', 'Lipids', 'HbA1c'];
- const IMAGING_OPTIONS = ['X-ray hands', 'X-ray feet', 'X-ray spine', 'MRI', 'Ultrasound', 'CT', 'DXA'];
  
  export function AddVisitDialog({ patientId, open, onOpenChange, onVisitAdded }: AddVisitDialogProps) {
    const { user } = useAuth();

@@ -11,10 +11,7 @@
  import { useNavigate } from 'react-router-dom';
  import { format } from 'date-fns';
  import { usePatients, PatientCard } from '@/hooks/usePatients';
- 
- const DIAGNOSIS_OPTIONS = ['RA', 'SLE', 'SpA', 'PsA', 'Vasculitis', 'FM'];
- const THERAPY_OPTIONS = ['biologic', 'infusion', 'MTX', 'LEF', 'HCQ', 'JAK-i'];
- const RISK_OPTIONS = ['pregnancy', 'infection', 'TB+', 'HBV+'];
+ import { DIAGNOSIS_OPTIONS, THERAPY_OPTIONS, RISK_OPTIONS } from '@/config/clinical';
  
  export default function Patients() {
    const navigate = useNavigate();

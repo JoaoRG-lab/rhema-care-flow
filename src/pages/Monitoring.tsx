@@ -11,32 +11,8 @@
  import { format, isBefore } from 'date-fns';
  import { useMonitoringEvents, MonitoringEventWithPatient } from '@/hooks/useMonitoringEvents';
  import { usePatients } from '@/hooks/usePatients';
+ import { EVENT_TYPES, MED_CLASS_RECOMMENDATIONS } from '@/config/clinical';
  import { Link } from 'react-router-dom';
- 
- const EVENT_TYPES = [
-   'CBC',
-   'LFTs',
-   'Creatinine',
-   'Lipid Panel',
-   'TB Screening',
-   'HBV Screening',
-   'HCV Screening',
-   'Flu Vaccine',
-   'Pneumococcal Vaccine',
-   'COVID Vaccine',
-   'Eye Exam (HCQ)',
-   'Chest X-ray',
- ];
- 
- const MED_CLASS_RECOMMENDATIONS = {
-   MTX: ['CBC', 'LFTs', 'Creatinine'],
-   LEF: ['CBC', 'LFTs'],
-   AZA: ['CBC', 'LFTs'],
-   MMF: ['CBC', 'LFTs', 'Creatinine'],
-   HCQ: ['Eye Exam (HCQ)'],
-   Biologics: ['TB Screening', 'HBV Screening', 'HCV Screening', 'CBC'],
-   'JAK-i': ['CBC', 'LFTs', 'Lipid Panel', 'TB Screening'],
- };
  
  export default function Monitoring() {
    const { events, loading, createEvent, markComplete } = useMonitoringEvents();
