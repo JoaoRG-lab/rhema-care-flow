@@ -12,15 +12,7 @@
  import { format, isBefore } from 'date-fns';
  import { toast } from 'sonner';
  import { EVENT_TYPES } from '@/config/clinical';
- 
- interface MonitoringEvent {
-   id: string;
-   event_type: string;
-   due_date: string;
-   status: string;
-   completed_at: string | null;
-   notes: string | null;
- }
+ import type { MonitoringEvent } from '@/types/clinical';
  
  interface PatientMonitoringProps {
    patientId: string;

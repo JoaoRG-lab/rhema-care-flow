@@ -23,19 +23,7 @@ import DOMPurify from 'dompurify';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { VisitSummaryAssistant } from './VisitSummaryAssistant';
  
- import type { Json } from '@/integrations/supabase/types';
- 
- interface Visit {
-   id: string;
-   visit_date: string;
-   disease_activity: Json | null;
-   actions: string[] | null;
-   labs_ordered: string[] | null;
-   imaging: string[] | null;
-   next_steps: string | null;
-   created_at: string;
-   attachments: string[] | null;
- }
+ import type { Visit } from '@/types/clinical';
  
  interface VisitHistoryProps {
    patientId: string;

@@ -6,13 +6,7 @@
  import ReactMarkdown from 'react-markdown';
  import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
- 
- interface ScoreEntry {
-   id: string;
-   score_type: string;
-   calculated_score: number | null;
-   created_at: string;
- }
+ import type { ScoreEntry } from '@/types/clinical';
  
  interface TrendAnalysisAssistantProps {
    scores: ScoreEntry[];

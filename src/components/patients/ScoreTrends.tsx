@@ -6,13 +6,7 @@
  import { TrendingUp } from 'lucide-react';
  import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
  import { TrendAnalysisAssistant } from './TrendAnalysisAssistant';
- 
- interface ScoreEntry {
-   id: string;
-   score_type: string;
-   calculated_score: number | null;
-   created_at: string;
- }
+ import type { ScoreEntry } from '@/types/clinical';
  
  interface ScoreTrendsProps {
    patientId: string;

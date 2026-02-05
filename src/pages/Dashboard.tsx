@@ -14,6 +14,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import {
    DIAGNOSIS_OPTIONS,
  } from '@/config/clinical';
+ import type { PatientCard, MonitoringEvent } from '@/types/clinical';
  import {
    Users,
    AlertTriangle,
@@ -25,22 +26,6 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
    Clock,
  } from 'lucide-react';
  import { format, addDays, isAfter, isBefore } from 'date-fns';
- 
- interface PatientCard {
-   id: string;
-   patient_code: string;
-   diagnosis_tags: string[];
-   therapy_tags: string[];
-   next_followup_date: string | null;
- }
- 
- interface MonitoringEvent {
-   id: string;
-   event_type: string;
-   due_date: string;
-   status: string;
-   patient_card_id: string | null;
- }
  
  export default function Dashboard() {
    const { user } = useAuth();

@@ -9,17 +9,7 @@
  import { toast } from 'sonner';
 import { useAuditLog } from '@/hooks/useAuditLog';
  import { DIAGNOSIS_OPTIONS, THERAPY_OPTIONS, RISK_OPTIONS } from '@/config/clinical';
- 
- interface PatientCard {
-   id: string;
-   patient_code: string;
-   mrn_last4: string | null;
-   diagnosis_tags: string[];
-   therapy_tags: string[];
-   risk_flags: string[];
-   next_followup_date: string | null;
-   notes: string | null;
- }
+ import type { PatientCard } from '@/types/clinical';
  
  interface EditPatientDialogProps {
    patient: PatientCard;

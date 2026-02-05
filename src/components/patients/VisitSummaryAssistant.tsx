@@ -6,16 +6,7 @@
  import ReactMarkdown from 'react-markdown';
  import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
- 
- interface Visit {
-   id: string;
-   visit_date: string;
-   disease_activity: any;
-   actions: string[] | null;
-   labs_ordered: string[] | null;
-   imaging: string[] | null;
-   next_steps: string | null;
- }
+ import type { Visit } from '@/types/clinical';
  
  interface VisitSummaryAssistantProps {
    visits: Visit[];

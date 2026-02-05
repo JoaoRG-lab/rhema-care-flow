@@ -2,9 +2,10 @@
  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
  import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Shield, Award, Star, Code, Handshake } from "lucide-react";
+ import type { VerificationTier, ContributorType } from '@/types/verification';
  
-export type VerificationTier = "bronze" | "silver" | "gold" | "expert" | "developer" | "partner" | null;
-export type ContributorType = "clinical" | "developer" | "partner";
+ // Re-export types for convenience
+ export type { VerificationTier, ContributorType };
  
  interface VerifiedBadgeProps {
    tier: VerificationTier;

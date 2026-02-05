@@ -3,34 +3,10 @@
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
  import { useAuditLog } from '@/hooks/useAuditLog';
+ import type { PatientCard, CreatePatientInput, UpdatePatientInput } from '@/types/clinical';
  
- export interface PatientCard {
-   id: string;
-   patient_code: string;
-   mrn_last4: string | null;
-   diagnosis_tags: string[];
-   therapy_tags: string[];
-   risk_flags: string[];
-   last_visit_date: string | null;
-   next_followup_date: string | null;
-   notes: string | null;
-   created_at: string;
-   updated_at?: string;
- }
- 
- export interface CreatePatientInput {
-   patient_code: string;
-   mrn_last4?: string | null;
-   diagnosis_tags?: string[];
-   therapy_tags?: string[];
-   risk_flags?: string[];
-   notes?: string | null;
-   next_followup_date?: string | null;
- }
- 
- export interface UpdatePatientInput extends Partial<CreatePatientInput> {
-   id: string;
- }
+ // Re-export types for convenience
+ export type { PatientCard, CreatePatientInput, UpdatePatientInput };
  
  export function usePatients() {
    const { user } = useAuth();
