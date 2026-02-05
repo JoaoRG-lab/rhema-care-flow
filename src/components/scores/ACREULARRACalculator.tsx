@@ -10,6 +10,8 @@
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
  import { addToHistory } from '@/lib/calculators';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  type JointInvolvement = '0' | '1' | '2' | '3' | '5';
  type Serology = '0' | '2' | '3';
@@ -18,6 +20,7 @@
  
  export function ACREULARRACalculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [jointInvolvement, setJointInvolvement] = useState<JointInvolvement | null>(null);
    const [serology, setSerology] = useState<Serology | null>(null);
    const [acutePhase, setAcutePhase] = useState<AcutePhase | null>(null);
@@ -47,7 +50,12 @@
    };
  
    const saveScore = async () => {
-     if (!user || result === null) return;
+     if (result === null) return;
+     if (!requireAuth(() => performSave())) return;
+   };
+ 
+   const performSave = async () => {
+     if (!user) return;
      setIsSaving(true);
      
      try {
@@ -340,6 +348,12 @@
            </p>
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }

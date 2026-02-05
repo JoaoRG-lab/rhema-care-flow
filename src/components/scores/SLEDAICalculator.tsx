@@ -7,6 +7,8 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  interface SLEDAIItem {
    id: string;
@@ -63,8 +65,10 @@
  
  export function SLEDAICalculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [checked, setChecked] = useState<Record<string, boolean>>({});
    const [result, setResult] = useState<number | null>(null);
+   const [isSaving, setIsSaving] = useState(false);
  
    const handleCheck = (id: string, isChecked: boolean) => {
      setChecked(prev => ({ ...prev, [id]: isChecked }));
@@ -78,15 +82,28 @@
    };
  
    const saveScore = async () => {
-     if (!user || result === null) return;
-     const { error } = await supabase.from('score_entries').insert({
-       user_id: user.id,
-       score_type: 'SLEDAI',
-       data_json: checked as any,
-       calculated_score: result,
-     });
-     if (error) toast.error('Failed to save score');
-     else toast.success('SLEDAI score saved');
+     if (result === null) return;
+     if (!requireAuth(() => performSave())) return;
+   };
+ 
+   const performSave = async () => {
+     if (!user) return;
+     setIsSaving(true);
+     try {
+       const { error } = await supabase.from('score_entries').insert({
+         user_id: user.id,
+         score_type: 'SLEDAI',
+         data_json: checked as any,
+         calculated_score: result,
+       });
+       if (error) throw error;
+       toast.success('SLEDAI score saved');
+     } catch (error) {
+       console.error('Error saving score:', error);
+       toast.error('Failed to save score');
+     } finally {
+       setIsSaving(false);
+     }
    };
  
    const getInterpretation = (score: number) => {
@@ -161,9 +178,9 @@
                      <Button variant="outline" size="sm" onClick={reset}>
                        Reset
                      </Button>
-                     <Button variant="outline" size="sm" className="gap-2" onClick={saveScore}>
+                     <Button variant="outline" size="sm" className="gap-2" onClick={saveScore} disabled={isSaving}>
                        <Save className="h-4 w-4" />
-                       Save
+                       {isSaving ? 'Saving...' : 'Save'}
                      </Button>
                    </div>
                  </>
@@ -188,6 +205,12 @@
            </div>
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }

@@ -7,14 +7,18 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  export function DAS28Calculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [tjc, setTjc] = useState<number>(0);
    const [sjc, setSjc] = useState<number>(0);
    const [esr, setEsr] = useState<number>(1);
    const [globalHealth, setGlobalHealth] = useState<number>(0);
    const [result, setResult] = useState<number | null>(null);
+   const [isSaving, setIsSaving] = useState(false);
  
    const calculate = () => {
      const score = 0.56 * Math.sqrt(tjc) + 0.28 * Math.sqrt(sjc) + 
@@ -23,15 +27,28 @@
    };
  
    const saveScore = async () => {
-     if (!user || result === null) return;
-     const { error } = await supabase.from('score_entries').insert({
-       user_id: user.id,
-       score_type: 'DAS28-ESR',
-       data_json: { tjc, sjc, esr, globalHealth } as any,
-       calculated_score: result,
-     });
-     if (error) toast.error('Failed to save score');
-     else toast.success('DAS28-ESR score saved');
+     if (result === null) return;
+     if (!requireAuth(() => performSave())) return;
+   };
+ 
+   const performSave = async () => {
+     if (!user) return;
+     setIsSaving(true);
+     try {
+       const { error } = await supabase.from('score_entries').insert({
+         user_id: user.id,
+         score_type: 'DAS28-ESR',
+         data_json: { tjc, sjc, esr, globalHealth } as any,
+         calculated_score: result,
+       });
+       if (error) throw error;
+       toast.success('DAS28-ESR score saved');
+     } catch (error) {
+       console.error('Error saving score:', error);
+       toast.error('Failed to save score');
+     } finally {
+       setIsSaving(false);
+     }
    };
  
    const getInterpretation = (score: number) => {
@@ -80,9 +97,9 @@
                  <p className={`text-lg font-medium mt-2 ${getInterpretation(result).color}`}>
                    {getInterpretation(result).text}
                  </p>
-                 <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={saveScore}>
+                 <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={saveScore} disabled={isSaving}>
                    <Save className="h-4 w-4" />
-                   Save Score
+                   {isSaving ? 'Saving...' : 'Save Score'}
                  </Button>
                </>
              ) : (
@@ -91,6 +108,12 @@
            </div>
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }

@@ -3,7 +3,6 @@
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
  import { Label } from '@/components/ui/label';
- import { Checkbox } from '@/components/ui/checkbox';
  import { Calculator, Save, Info, CheckCircle, XCircle } from 'lucide-react';
  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
  import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +10,8 @@
  import { toast } from 'sonner';
  import { addToHistory } from '@/lib/calculators';
  import { cn } from '@/lib/utils';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  interface MDAInputs {
    tjc: number;
@@ -30,6 +31,7 @@
  
  export function MDACalculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [inputs, setInputs] = useState<MDAInputs>({
      tjc: 0,
      sjc: 0,
@@ -97,6 +99,10 @@
    };
  
    const saveScore = async () => {
+     if (!requireAuth(() => performSave())) return;
+   };
+ 
+   const performSave = async () => {
      if (!user) return;
      setIsSaving(true);
      
@@ -364,6 +370,12 @@
            </div>
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }

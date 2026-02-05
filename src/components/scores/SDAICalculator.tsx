@@ -9,9 +9,12 @@
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
  import { addToHistory } from '@/lib/calculators';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  export function SDAICalculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [tjc, setTjc] = useState<number>(0);
    const [sjc, setSjc] = useState<number>(0);
    const [pga, setPga] = useState<number>(0);
@@ -35,7 +38,12 @@
    };
  
    const saveScore = async () => {
-     if (!user || result === null) return;
+     if (result === null) return;
+     if (!requireAuth(() => performSave())) return;
+   };
+ 
+   const performSave = async () => {
+     if (!user) return;
      setIsSaving(true);
      
      try {
@@ -222,6 +230,12 @@
            </div>
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }

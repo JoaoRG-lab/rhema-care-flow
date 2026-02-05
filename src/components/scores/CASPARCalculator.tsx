@@ -10,6 +10,8 @@
  import { toast } from 'sonner';
  import { addToHistory } from '@/lib/calculators';
  import { Alert, AlertDescription } from '@/components/ui/alert';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  interface CriteriaItem {
    id: string;
@@ -77,6 +79,7 @@
  
  export function CASPARCalculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [hasInflammatoryDisease, setHasInflammatoryDisease] = useState(false);
    const [selectedCriteria, setSelectedCriteria] = useState<Set<string>>(new Set());
    const [result, setResult] = useState<{ score: number; classification: boolean } | null>(null);
@@ -125,7 +128,12 @@
    };
  
    const saveScore = async () => {
-     if (!user || result === null) return;
+     if (result === null) return;
+     if (!requireAuth(() => performSave())) return;
+   };
+ 
+   const performSave = async () => {
+     if (!user) return;
      setIsSaving(true);
      
      try {
@@ -352,6 +360,12 @@
            </div>
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }
