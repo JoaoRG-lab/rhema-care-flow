@@ -1,43 +1,15 @@
- import { useEffect, useState } from 'react';
- import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
  import { AppLayout } from '@/components/layout/AppLayout';
  import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
  import { Button } from '@/components/ui/button';
  import { useAuth } from '@/contexts/AuthContext';
- import { supabase } from '@/integrations/supabase/client';
+import { useVerificationStatus } from '@/hooks/useVerificationStatus';
  import { Settings as SettingsIcon, Shield, BadgeCheck, ExternalLink, FileText } from 'lucide-react';
  import { VerifiedBadge, VerificationStatusBadge } from '@/components/ui/VerifiedBadge';
- import type { VerificationTier } from '@/components/ui/VerifiedBadge';
  
  export default function Settings() {
    const { user } = useAuth();
-  const [verificationStatus, setVerificationStatus] = useState<{
-    status: 'pending' | 'under_review' | 'approved' | 'rejected' | null;
-    tier: VerificationTier;
-  }>({ status: null, tier: null });
-
-  useEffect(() => {
-    const fetchVerificationStatus = async () => {
-      if (!user) return;
-      
-      const { data } = await supabase
-        .from('verification_requests')
-        .select('status, tier')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (data) {
-        setVerificationStatus({
-          status: data.status as any,
-          tier: data.tier as VerificationTier,
-        });
-      }
-    };
-    
-    fetchVerificationStatus();
-  }, [user]);
+  const { status: verificationStatusValue, tier, loading } = useVerificationStatus();
  
    return (
      <AppLayout>
@@ -50,7 +22,10 @@
            <Card>
              <CardHeader><CardTitle className="text-base">Account</CardTitle></CardHeader>
              <CardContent>
-               <p className="text-sm text-muted-foreground">Email: {user?.email}</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-muted-foreground">Email: {user?.email}</p>
+                  {tier && <VerifiedBadge tier={tier} size="sm" />}
+                </div>
              </CardContent>
            </Card>
 
@@ -66,16 +41,16 @@
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {verificationStatus.status ? (
+              {verificationStatusValue ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">Status:</span>
-                    <VerificationStatusBadge status={verificationStatus.status} />
+                    <VerificationStatusBadge status={verificationStatusValue} />
                   </div>
-                  {verificationStatus.tier && (
+                  {tier && (
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-muted-foreground">Tier:</span>
-                      <VerifiedBadge tier={verificationStatus.tier} />
+                      <VerifiedBadge tier={tier} />
                     </div>
                   )}
                   <Button variant="outline" size="sm" asChild>
