@@ -39,7 +39,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  
  export default function Dashboard() {
    const { user } = useAuth();
-  const { tier } = useVerificationStatus();
+  const { tier, contributorType, fullName } = useVerificationStatus();
    const [patients, setPatients] = useState<PatientCard[]>([]);
    const [monitoringAlerts, setMonitoringAlerts] = useState<MonitoringEvent[]>([]);
    const [upcomingFollowups, setUpcomingFollowups] = useState<PatientCard[]>([]);
@@ -93,17 +93,64 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
      isBefore(new Date(m.due_date), new Date())
    ).length;
  
+  // Generate personalized greeting based on verification status
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    const timeGreeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    
+    if (!tier) {
+      return `${timeGreeting}!`;
+    }
+    
+    // Format name with appropriate title based on contributor type
+    const formatName = () => {
+      if (!fullName) return '';
+      
+      // For clinical contributors, add "Dr." prefix if not already present
+      if (contributorType === 'clinical') {
+        const name = fullName.trim();
+        if (name.toLowerCase().startsWith('dr.') || name.toLowerCase().startsWith('dr ')) {
+          return name;
+        }
+        return `Dr. ${name}`;
+      }
+      
+      return fullName;
+    };
+    
+    const displayName = formatName();
+    
+    switch (tier) {
+      case 'expert':
+        return `${timeGreeting}, ${displayName}! Your expertise guides our community.`;
+      case 'gold':
+        return `${timeGreeting}, ${displayName}! Thank you for your verified contributions.`;
+      case 'silver':
+        return `${timeGreeting}, ${displayName}!`;
+      case 'bronze':
+        return `${timeGreeting}, ${displayName}!`;
+      case 'developer':
+        return `${timeGreeting}, ${displayName}! Building great things.`;
+      case 'partner':
+        return `${timeGreeting}, ${displayName}! Great to have you with us.`;
+      default:
+        return `${timeGreeting}!`;
+    }
+  };
+
    return (
      <AppLayout>
        <div className="p-6 lg:p-8">
          {/* Header */}
          <div className="flex items-center justify-between mb-8">
            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-foreground">Today's Clinic</h1>
-                {tier && <VerifiedBadge tier={tier} size="sm" />}
-              </div>
-             <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-bold text-foreground">{getGreeting()}</h1>
+              {tier && <VerifiedBadge tier={tier} size="sm" />}
+            </div>
+            <p className="text-muted-foreground">
+              Today's Clinic • {format(new Date(), 'EEEE, MMMM d, yyyy')}
+            </p>
            </div>
            <Link to="/patients">
              <Button className="gap-2">
