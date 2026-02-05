@@ -1,4 +1,5 @@
- import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
  import { Button } from "@/components/ui/button";
  import { Badge } from "@/components/ui/badge";
  import { Separator } from "@/components/ui/separator";
@@ -7,7 +8,8 @@
  import { Switch } from "@/components/ui/switch";
  import { Label } from "@/components/ui/label";
  import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
- import { AlertCircle, CheckCircle, Info, AlertTriangle } from "lucide-react";
+import { AlertCircle, CheckCircle, Info, AlertTriangle, Sun, Moon, Monitor } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
  
  const ColorSwatch = ({ name, variable, description }: { name: string; variable: string; description?: string }) => (
    <div className="flex items-center gap-3 p-2">
@@ -30,15 +32,69 @@
  );
  
  export default function StyleGuide() {
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    if (theme === "system") {
+      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setResolvedTheme(systemDark ? "dark" : "light");
+      if (systemDark) {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
+    } else if (theme === "dark") {
+      root.classList.add("dark");
+      setResolvedTheme("dark");
+    } else {
+      root.classList.remove("dark");
+      setResolvedTheme("light");
+    }
+
+    return () => {
+      // Reset to light mode when leaving the page
+      root.classList.remove("dark");
+    };
+  }, [theme]);
+
    return (
      <div className="min-h-screen bg-background p-8">
        <div className="max-w-6xl mx-auto space-y-12">
          {/* Header */}
-         <div className="space-y-2">
-           <h1 className="text-4xl font-bold tracking-tight">RheumaFlow Design System</h1>
-           <p className="text-lg text-muted-foreground">
-             Comprehensive style guide for the medical-tech professional theme
-           </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">RheumaFlow Design System</h1>
+            <p className="text-lg text-muted-foreground">
+              Comprehensive style guide for the medical-tech professional theme
+            </p>
+          </div>
+          
+          {/* Theme Toggle */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Theme:</span>
+            <Tabs value={theme} onValueChange={(v) => setTheme(v as "light" | "dark" | "system")}>
+              <TabsList>
+                <TabsTrigger value="light" className="gap-1.5">
+                  <Sun className="h-4 w-4" />
+                  Light
+                </TabsTrigger>
+                <TabsTrigger value="dark" className="gap-1.5">
+                  <Moon className="h-4 w-4" />
+                  Dark
+                </TabsTrigger>
+                <TabsTrigger value="system" className="gap-1.5">
+                  <Monitor className="h-4 w-4" />
+                  System
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Badge variant={resolvedTheme === "dark" ? "secondary" : "outline"} className="ml-2">
+              {resolvedTheme === "dark" ? "Dark Mode" : "Light Mode"}
+            </Badge>
+          </div>
          </div>
  
          <Separator />
