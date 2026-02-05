@@ -157,7 +157,7 @@
  
          {/* Compare Tab */}
          <TabsContent value="compare" className="mt-0">
-           <ScoreComparison scores={scores} />
+           <ScoreComparison scores={scores} patientCode={patientCode} />
          </TabsContent>
  
          {/* History Tab */}
