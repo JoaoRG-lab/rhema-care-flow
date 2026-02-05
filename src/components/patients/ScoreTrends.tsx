@@ -5,6 +5,7 @@
  import { format } from 'date-fns';
  import { TrendingUp } from 'lucide-react';
  import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+ import { TrendAnalysisAssistant } from './TrendAnalysisAssistant';
  
  interface ScoreEntry {
    id: string;
@@ -16,6 +17,8 @@
  interface ScoreTrendsProps {
    patientId: string;
    refreshKey?: number;
+   patientCode?: string;
+   diagnosisTags?: string[] | null;
  }
  
  const SCORE_COLORS: Record<string, string> = {
@@ -25,7 +28,7 @@
    'SLEDAI': 'hsl(var(--chart-4))',
  };
  
- export function ScoreTrends({ patientId, refreshKey }: ScoreTrendsProps) {
+ export function ScoreTrends({ patientId, refreshKey, patientCode, diagnosisTags }: ScoreTrendsProps) {
    const { user } = useAuth();
    const [scores, setScores] = useState<ScoreEntry[]>([]);
    const [loading, setLoading] = useState(true);
@@ -89,6 +92,13 @@
  
    return (
      <div className="space-y-6">
+       {/* AI Assistant */}
+       <TrendAnalysisAssistant 
+         scores={scores} 
+         patientCode={patientCode || 'Unknown'} 
+         diagnosisTags={diagnosisTags || null}
+       />
+ 
        {/* Chart */}
        <Card>
          <CardHeader>
