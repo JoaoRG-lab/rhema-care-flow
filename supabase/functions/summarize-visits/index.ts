@@ -1,94 +1,137 @@
  import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
  
  const corsHeaders = {
    "Access-Control-Allow-Origin": "*",
    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
  };
  
-// Rate limit: 20 requests per hour per user
-const RATE_LIMIT_MAX_REQUESTS = 20;
-const RATE_LIMIT_WINDOW_MINUTES = 60;
-
+ // Rate limit: 20 requests per hour per user
+ const RATE_LIMIT_MAX_REQUESTS = 20;
+ const RATE_LIMIT_WINDOW_MINUTES = 60;
+ 
+ // Zod schemas for input validation
+ const VisitSchema = z.object({
+   visit_date: z.string().min(1).max(50),
+   disease_activity: z.record(z.unknown()).optional().nullable(),
+   actions: z.array(z.string().max(200)).max(50).optional().nullable(),
+   labs_ordered: z.array(z.string().max(100)).max(50).optional().nullable(),
+   imaging: z.array(z.string().max(100)).max(50).optional().nullable(),
+   next_steps: z.string().max(5000).optional().nullable(),
+ });
+ 
+ const SummarizeVisitsRequestSchema = z.object({
+   visits: z.array(VisitSchema).min(1, "At least one visit is required").max(100, "Maximum 100 visits allowed"),
+   patientCode: z.string().min(1, "Patient code is required").max(100, "Patient code too long"),
+   diagnosisTags: z.array(z.string().max(100)).max(50).optional(),
+ });
+ 
  serve(async (req) => {
    if (req.method === "OPTIONS") {
      return new Response(null, { headers: corsHeaders });
    }
  
    try {
-    // Validate JWT authentication
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Create service role client for rate limiting (bypasses RLS)
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    // Create user client for authenticated operations
-    const supabaseUser = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = claimsData.claims.sub;
-    console.log("Summarize visits request from user:", userId);
-
-    // Check rate limit
-    const { data: rateLimitAllowed, error: rateLimitError } = await supabaseAdmin.rpc(
-      "check_rate_limit",
-      {
-        p_user_id: userId,
-        p_endpoint: "summarize-visits",
-        p_max_requests: RATE_LIMIT_MAX_REQUESTS,
-        p_window_minutes: RATE_LIMIT_WINDOW_MINUTES,
-      }
-    );
-
-    if (rateLimitError) {
-      console.error("Rate limit check error:", rateLimitError);
-      // Continue without rate limiting if there's an error checking
-    } else if (!rateLimitAllowed) {
-      console.log("Rate limit exceeded for user:", userId);
-      return new Response(
-        JSON.stringify({
-          error: "Rate limit exceeded. Maximum 20 requests per hour. Please try again later.",
-        }),
-        {
-          status: 429,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-            "Retry-After": "3600",
-          },
-        }
-      );
-    }
-
-     const { visits, patientCode, diagnosisTags } = await req.json();
-     
+     // Validate JWT authentication
+     const authHeader = req.headers.get("Authorization");
+     if (!authHeader?.startsWith("Bearer ")) {
+       return new Response(JSON.stringify({ error: "Unauthorized" }), {
+         status: 401,
+         headers: { ...corsHeaders, "Content-Type": "application/json" },
+       });
+     }
+ 
+     // Create service role client for rate limiting (bypasses RLS)
+     const supabaseAdmin = createClient(
+       Deno.env.get("SUPABASE_URL") ?? "",
+       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+     );
+ 
+     // Create user client for authenticated operations
+     const supabaseUser = createClient(
+       Deno.env.get("SUPABASE_URL") ?? "",
+       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+       { global: { headers: { Authorization: authHeader } } }
+     );
+ 
+     const token = authHeader.replace("Bearer ", "");
+     const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
+     if (claimsError || !claimsData?.claims) {
+       return new Response(JSON.stringify({ error: "Unauthorized" }), {
+         status: 401,
+         headers: { ...corsHeaders, "Content-Type": "application/json" },
+       });
+     }
+ 
+     const userId = claimsData.claims.sub;
+     console.log("Summarize visits request from user:", userId);
+ 
+     // Check rate limit
+     const { data: rateLimitAllowed, error: rateLimitError } = await supabaseAdmin.rpc(
+       "check_rate_limit",
+       {
+         p_user_id: userId,
+         p_endpoint: "summarize-visits",
+         p_max_requests: RATE_LIMIT_MAX_REQUESTS,
+         p_window_minutes: RATE_LIMIT_WINDOW_MINUTES,
+       }
+     );
+ 
+     if (rateLimitError) {
+       console.error("Rate limit check error:", rateLimitError);
+     } else if (!rateLimitAllowed) {
+       console.log("Rate limit exceeded for user:", userId);
+       return new Response(
+         JSON.stringify({
+           error: "Rate limit exceeded. Maximum 20 requests per hour. Please try again later.",
+         }),
+         {
+           status: 429,
+           headers: {
+             ...corsHeaders,
+             "Content-Type": "application/json",
+             "Retry-After": "3600",
+           },
+         }
+       );
+     }
+ 
+     // Parse and validate request body
+     let body: unknown;
+     try {
+       body = await req.json();
+     } catch {
+       return new Response(
+         JSON.stringify({ error: "Invalid JSON body" }),
+         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+       );
+     }
+ 
+     // Validate with Zod
+     const validationResult = SummarizeVisitsRequestSchema.safeParse(body);
+     if (!validationResult.success) {
+       console.warn("Validation error:", validationResult.error.errors);
+       return new Response(
+         JSON.stringify({
+           error: "Invalid request format",
+           details: validationResult.error.errors.map((e) => ({
+             field: e.path.join("."),
+             message: e.message,
+           })),
+         }),
+         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+       );
+     }
+ 
+     const { visits, patientCode, diagnosisTags } = validationResult.data;
+ 
      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
      if (!LOVABLE_API_KEY) {
        throw new Error("LOVABLE_API_KEY is not configured");
      }
  
-     const visitsSummary = visits.map((v: any) => {
+     const visitsSummary = visits.map((v) => {
        const parts = [`Date: ${v.visit_date}`];
        if (v.disease_activity && Object.keys(v.disease_activity).length > 0) {
          parts.push(`Disease Activity: ${JSON.stringify(v.disease_activity)}`);
