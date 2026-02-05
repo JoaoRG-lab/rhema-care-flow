@@ -263,3 +263,144 @@
      }
    }
  }
+
+/* Prism.js syntax highlighting theme - matches design system */
+code[class*="language-"],
+pre[class*="language-"] {
+  color: hsl(var(--foreground));
+  background: none;
+  text-shadow: none;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.875rem;
+  text-align: left;
+  white-space: pre-wrap;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: break-word;
+  line-height: 1.6;
+  tab-size: 2;
+  hyphens: none;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: hsl(var(--muted-foreground));
+}
+
+.token.namespace {
+  opacity: 0.7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: hsl(185 65% 35%);
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: hsl(150 60% 35%);
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: hsl(40 70% 45%);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: hsl(280 60% 50%);
+}
+
+.token.function,
+.token.class-name {
+  color: hsl(200 75% 45%);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: hsl(35 80% 50%);
+}
+
+.token.important,
+.token.bold {
+  font-weight: 600;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+/* Dark mode syntax highlighting */
+.dark code[class*="language-"],
+.dark pre[class*="language-"] {
+  color: hsl(var(--foreground));
+}
+
+.dark .token.property,
+.dark .token.tag,
+.dark .token.boolean,
+.dark .token.number,
+.dark .token.constant,
+.dark .token.symbol,
+.dark .token.deleted {
+  color: hsl(185 70% 55%);
+}
+
+.dark .token.selector,
+.dark .token.attr-name,
+.dark .token.string,
+.dark .token.char,
+.dark .token.builtin,
+.dark .token.inserted {
+  color: hsl(150 60% 55%);
+}
+
+.dark .token.operator,
+.dark .token.entity,
+.dark .token.url,
+.dark .language-css .token.string,
+.dark .style .token.string {
+  color: hsl(40 80% 60%);
+}
+
+.dark .token.atrule,
+.dark .token.attr-value,
+.dark .token.keyword {
+  color: hsl(280 70% 70%);
+}
+
+.dark .token.function,
+.dark .token.class-name {
+  color: hsl(200 80% 65%);
+}
+
+.dark .token.regex,
+.dark .token.important,
+.dark .token.variable {
+  color: hsl(35 85% 60%);
+}
