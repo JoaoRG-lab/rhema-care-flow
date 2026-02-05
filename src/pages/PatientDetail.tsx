@@ -7,7 +7,7 @@
  import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
- import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2 } from 'lucide-react';
+ import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
  import { format } from 'date-fns';
  import { toast } from 'sonner';
  import { VisitHistory } from '@/components/patients/VisitHistory';
@@ -17,6 +17,8 @@
  import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
  import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
 import { useAuditLog } from '@/hooks/useAuditLog';
+ import { useSwipeGesture } from '@/hooks/useSwipeGesture';
+ import { useIsMobile } from '@/hooks/use-mobile';
  import type { PatientCard } from '@/types/clinical';
  
  export default function PatientDetail() {
@@ -24,12 +26,18 @@ import { useAuditLog } from '@/hooks/useAuditLog';
    const navigate = useNavigate();
    const { user } = useAuth();
   const { logAccess } = useAuditLog();
+   const isMobile = useIsMobile();
    const [patient, setPatient] = useState<PatientCard | null>(null);
    const [loading, setLoading] = useState(true);
    const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
    const [refreshKey, setRefreshKey] = useState(0);
    const [isEditOpen, setIsEditOpen] = useState(false);
    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+   const [adjacentPatients, setAdjacentPatients] = useState<{ prev: string | null; next: string | null }>({
+     prev: null,
+     next: null,
+   });
+   const [swipeHint, setSwipeHint] = useState<'left' | 'right' | null>(null);
  
    const fetchPatient = async () => {
      if (!user || !id) return;
@@ -55,9 +63,60 @@ import { useAuditLog } from '@/hooks/useAuditLog';
         resourceId: data.id,
         metadata: { patient_code: data.patient_code }
       });
+      
+       // Fetch adjacent patients for navigation
+       fetchAdjacentPatients(data.patient_code);
      }
      setLoading(false);
    };
+ 
+   const fetchAdjacentPatients = async (currentCode: string) => {
+     if (!user) return;
+     
+     // Get all patients sorted by code to determine prev/next
+     const { data: allPatients } = await supabase
+       .from('patient_cards_secure')
+       .select('id, patient_code')
+       .eq('user_id', user.id)
+       .order('patient_code', { ascending: true });
+     
+     if (!allPatients || allPatients.length <= 1) return;
+     
+     const currentIndex = allPatients.findIndex((p) => p.patient_code === currentCode);
+     if (currentIndex === -1) return;
+     
+     setAdjacentPatients({
+       prev: currentIndex > 0 ? allPatients[currentIndex - 1].id : null,
+       next: currentIndex < allPatients.length - 1 ? allPatients[currentIndex + 1].id : null,
+     });
+   };
+ 
+   const navigateToPrev = () => {
+     if (adjacentPatients.prev) {
+       setSwipeHint('right');
+       setTimeout(() => {
+         navigate(`/patients/${adjacentPatients.prev}`);
+         setSwipeHint(null);
+       }, 150);
+     }
+   };
+ 
+   const navigateToNext = () => {
+     if (adjacentPatients.next) {
+       setSwipeHint('left');
+       setTimeout(() => {
+         navigate(`/patients/${adjacentPatients.next}`);
+         setSwipeHint(null);
+       }, 150);
+     }
+   };
+ 
+   const swipeRef = useSwipeGesture<HTMLDivElement>({
+     onSwipeLeft: navigateToNext,
+     onSwipeRight: navigateToPrev,
+     threshold: 75,
+     enabled: isMobile,
+   });
  
    useEffect(() => {
      fetchPatient();
@@ -91,13 +150,47 @@ import { useAuditLog } from '@/hooks/useAuditLog';
  
    return (
      <AppLayout>
-       <div className="p-6 lg:p-8">
+       <div
+         ref={swipeRef}
+         className={`p-4 md:p-6 lg:p-8 transition-transform duration-150 ${
+           swipeHint === 'left' ? '-translate-x-4 opacity-80' : 
+           swipeHint === 'right' ? 'translate-x-4 opacity-80' : ''
+         }`}
+       >
          {/* Header */}
          <div className="mb-6">
-           <Button variant="ghost" size="sm" onClick={() => navigate('/patients')} className="mb-4 -ml-2">
-             <ArrowLeft className="h-4 w-4 mr-2" />
-             Back to Patients
-           </Button>
+           <div className="flex items-center justify-between mb-4">
+             <Button variant="ghost" size="sm" onClick={() => navigate('/patients')} className="-ml-2">
+               <ArrowLeft className="h-4 w-4 mr-2" />
+               <span className="hidden sm:inline">Back to Patients</span>
+               <span className="sm:hidden">Back</span>
+             </Button>
+             
+             {/* Patient Navigation (visible on mobile) */}
+             {isMobile && (adjacentPatients.prev || adjacentPatients.next) && (
+               <div className="flex items-center gap-1">
+                 <Button
+                   variant="ghost"
+                   size="icon"
+                   onClick={navigateToPrev}
+                   disabled={!adjacentPatients.prev}
+                   className="h-8 w-8"
+                 >
+                   <ChevronLeft className="h-4 w-4" />
+                 </Button>
+                 <span className="text-xs text-muted-foreground">Swipe</span>
+                 <Button
+                   variant="ghost"
+                   size="icon"
+                   onClick={navigateToNext}
+                   disabled={!adjacentPatients.next}
+                   className="h-8 w-8"
+                 >
+                   <ChevronRight className="h-4 w-4" />
+                 </Button>
+               </div>
+             )}
+           </div>
            <div className="flex items-start justify-between">
              <div>
                <h1 className="text-2xl font-bold flex items-center gap-3">
