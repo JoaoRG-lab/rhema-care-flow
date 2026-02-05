@@ -32,6 +32,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DAS28CRPCalculator } from '@/components/scores/DAS28CRPCalculator';
 import { ACREULARRACalculator } from '@/components/scores/ACREULARRACalculator';
 import { DAS28ComparisonCalculator } from '@/components/scores/DAS28ComparisonCalculator';
+import { SDAICalculator } from '@/components/scores/SDAICalculator';
  import { Alert, AlertDescription } from '@/components/ui/alert';
  import { toast } from 'sonner';
  
@@ -98,6 +99,8 @@ import { DAS28ComparisonCalculator } from '@/components/scores/DAS28ComparisonCa
         return <DAS28ComparisonCalculator />;
        case 'cdai':
          return <CDAICalculator />;
+      case 'sdai':
+        return <SDAICalculator />;
        case 'basdai':
          return <BASDAICalculator />;
        case 'sledai':
