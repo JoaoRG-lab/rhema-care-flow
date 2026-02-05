@@ -8,6 +8,7 @@
  import { supabase } from '@/integrations/supabase/client';
  import { toast } from 'sonner';
  import type { Json } from '@/integrations/supabase/types';
+ import { ACTION_OPTIONS, LAB_OPTIONS, IMAGING_OPTIONS } from '@/config/clinical';
  
  interface Visit {
    id: string;
@@ -26,10 +27,6 @@
    onOpenChange: (open: boolean) => void;
    onVisitUpdated: () => void;
  }
- 
- const ACTION_OPTIONS = ['Medication started', 'Medication adjusted', 'Medication stopped', 'Injection given', 'Referral made', 'Imaging ordered', 'Labs ordered'];
- const LAB_OPTIONS = ['CBC', 'CMP', 'LFTs', 'ESR', 'CRP', 'RF', 'Anti-CCP', 'ANA', 'dsDNA', 'Complement', 'Lipids', 'HbA1c'];
- const IMAGING_OPTIONS = ['X-ray hands', 'X-ray feet', 'X-ray spine', 'MRI', 'Ultrasound', 'CT', 'DXA'];
  
  export function EditVisitDialog({ visit, open, onOpenChange, onVisitUpdated }: EditVisitDialogProps) {
    const [visitDate, setVisitDate] = useState(visit.visit_date);
