@@ -232,7 +232,12 @@ import { useAuditLog } from '@/hooks/useAuditLog';
            </TabsList>
  
            <TabsContent value="visits">
-             <VisitHistory patientId={patient.id} refreshKey={refreshKey} />
+            <VisitHistory 
+              patientId={patient.id} 
+              refreshKey={refreshKey} 
+              patientCode={patient.patient_code}
+              diagnosisTags={patient.diagnosis_tags}
+            />
            </TabsContent>
  
            <TabsContent value="scores">

@@ -21,6 +21,7 @@
  import { EditVisitDialog } from './EditVisitDialog';
 import DOMPurify from 'dompurify';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { VisitSummaryAssistant } from './VisitSummaryAssistant';
  
  import type { Json } from '@/integrations/supabase/types';
  
@@ -39,9 +40,11 @@ import { useAuditLog } from '@/hooks/useAuditLog';
  interface VisitHistoryProps {
    patientId: string;
    refreshKey?: number;
+  patientCode?: string;
+  diagnosisTags?: string[] | null;
  }
  
- export function VisitHistory({ patientId, refreshKey }: VisitHistoryProps) {
+export function VisitHistory({ patientId, refreshKey, patientCode, diagnosisTags }: VisitHistoryProps) {
    const { user } = useAuth();
   const { logAccess } = useAuditLog();
    const [visits, setVisits] = useState<Visit[]>([]);
@@ -144,6 +147,13 @@ import { useAuditLog } from '@/hooks/useAuditLog';
  
    return (
      <div className="space-y-4">
+      {/* AI Summary Assistant */}
+      <VisitSummaryAssistant 
+        visits={visits} 
+        patientCode={patientCode || 'Unknown'} 
+        diagnosisTags={diagnosisTags || null}
+      />
+
        {visits.map((visit) => (
          <Card key={visit.id}>
            <CardHeader className="pb-2">
