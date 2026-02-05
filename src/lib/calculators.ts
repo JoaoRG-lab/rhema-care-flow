@@ -159,7 +159,8 @@
      description: 'Minimal Disease Activity for PsA (5/7 criteria)',
      category: 'disease-activity',
      diseases: ['psa'],
-     implemented: false,
+     implemented: true,
+     reference: 'Coates et al. 2010',
    },
    {
      id: 'bvas',
