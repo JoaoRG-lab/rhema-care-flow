@@ -20,6 +20,7 @@
  import { toast } from 'sonner';
  import { EditVisitDialog } from './EditVisitDialog';
 import DOMPurify from 'dompurify';
+import { useAuditLog } from '@/hooks/useAuditLog';
  
  import type { Json } from '@/integrations/supabase/types';
  
@@ -42,6 +43,7 @@ import DOMPurify from 'dompurify';
  
  export function VisitHistory({ patientId, refreshKey }: VisitHistoryProps) {
    const { user } = useAuth();
+  const { logAccess } = useAuditLog();
    const [visits, setVisits] = useState<Visit[]>([]);
    const [loading, setLoading] = useState(true);
    const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
@@ -73,7 +75,18 @@ import DOMPurify from 'dompurify';
        .eq('user_id', user.id)
        .order('visit_date', { ascending: false });
  
-     if (data) setVisits(data);
+      if (data) {
+        setVisits(data);
+        // Log visit history access
+        if (data.length > 0) {
+          logAccess({
+            action: 'view',
+            resourceType: 'visit',
+            resourceId: patientId,
+            metadata: { visit_count: data.length }
+          });
+        }
+      }
      setLoading(false);
    };
  
@@ -93,6 +106,12 @@ import DOMPurify from 'dompurify';
        toast.error('Failed to delete visit');
      } else {
        toast.success('Visit deleted');
+        logAccess({
+          action: 'delete',
+          resourceType: 'visit',
+          resourceId: deletingVisitId,
+          metadata: { patient_id: patientId }
+        });
        fetchVisits();
      }
    };

@@ -13,6 +13,7 @@
  import { useNavigate } from 'react-router-dom';
  import { format } from 'date-fns';
  import { toast } from 'sonner';
+import { useAuditLog } from '@/hooks/useAuditLog';
  
  interface PatientCard {
    id: string;
@@ -34,6 +35,7 @@
  export default function Patients() {
    const { user } = useAuth();
    const navigate = useNavigate();
+  const { logAccess } = useAuditLog();
    const [patients, setPatients] = useState<PatientCard[]>([]);
    const [searchQuery, setSearchQuery] = useState('');
    const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
@@ -70,7 +72,7 @@
      e.preventDefault();
      if (!user) return;
  
-     const { error } = await supabase.from('patient_cards').insert({
+      const { data, error } = await supabase.from('patient_cards').insert({
        user_id: user.id,
        patient_code: patientCode,
        mrn_last4: mrnLast4 || null,
@@ -79,12 +81,18 @@
        risk_flags: riskFlags,
        notes: notes || null,
        next_followup_date: nextFollowup || null,
-     });
+      }).select().single();
  
      if (error) {
        toast.error('Failed to create patient card');
      } else {
        toast.success('Patient card created');
+        logAccess({
+          action: 'create',
+          resourceType: 'patient_card',
+          resourceId: data?.id,
+          metadata: { patient_code: patientCode }
+        });
        setIsOpen(false);
        resetForm();
        fetchPatients();
