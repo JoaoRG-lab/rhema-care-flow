@@ -14,15 +14,20 @@
    Palette,
    BadgeCheck,
    ShieldCheck,
-  ChevronUp,
-  User,
+   ChevronUp,
+   User,
+   BookOpen,
+   Heart,
+   GraduationCap,
  } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+ import { usePersona } from '@/contexts/PersonaContext';
  import { cn } from '@/lib/utils';
 import { VerifiedBadge, VerifiedIcon } from '@/components/ui/VerifiedBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+ import { PersonaSwitcher } from './PersonaSwitcher';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,11 +48,32 @@ import {
    { path: '/focus', label: 'Focus', icon: Timer },
  ];
  
+ const academicNavItems = [
+   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+   { path: '/academic', label: 'Research', icon: GraduationCap },
+   { path: '/patients', label: 'Cohort Data', icon: Users },
+   { path: '/scores', label: 'Calculators', icon: Activity },
+   { path: '/calendar', label: 'Calendar', icon: Calendar },
+ ];
+ 
+ const patientNavItems = [
+   { path: '/patient-portal', label: 'My Health', icon: Heart },
+   { path: '/calendar', label: 'Appointments', icon: Calendar },
+ ];
+ 
  export function AppSidebar() {
    const location = useLocation();
    const { signOut, user } = useAuth();
   const { isAdmin } = useUserRole();
   const { tier, fullName, contributorType } = useVerificationStatus();
+   const { persona } = usePersona();
+ 
+   // Select nav items based on persona
+   const currentNavItems = persona === 'academic' 
+     ? academicNavItems 
+     : persona === 'patient' 
+       ? patientNavItems 
+       : navItems;
 
   // Get initials from name or email
   const getInitials = () => {
@@ -85,14 +111,21 @@ import {
          </div>
          <div>
            <h1 className="font-semibold text-lg text-sidebar-foreground">RheumaFlow</h1>
-           <p className="text-xs text-sidebar-foreground/60">Rheumatology Workflow</p>
+           <p className="text-xs text-sidebar-foreground/60">
+             {persona === 'academic' ? 'Academic Mode' : persona === 'patient' ? 'Patient Portal' : 'Clinical Workflow'}
+           </p>
          </div>
+       </div>
+ 
+       {/* Persona Switcher */}
+       <div className="border-b border-sidebar-border">
+         <PersonaSwitcher variant="sidebar" />
        </div>
  
        {/* Navigation */}
        <nav className="flex-1 overflow-y-auto py-4 px-3">
          <ul className="space-y-1">
-           {navItems.map((item) => {
+           {currentNavItems.map((item) => {
              const isActive = location.pathname === item.path;
              return (
                <li key={item.path}>

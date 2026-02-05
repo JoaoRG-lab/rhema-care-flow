@@ -8,9 +8,12 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+ import { usePersona } from '@/contexts/PersonaContext';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
  import { VerificationPrompt } from '@/components/dashboard/VerificationPrompt';
+ import { QuickPatientSearch } from '@/components/clinical/QuickPatientSearch';
+ import { VoiceNoteButton } from '@/components/clinical/VoiceNoteButton';
  import {
    DIAGNOSIS_OPTIONS,
  } from '@/config/clinical';
@@ -24,6 +27,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
    ChevronRight,
    CheckSquare,
    Clock,
+   Zap,
  } from 'lucide-react';
  import { format, addDays, isAfter, isBefore } from 'date-fns';
  import { useIsMobile } from '@/hooks/use-mobile';
@@ -31,6 +35,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
  export default function Dashboard() {
    const { user } = useAuth();
    const { status, tier, contributorType, fullName } = useVerificationStatus();
+   const { persona } = usePersona();
    const [patients, setPatients] = useState<PatientCard[]>([]);
    const [monitoringAlerts, setMonitoringAlerts] = useState<MonitoringEvent[]>([]);
    const [upcomingFollowups, setUpcomingFollowups] = useState<PatientCard[]>([]);
@@ -146,13 +151,34 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
               {isMobile ? format(new Date(), 'MMM d, yyyy') : `Today's Clinic • ${format(new Date(), 'EEEE, MMMM d, yyyy')}`}
             </p>
            </div>
-           <Link to="/patients">
-             <Button className="gap-2 w-full sm:w-auto">
-               <Plus className="h-4 w-4" />
-               {isMobile ? 'New Patient' : 'New Patient Card'}
-             </Button>
-           </Link>
+           <div className="flex items-center gap-2">
+             <Link to="/patients">
+               <Button className="gap-2">
+                 <Plus className="h-4 w-4" />
+                 {isMobile ? 'New' : 'New Patient'}
+               </Button>
+             </Link>
+           </div>
          </div>
+ 
+         {/* Quick Patient Search - Clinical Mode */}
+         {persona === 'clinical' && (
+           <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+             <CardContent className="p-4">
+               <div className="flex items-center gap-3 mb-3">
+                 <Zap className="h-5 w-5 text-primary" />
+                 <h3 className="font-semibold">Quick Actions</h3>
+               </div>
+               <div className="flex flex-col sm:flex-row gap-3">
+                 <QuickPatientSearch />
+                 <div className="flex items-center gap-2">
+                   <VoiceNoteButton onTranscript={(text) => console.log('Voice note:', text)} />
+                   <span className="text-xs text-muted-foreground hidden sm:inline">Voice note</span>
+                 </div>
+               </div>
+             </CardContent>
+           </Card>
+         )}
  
          {/* Verification Prompt for unverified users */}
          {tier === null && (
