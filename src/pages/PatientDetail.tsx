@@ -236,7 +236,12 @@ import { useAuditLog } from '@/hooks/useAuditLog';
            </TabsContent>
  
            <TabsContent value="scores">
-             <ScoreTrends patientId={patient.id} refreshKey={refreshKey} />
+             <ScoreTrends 
+               patientId={patient.id} 
+               refreshKey={refreshKey} 
+               patientCode={patient.patient_code}
+               diagnosisTags={patient.diagnosis_tags}
+             />
            </TabsContent>
  
            <TabsContent value="monitoring">
