@@ -1,4 +1,4 @@
- import { useEffect, useState } from 'react';
+ import { useState } from 'react';
  import { AppLayout } from '@/components/layout/AppLayout';
  import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
  import { Button } from '@/components/ui/button';
@@ -7,28 +7,11 @@
  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
  import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
- import { supabase } from '@/integrations/supabase/client';
- import { useAuth } from '@/contexts/AuthContext';
  import { Shield, Plus, Check, Clock, AlertTriangle, User } from 'lucide-react';
  import { format, isBefore } from 'date-fns';
- import { toast } from 'sonner';
+ import { useMonitoringEvents, MonitoringEventWithPatient } from '@/hooks/useMonitoringEvents';
+ import { usePatients } from '@/hooks/usePatients';
  import { Link } from 'react-router-dom';
- 
- interface MonitoringEvent {
-   id: string;
-   event_type: string;
-   due_date: string;
-   status: string;
-   completed_at: string | null;
-   notes: string | null;
-   patient_card_id: string | null;
-   patient_cards?: { patient_code: string } | null;
- }
- 
- interface PatientCard {
-   id: string;
-   patient_code: string;
- }
  
  const EVENT_TYPES = [
    'CBC',
@@ -56,11 +39,9 @@
  };
  
  export default function Monitoring() {
-   const { user } = useAuth();
-   const [events, setEvents] = useState<MonitoringEvent[]>([]);
-   const [patients, setPatients] = useState<PatientCard[]>([]);
+   const { events, loading, createEvent, markComplete } = useMonitoringEvents();
+   const { patients } = usePatients();
    const [isOpen, setIsOpen] = useState(false);
-   const [loading, setLoading] = useState(true);
  
    // Form state
    const [eventType, setEventType] = useState('');
@@ -68,93 +49,27 @@
    const [notes, setNotes] = useState('');
    const [selectedPatientId, setSelectedPatientId] = useState<string>('');
  
-   const fetchEvents = async () => {
-     if (!user) return;
-     const { data, error } = await supabase
-        .from('monitoring_events_secure')
-         .select('*')
-       .eq('user_id', user.id)
-       .order('due_date', { ascending: true });
- 
-      if (data) {
-         // Fetch patient codes separately to avoid join issues with views
-         const patientIds = [...new Set(data.filter(e => e.patient_card_id).map(e => e.patient_card_id!))];
-         let patientMap: Record<string, string> = {};
-         
-         if (patientIds.length > 0) {
-           const { data: patientData } = await supabase
-             .from('patient_cards_secure')
-             .select('id, patient_code')
-             .in('id', patientIds);
-           
-           if (patientData) {
-             patientMap = Object.fromEntries(patientData.map(p => [p.id, p.patient_code]));
-           }
-         }
-         
-         const mappedEvents = data.map((e: any) => ({
-           ...e,
-           patient_cards: e.patient_card_id ? { patient_code: patientMap[e.patient_card_id] || 'Unknown' } : null
-         }));
-         setEvents(mappedEvents as MonitoringEvent[]);
-      }
-     if (error) toast.error('Failed to load events');
-     setLoading(false);
-   };
- 
-   const fetchPatients = async () => {
-     if (!user) return;
-     const { data } = await supabase
-        .from('patient_cards_secure')
-       .select('id, patient_code')
-       .eq('user_id', user.id)
-       .order('patient_code');
-      if (data) setPatients(data as PatientCard[]);
-   };
- 
-   useEffect(() => {
-     fetchEvents();
-     fetchPatients();
-   }, [user]);
- 
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
-     if (!user) return;
  
-     const { error } = await supabase.from('monitoring_events').insert({
-       user_id: user.id,
+     const success = await createEvent({
        event_type: eventType,
        due_date: dueDate,
        notes: notes || null,
-       status: 'pending',
        patient_card_id: selectedPatientId || null,
      });
  
-     if (error) {
-       toast.error('Failed to create event');
-     } else {
-       toast.success('Monitoring event created');
+     if (success) {
        setIsOpen(false);
        setEventType('');
        setDueDate('');
        setNotes('');
        setSelectedPatientId('');
-       fetchEvents();
      }
    };
  
-   const markComplete = async (id: string) => {
-     const { error } = await supabase
-       .from('monitoring_events')
-       .update({ status: 'completed', completed_at: new Date().toISOString() })
-       .eq('id', id);
- 
-     if (error) {
-       toast.error('Failed to update');
-     } else {
-       toast.success('Marked complete');
-       fetchEvents();
-     }
+   const handleMarkComplete = async (id: string) => {
+     await markComplete(id);
    };
  
    const pendingEvents = events.filter(e => e.status === 'pending');
@@ -290,7 +205,7 @@
                                </Link>
                              )}
                          </div>
-                         <Button size="sm" variant="outline" onClick={() => markComplete(event.id)}>
+                         <Button size="sm" variant="outline" onClick={() => handleMarkComplete(event.id)}>
                            <Check className="h-4 w-4" />
                          </Button>
                        </div>
@@ -322,7 +237,7 @@
                                </Link>
                              )}
                          </div>
-                         <Button size="sm" variant="outline" onClick={() => markComplete(event.id)}>
+                         <Button size="sm" variant="outline" onClick={() => handleMarkComplete(event.id)}>
                            <Check className="h-4 w-4" />
                          </Button>
                        </div>

@@ -1,4 +1,4 @@
- import { useEffect, useState } from 'react';
+ import { useState } from 'react';
  import { AppLayout } from '@/components/layout/AppLayout';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
@@ -7,40 +7,21 @@
  import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
  import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
- import { supabase } from '@/integrations/supabase/client';
- import { useAuth } from '@/contexts/AuthContext';
  import { Plus, Search, Calendar, User } from 'lucide-react';
  import { useNavigate } from 'react-router-dom';
  import { format } from 'date-fns';
- import { toast } from 'sonner';
-import { useAuditLog } from '@/hooks/useAuditLog';
- 
- interface PatientCard {
-   id: string;
-   patient_code: string;
-   mrn_last4: string | null;
-   diagnosis_tags: string[];
-   therapy_tags: string[];
-   risk_flags: string[];
-   last_visit_date: string | null;
-   next_followup_date: string | null;
-   notes: string | null;
-   created_at: string;
- }
+ import { usePatients, PatientCard } from '@/hooks/usePatients';
  
  const DIAGNOSIS_OPTIONS = ['RA', 'SLE', 'SpA', 'PsA', 'Vasculitis', 'FM'];
  const THERAPY_OPTIONS = ['biologic', 'infusion', 'MTX', 'LEF', 'HCQ', 'JAK-i'];
  const RISK_OPTIONS = ['pregnancy', 'infection', 'TB+', 'HBV+'];
  
  export default function Patients() {
-   const { user } = useAuth();
    const navigate = useNavigate();
-  const { logAccess } = useAuditLog();
-   const [patients, setPatients] = useState<PatientCard[]>([]);
+   const { patients, loading, createPatient } = usePatients();
    const [searchQuery, setSearchQuery] = useState('');
    const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
    const [isOpen, setIsOpen] = useState(false);
-   const [loading, setLoading] = useState(true);
  
    // Form state
    const [patientCode, setPatientCode] = useState('');
@@ -51,29 +32,10 @@ import { useAuditLog } from '@/hooks/useAuditLog';
    const [notes, setNotes] = useState('');
    const [nextFollowup, setNextFollowup] = useState('');
  
-   const fetchPatients = async () => {
-     if (!user) return;
-     const { data, error } = await supabase
-        .from('patient_cards_secure')
-       .select('*')
-       .eq('user_id', user.id)
-       .order('created_at', { ascending: false });
- 
-      if (data) setPatients(data as PatientCard[]);
-     if (error) toast.error('Failed to load patients');
-     setLoading(false);
-   };
- 
-   useEffect(() => {
-     fetchPatients();
-   }, [user]);
- 
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
-     if (!user) return;
  
-      const { data, error } = await supabase.from('patient_cards').insert({
-       user_id: user.id,
+     const result = await createPatient({
        patient_code: patientCode,
        mrn_last4: mrnLast4 || null,
        diagnosis_tags: diagnosisTags,
@@ -81,21 +43,11 @@ import { useAuditLog } from '@/hooks/useAuditLog';
        risk_flags: riskFlags,
        notes: notes || null,
        next_followup_date: nextFollowup || null,
-      }).select().single();
+     });
  
-     if (error) {
-       toast.error('Failed to create patient card');
-     } else {
-       toast.success('Patient card created');
-        logAccess({
-          action: 'create',
-          resourceType: 'patient_card',
-          resourceId: data?.id,
-          metadata: { patient_code: patientCode }
-        });
+     if (result) {
        setIsOpen(false);
        resetForm();
-       fetchPatients();
      }
    };
  

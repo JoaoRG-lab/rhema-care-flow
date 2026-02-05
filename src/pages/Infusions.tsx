@@ -1,4 +1,4 @@
- import { useEffect, useState } from 'react';
+ import { useState } from 'react';
  import { AppLayout } from '@/components/layout/AppLayout';
  import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
  import { Button } from '@/components/ui/button';
@@ -6,20 +6,9 @@
  import { Label } from '@/components/ui/label';
  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
- import { supabase } from '@/integrations/supabase/client';
- import { useAuth } from '@/contexts/AuthContext';
+ import { useInfusions, InfusionEvent } from '@/hooks/useInfusions';
  import { Syringe, Plus, Calendar, Clock } from 'lucide-react';
- import { format, addDays, differenceInDays } from 'date-fns';
- import { toast } from 'sonner';
- 
- interface InfusionEvent {
-   id: string;
-   drug: string;
-   interval_days: number;
-   next_date: string;
-   notes: string | null;
-   patient_card_id: string | null;
- }
+ import { format, differenceInDays } from 'date-fns';
  
  const BIOLOGIC_DRUGS = [
    { name: 'Infliximab', defaultInterval: 56 },
@@ -32,33 +21,14 @@
  ];
  
  export default function Infusions() {
-   const { user } = useAuth();
-   const [infusions, setInfusions] = useState<InfusionEvent[]>([]);
+   const { infusions, loading, createInfusion, markCompleted } = useInfusions();
    const [isOpen, setIsOpen] = useState(false);
-   const [loading, setLoading] = useState(true);
  
    // Form state
    const [drug, setDrug] = useState('');
    const [intervalDays, setIntervalDays] = useState<number>(28);
    const [nextDate, setNextDate] = useState('');
    const [notes, setNotes] = useState('');
- 
-   const fetchInfusions = async () => {
-     if (!user) return;
-     const { data, error } = await supabase
-        .from('infusion_events_secure')
-       .select('*')
-       .eq('user_id', user.id)
-       .order('next_date', { ascending: true });
- 
-      if (data) setInfusions(data as InfusionEvent[]);
-     if (error) toast.error('Failed to load infusions');
-     setLoading(false);
-   };
- 
-   useEffect(() => {
-     fetchInfusions();
-   }, [user]);
  
    const handleDrugChange = (selectedDrug: string) => {
      setDrug(selectedDrug);
@@ -70,44 +40,25 @@
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
-     if (!user) return;
  
-     const { error } = await supabase.from('infusion_events').insert({
-       user_id: user.id,
+     const success = await createInfusion({
        drug,
        interval_days: intervalDays,
        next_date: nextDate,
        notes: notes || null,
      });
  
-     if (error) {
-       toast.error('Failed to create infusion');
-     } else {
-       toast.success('Infusion scheduled');
+     if (success) {
        setIsOpen(false);
        setDrug('');
        setIntervalDays(28);
        setNextDate('');
        setNotes('');
-       fetchInfusions();
      }
    };
  
-   const markCompleted = async (infusion: InfusionEvent) => {
-     // Update to next scheduled date
-     const newNextDate = addDays(new Date(infusion.next_date), infusion.interval_days);
-     
-     const { error } = await supabase
-       .from('infusion_events')
-       .update({ next_date: format(newNextDate, 'yyyy-MM-dd') })
-       .eq('id', infusion.id);
- 
-     if (error) {
-       toast.error('Failed to update');
-     } else {
-       toast.success(`Next infusion scheduled for ${format(newNextDate, 'MMM d, yyyy')}`);
-       fetchInfusions();
-     }
+   const handleMarkCompleted = async (infusion: InfusionEvent) => {
+     await markCompleted(infusion);
    };
  
    const getDaysUntil = (dateStr: string) => {
@@ -238,7 +189,7 @@
                          size="sm" 
                          variant="outline" 
                          className="w-full"
-                         onClick={() => markCompleted(infusion)}
+                         onClick={() => handleMarkCompleted(infusion)}
                        >
                          Mark Complete & Schedule Next
                        </Button>
