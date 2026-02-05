@@ -8,12 +8,14 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+ import { ArrowLeftRight } from 'lucide-react';
  import { format } from 'date-fns';
  import { toast } from 'sonner';
  import { VisitHistory } from '@/components/patients/VisitHistory';
  import { ScoreTrends } from '@/components/patients/ScoreTrends';
  import { AddVisitDialog } from '@/components/patients/AddVisitDialog';
  import { PatientMonitoring } from '@/components/patients/PatientMonitoring';
+ import { TreatmentResponseTimeline } from '@/components/patients/TreatmentResponseTimeline';
  import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
  import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
 import { useAuditLog } from '@/hooks/useAuditLog';
@@ -310,6 +312,10 @@ import { useAuditLog } from '@/hooks/useAuditLog';
                <Shield className="h-4 w-4" />
                Monitoring
              </TabsTrigger>
+             <TabsTrigger value="timeline" className="gap-2">
+               <ArrowLeftRight className="h-4 w-4" />
+               Response
+             </TabsTrigger>
            </TabsList>
  
            <TabsContent value="visits">
@@ -332,6 +338,14 @@ import { useAuditLog } from '@/hooks/useAuditLog';
  
            <TabsContent value="monitoring">
              <PatientMonitoring patientId={patient.id} refreshKey={refreshKey} />
+           </TabsContent>
+ 
+           <TabsContent value="timeline">
+             <TreatmentResponseTimeline 
+               patientId={patient.id} 
+               refreshKey={refreshKey}
+               patientCode={patient.patient_code}
+             />
            </TabsContent>
          </Tabs>
            
