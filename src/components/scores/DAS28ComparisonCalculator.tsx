@@ -4,12 +4,14 @@
  import { Input } from '@/components/ui/input';
  import { Label } from '@/components/ui/label';
  import { Calculator, Save, Info, ArrowLeftRight } from 'lucide-react';
+ import { AlertTriangle } from 'lucide-react';
  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
  import { addToHistory } from '@/lib/calculators';
  import { cn } from '@/lib/utils';
+ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
  
  interface ScoreResult {
    score: number;
@@ -115,6 +117,29 @@
    const scoreDifference = esrResult && crpResult 
      ? Math.abs(esrResult.score - crpResult.score).toFixed(2)
      : null;
+ 
+   const hasCategoryDiscrepancy = esrResult && crpResult && 
+     esrResult.interpretation.text !== crpResult.interpretation.text;
+ 
+   const getDiscrepancyMessage = () => {
+     if (!esrResult || !crpResult || !hasCategoryDiscrepancy) return null;
+     
+     const esrCategory = esrResult.interpretation.text;
+     const crpCategory = crpResult.interpretation.text;
+     
+     // Determine which is higher
+     const esrHigher = esrResult.score > crpResult.score;
+     
+     return {
+       title: `Category Discrepancy: ${esrCategory} vs ${crpCategory}`,
+       message: esrHigher
+         ? 'ESR suggests higher disease activity than CRP. Consider ESR may be elevated by non-RA factors (age, anemia, infection) or CRP may be suppressed.'
+         : 'CRP suggests higher disease activity than ESR. CRP responds faster to inflammation changes; ESR may lag behind acute flares.',
+       clinicalNote: 'When scores disagree, correlate with clinical examination and consider repeating labs. DAS28-CRP may be more sensitive to rapid changes.',
+     };
+   };
+ 
+   const discrepancyInfo = getDiscrepancyMessage();
  
    return (
      <Card>
@@ -228,7 +253,10 @@
  
            {/* Side by Side Results */}
            {(esrResult || crpResult) && (
-             <div className="grid md:grid-cols-2 gap-4">
+             <div className={cn(
+               "grid md:grid-cols-2 gap-4",
+               hasCategoryDiscrepancy && "ring-2 ring-warning/50 ring-offset-2 ring-offset-background rounded-lg"
+             )}>
                {/* DAS28-ESR Result */}
                <div className={cn(
                  "flex flex-col items-center justify-center rounded-lg p-6 border-2",
@@ -292,14 +320,30 @@
            {/* Score Difference & Interpretation Guide */}
            {esrResult && crpResult && (
              <div className="space-y-3">
+               {/* Category Discrepancy Alert */}
+               {hasCategoryDiscrepancy && discrepancyInfo && (
+                 <Alert variant="destructive" className="border-warning bg-warning/10 text-foreground [&>svg]:text-warning">
+                   <AlertTriangle className="h-4 w-4" />
+                   <AlertTitle className="text-warning-foreground font-semibold">
+                     {discrepancyInfo.title}
+                   </AlertTitle>
+                   <AlertDescription className="text-sm space-y-2">
+                     <p>{discrepancyInfo.message}</p>
+                     <p className="text-xs text-muted-foreground italic">
+                       {discrepancyInfo.clinicalNote}
+                     </p>
+                   </AlertDescription>
+                 </Alert>
+               )}
+ 
                {/* Score Difference */}
                <div className="flex items-center justify-center gap-3 p-3 bg-muted/50 rounded-lg">
                  <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
                  <span className="text-sm">
                    Score Difference: <strong>{scoreDifference}</strong>
                  </span>
-                 {esrResult.interpretation.text !== crpResult.interpretation.text && (
-                   <span className="text-xs text-warning px-2 py-0.5 bg-warning/10 rounded">
+                 {hasCategoryDiscrepancy && (
+                   <span className="text-xs text-warning font-medium px-2 py-0.5 bg-warning/20 rounded-full border border-warning/30">
                      Different categories
                    </span>
                  )}
