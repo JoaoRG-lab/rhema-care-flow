@@ -14,6 +14,7 @@
  import { Checkbox } from "@/components/ui/checkbox";
  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
  import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  import { supabase } from "@/integrations/supabase/client";
  import { useAuth } from "@/contexts/AuthContext";
  import { toast } from "sonner";
@@ -26,7 +27,13 @@
    ArrowLeft,
    Loader2,
    CheckCircle,
-   Info
+  Info,
+  Code,
+  Handshake,
+  Stethoscope,
+  Github,
+  Globe,
+  Building2
  } from "lucide-react";
  
  const CERTIFYING_BODIES = [
@@ -67,59 +74,110 @@
    "Ultrasound/Imaging"
  ];
  
- const verificationSchema = z.object({
+const TECHNICAL_EXPERTISE_AREAS = [
+  "React/TypeScript",
+  "Backend/Node.js",
+  "Database/SQL",
+  "Mobile Development",
+  "UI/UX Design",
+  "DevOps/Infrastructure",
+  "Security",
+  "AI/Machine Learning",
+  "Healthcare IT/FHIR",
+  "Data Visualization"
+];
+
+const PARTNERSHIP_TYPES = [
+  "Healthcare Institution",
+  "Medical Device Company",
+  "Pharmaceutical Company",
+  "Research Organization",
+  "Professional Association",
+  "Technology Vendor",
+  "Academic Partner",
+  "Other"
+];
+
+// Base schema for all contributor types
+const baseSchema = z.object({
    full_name: z.string().min(2, "Full name is required").max(100),
    email: z.string().email("Valid email is required"),
-   
-   // University Affiliation
+  contributor_type: z.enum(["clinical", "developer", "partner"]),
+  expertise_statement: z.string().max(1000).optional(),
+  accuracy_agreement: z.boolean().refine(val => val === true, "You must confirm accuracy"),
+  ethics_agreement: z.boolean().refine(val => val === true, "You must agree to ethical standards"),
+});
+
+// Clinical contributor fields
+const clinicalSchema = baseSchema.extend({
+  contributor_type: z.literal("clinical"),
    institution: z.string().optional(),
    department: z.string().optional(),
    position: z.string().optional(),
    institutional_email: z.string().email().optional().or(z.literal("")),
-   
-   // Board Certification
    certifying_body: z.string().optional(),
    certification_credential: z.string().optional(),
    certification_date: z.string().optional(),
    certification_expiry: z.string().optional(),
    moc_status: z.string().optional(),
-   
-   // Medical License
    license_number: z.string().optional(),
    license_issuing_authority: z.string().optional(),
    license_status: z.string().optional(),
    license_expiry: z.string().optional(),
-   
-   // Publications
    orcid_id: z.string().optional(),
    publication_count: z.coerce.number().min(0).optional(),
    clinical_trial_roles: z.string().optional(),
    guideline_contributions: z.string().optional(),
-   
-   // Experience
    years_in_practice: z.coerce.number().min(0).max(70).optional(),
-   expertise_statement: z.string().max(1000).optional(),
-   
-   // Agreements
-   accuracy_agreement: z.boolean().refine(val => val === true, "You must confirm accuracy"),
-   ethics_agreement: z.boolean().refine(val => val === true, "You must agree to ethical standards"),
  });
  
- type VerificationFormData = z.infer<typeof verificationSchema>;
+// Developer contributor fields
+const developerSchema = baseSchema.extend({
+  contributor_type: z.literal("developer"),
+  github_username: z.string().optional(),
+  portfolio_url: z.string().url().optional().or(z.literal("")),
+  years_of_experience: z.coerce.number().min(0).max(50).optional(),
+  open_source_contributions: z.string().optional(),
+});
+
+// Partner contributor fields
+const partnerSchema = baseSchema.extend({
+  contributor_type: z.literal("partner"),
+  company_name: z.string().min(2, "Company name is required"),
+  partnership_type: z.string().optional(),
+  company_website: z.string().url().optional().or(z.literal("")),
+  contact_role: z.string().optional(),
+  partnership_goals: z.string().optional(),
+});
+
+// Combined schema using discriminated union
+const verificationSchema = z.discriminatedUnion("contributor_type", [
+  clinicalSchema,
+  developerSchema,
+  partnerSchema,
+]);
+
+type VerificationFormData = z.infer<typeof clinicalSchema> | z.infer<typeof developerSchema> | z.infer<typeof partnerSchema>;
  
  export default function VerificationRequest() {
    const { user } = useAuth();
    const navigate = useNavigate();
    const [isSubmitting, setIsSubmitting] = useState(false);
    const [selectedExpertise, setSelectedExpertise] = useState<string[]>([]);
+  const [selectedTechExpertise, setSelectedTechExpertise] = useState<string[]>([]);
+  const [contributorType, setContributorType] = useState<"clinical" | "developer" | "partner">("clinical");
    const [existingRequest, setExistingRequest] = useState<any>(null);
    const [isLoading, setIsLoading] = useState(true);
  
-   const form = useForm<VerificationFormData>({
-     resolver: zodResolver(verificationSchema),
+  const form = useForm<any>({
+    resolver: zodResolver(
+      contributorType === "clinical" ? clinicalSchema :
+      contributorType === "developer" ? developerSchema : partnerSchema
+    ),
      defaultValues: {
        full_name: "",
        email: user?.email || "",
+      contributor_type: contributorType,
        accuracy_agreement: false,
        ethics_agreement: false,
      },
@@ -159,31 +217,60 @@
      setIsSubmitting(true);
  
      try {
-       const { error } = await supabase.from("verification_requests").insert({
+      const baseData = {
          user_id: user.id,
          full_name: data.full_name,
          email: data.email,
-         institution: data.institution || null,
-         department: data.department || null,
-         position: data.position || null,
-         institutional_email: data.institutional_email || null,
-         certifying_body: data.certifying_body || null,
-         certification_credential: data.certification_credential || null,
-         certification_date: data.certification_date || null,
-         certification_expiry: data.certification_expiry || null,
-         moc_status: data.moc_status || null,
-         license_number: data.license_number || null,
-         license_issuing_authority: data.license_issuing_authority || null,
-         license_status: data.license_status || null,
-         license_expiry: data.license_expiry || null,
-         orcid_id: data.orcid_id || null,
-         publication_count: data.publication_count || 0,
-         clinical_trial_roles: data.clinical_trial_roles || null,
-         guideline_contributions: data.guideline_contributions || null,
-         years_in_practice: data.years_in_practice || null,
-         expertise_areas: selectedExpertise,
+        contributor_type: contributorType,
          expertise_statement: data.expertise_statement || null,
-       });
+      };
+
+      let insertData: any = baseData;
+
+      if (contributorType === "clinical") {
+        const clinicalData = data as z.infer<typeof clinicalSchema>;
+        insertData = {
+          ...baseData,
+          institution: clinicalData.institution || null,
+          department: clinicalData.department || null,
+          position: clinicalData.position || null,
+          institutional_email: clinicalData.institutional_email || null,
+          certifying_body: clinicalData.certifying_body || null,
+          certification_credential: clinicalData.certification_credential || null,
+          certification_date: clinicalData.certification_date || null,
+          certification_expiry: clinicalData.certification_expiry || null,
+          moc_status: clinicalData.moc_status || null,
+          license_number: clinicalData.license_number || null,
+          license_issuing_authority: clinicalData.license_issuing_authority || null,
+          license_status: clinicalData.license_status || null,
+          license_expiry: clinicalData.license_expiry || null,
+          orcid_id: clinicalData.orcid_id || null,
+          publication_count: clinicalData.publication_count || 0,
+          clinical_trial_roles: clinicalData.clinical_trial_roles || null,
+          guideline_contributions: clinicalData.guideline_contributions || null,
+          years_in_practice: clinicalData.years_in_practice || null,
+          expertise_areas: selectedExpertise,
+        };
+      } else if (contributorType === "developer") {
+        const devData = data as z.infer<typeof developerSchema>;
+        insertData = {
+          ...baseData,
+          github_username: devData.github_username || null,
+          portfolio_url: devData.portfolio_url || null,
+          technical_expertise: selectedTechExpertise,
+        };
+      } else if (contributorType === "partner") {
+        const partnerData = data as z.infer<typeof partnerSchema>;
+        insertData = {
+          ...baseData,
+          company_name: partnerData.company_name || null,
+          partnership_type: partnerData.partnership_type || null,
+          portfolio_url: partnerData.company_website || null,
+          position: partnerData.contact_role || null,
+        };
+      }
+
+      const { error } = await supabase.from("verification_requests").insert(insertData);
  
        if (error) throw error;
  
@@ -205,6 +292,26 @@
      );
    };
  
+  const toggleTechExpertise = (area: string) => {
+    setSelectedTechExpertise(prev => 
+      prev.includes(area) 
+        ? prev.filter(a => a !== area)
+        : [...prev, area]
+    );
+  };
+
+  const handleContributorTypeChange = (type: "clinical" | "developer" | "partner") => {
+    setContributorType(type);
+    form.setValue("contributor_type", type);
+    form.reset({
+      full_name: form.getValues("full_name"),
+      email: form.getValues("email"),
+      contributor_type: type,
+      accuracy_agreement: false,
+      ethics_agreement: false,
+    });
+  };
+
    if (!user) {
      return (
        <div className="min-h-screen bg-background flex items-center justify-center p-8">
@@ -298,6 +405,8 @@
                      {existingRequest.tier === "silver" && "🥈 Silver"}
                      {existingRequest.tier === "gold" && "🥇 Gold"}
                      {existingRequest.tier === "expert" && "⭐ Expert"}
+                  {existingRequest.tier === "developer" && "💻 Developer"}
+                  {existingRequest.tier === "partner" && "🤝 Partner"}
                    </Badge>
                  </div>
                )}
@@ -340,11 +449,70 @@
            </p>
          </div>
  
-         <Alert className="mb-6">
+          {/* Contributor Type Selector */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Choose Your Contributor Type</CardTitle>
+              <CardDescription>Select the type that best describes your contribution</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-4">
+                <button
+                  type="button"
+                  onClick={() => handleContributorTypeChange("clinical")}
+                  className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                    contributorType === "clinical" 
+                      ? "border-primary bg-primary/5" 
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <Stethoscope className="h-8 w-8 text-primary mb-2" />
+                  <h3 className="font-semibold">Clinical</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Healthcare professionals, researchers, and medical educators
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleContributorTypeChange("developer")}
+                  className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                    contributorType === "developer" 
+                      ? "border-primary bg-primary/5" 
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <Code className="h-8 w-8 text-violet-500 mb-2" />
+                  <h3 className="font-semibold">Developer</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Software engineers and designers building RheumaFlow
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleContributorTypeChange("partner")}
+                  className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                    contributorType === "partner" 
+                      ? "border-primary bg-primary/5" 
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <Handshake className="h-8 w-8 text-emerald-500 mb-2" />
+                  <h3 className="font-semibold">Partner</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Organizations and companies integrating with RheumaFlow
+                  </p>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Alert className="mb-6">
            <Info className="h-4 w-4" />
            <AlertDescription>
-             Verified contributors can add clinical insights, review disease activity scores, and edit clinical guidelines.
-             Review typically takes 5-7 business days.
+              {contributorType === "clinical" && "Verified clinical contributors can add clinical insights, review disease activity scores, and edit clinical guidelines."}
+              {contributorType === "developer" && "Verified developers can contribute code, improve features, and help maintain the RheumaFlow platform."}
+              {contributorType === "partner" && "Verified partners can integrate their services and collaborate on healthcare solutions."}
+              {" "}Review typically takes 5-7 business days.
            </AlertDescription>
          </Alert>
  
@@ -355,9 +523,11 @@
                <CardHeader>
                  <CardTitle className="text-lg flex items-center gap-2">
                    <Award className="h-5 w-5 text-primary" />
-                   Personal Information
+                    {contributorType === "partner" ? "Contact Information" : "Personal Information"}
                  </CardTitle>
-                 <CardDescription>Your basic contact information</CardDescription>
+                  <CardDescription>
+                    {contributorType === "partner" ? "Primary contact for partnership" : "Your basic contact information"}
+                  </CardDescription>
                </CardHeader>
                <CardContent className="grid md:grid-cols-2 gap-4">
                  <FormField
@@ -365,9 +535,9 @@
                    name="full_name"
                    render={({ field }) => (
                      <FormItem>
-                       <FormLabel>Full Name *</FormLabel>
+                        <FormLabel>{contributorType === "partner" ? "Contact Name *" : "Full Name *"}</FormLabel>
                        <FormControl>
-                         <Input placeholder="Dr. Jane Smith" {...field} />
+                          <Input placeholder={contributorType === "clinical" ? "Dr. Jane Smith" : "Jane Smith"} {...field} />
                        </FormControl>
                        <FormMessage />
                      </FormItem>
@@ -380,30 +550,37 @@
                      <FormItem>
                        <FormLabel>Email Address *</FormLabel>
                        <FormControl>
-                         <Input type="email" placeholder="jane.smith@hospital.edu" {...field} />
+                          <Input type="email" placeholder={
+                            contributorType === "clinical" ? "jane.smith@hospital.edu" :
+                            contributorType === "developer" ? "jane@example.com" :
+                            "partnerships@company.com"
+                          } {...field} />
                        </FormControl>
                        <FormMessage />
                      </FormItem>
                    )}
                  />
-                 <FormField
-                   control={form.control}
-                   name="years_in_practice"
-                   render={({ field }) => (
-                     <FormItem>
-                       <FormLabel>Years in Practice</FormLabel>
-                       <FormControl>
-                         <Input type="number" min={0} max={70} placeholder="10" {...field} />
-                       </FormControl>
-                       <FormMessage />
-                     </FormItem>
-                   )}
-                 />
+                  {contributorType === "clinical" && (
+                    <FormField
+                      control={form.control}
+                      name="years_in_practice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Years in Practice</FormLabel>
+                          <FormControl>
+                            <Input type="number" min={0} max={70} placeholder="10" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                </CardContent>
              </Card>
  
-             {/* University Affiliation */}
-             <Card>
+              {/* Clinical: University Affiliation */}
+              {contributorType === "clinical" && (
+                <Card>
                <CardHeader>
                  <CardTitle className="text-lg flex items-center gap-2">
                    <GraduationCap className="h-5 w-5 text-primary" />
@@ -475,10 +652,12 @@
                    )}
                  />
                </CardContent>
-             </Card>
+                </Card>
+              )}
  
-             {/* Board Certification */}
-             <Card>
+              {/* Clinical: Board Certification */}
+              {contributorType === "clinical" && (
+                <Card>
                <CardHeader>
                  <CardTitle className="text-lg flex items-center gap-2">
                    <FileCheck className="h-5 w-5 text-primary" />
@@ -562,10 +741,12 @@
                    )}
                  />
                </CardContent>
-             </Card>
+                </Card>
+              )}
  
-             {/* Medical License */}
-             <Card>
+              {/* Clinical: Medical License */}
+              {contributorType === "clinical" && (
+                <Card>
                <CardHeader>
                  <CardTitle className="text-lg flex items-center gap-2">
                    <FileCheck className="h-5 w-5 text-primary" />
@@ -636,10 +817,12 @@
                    )}
                  />
                </CardContent>
-             </Card>
+                </Card>
+              )}
  
-             {/* Publications & Research */}
-             <Card>
+              {/* Clinical: Publications & Research */}
+              {contributorType === "clinical" && (
+                <Card>
                <CardHeader>
                  <CardTitle className="text-lg flex items-center gap-2">
                    <BookOpen className="h-5 w-5 text-primary" />
@@ -709,35 +892,233 @@
                    )}
                  />
                </CardContent>
-             </Card>
+                </Card>
+              )}
  
-             {/* Expertise Areas */}
-             <Card>
-               <CardHeader>
-                 <CardTitle className="text-lg">Areas of Expertise</CardTitle>
-                 <CardDescription>Select all areas where you have specialized expertise</CardDescription>
-               </CardHeader>
-               <CardContent>
-                 <div className="flex flex-wrap gap-2">
-                   {EXPERTISE_AREAS.map(area => (
-                     <Badge 
-                       key={area}
-                       variant={selectedExpertise.includes(area) ? "default" : "outline"}
-                       className="cursor-pointer transition-colors"
-                       onClick={() => toggleExpertise(area)}
-                     >
-                       {area}
-                     </Badge>
-                   ))}
-                 </div>
-               </CardContent>
-             </Card>
+              {/* Clinical: Expertise Areas */}
+              {contributorType === "clinical" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Areas of Expertise</CardTitle>
+                    <CardDescription>Select all areas where you have specialized expertise</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {EXPERTISE_AREAS.map(area => (
+                        <Badge 
+                          key={area}
+                          variant={selectedExpertise.includes(area) ? "default" : "outline"}
+                          className="cursor-pointer transition-colors"
+                          onClick={() => toggleExpertise(area)}
+                        >
+                          {area}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Developer: GitHub & Portfolio */}
+              {contributorType === "developer" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Github className="h-5 w-5" />
+                      Developer Profile
+                    </CardTitle>
+                    <CardDescription>Your development experience and portfolio</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="github_username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>GitHub Username</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="octocat" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormDescription>Your GitHub profile for code review</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="portfolio_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Portfolio URL</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="https://yourportfolio.com" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormDescription>Personal website or portfolio</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="open_source_contributions"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Open Source Contributions</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Describe your notable open source contributions, especially in healthcare or medical software..."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Developer: Technical Expertise */}
+              {contributorType === "developer" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Code className="h-5 w-5 text-violet-500" />
+                      Technical Expertise
+                    </CardTitle>
+                    <CardDescription>Select your areas of technical expertise</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {TECHNICAL_EXPERTISE_AREAS.map(area => (
+                        <Badge 
+                          key={area}
+                          variant={selectedTechExpertise.includes(area) ? "default" : "outline"}
+                          className="cursor-pointer transition-colors"
+                          onClick={() => toggleTechExpertise(area)}
+                        >
+                          {area}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Partner: Company Information */}
+              {contributorType === "partner" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-emerald-500" />
+                      Organization Details
+                    </CardTitle>
+                    <CardDescription>Information about your organization</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="company_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company/Organization Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Acme Healthcare Inc." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="partnership_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Partnership Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {PARTNERSHIP_TYPES.map(type => (
+                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="company_website"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Website</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="https://company.com" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="contact_role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Your Role</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Head of Partnerships" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="partnership_goals"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Partnership Goals</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Describe how your organization would like to collaborate with RheumaFlow and the value you can bring..."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              )}
  
              {/* Statement */}
              <Card>
                <CardHeader>
-                 <CardTitle className="text-lg">Statement of Expertise</CardTitle>
-                 <CardDescription>Brief statement describing your qualifications and experience</CardDescription>
+                  <CardTitle className="text-lg">
+                    {contributorType === "clinical" && "Statement of Expertise"}
+                    {contributorType === "developer" && "Motivation Statement"}
+                    {contributorType === "partner" && "Partnership Vision"}
+                  </CardTitle>
+                  <CardDescription>
+                    {contributorType === "clinical" && "Brief statement describing your qualifications and experience"}
+                    {contributorType === "developer" && "Tell us why you want to contribute to RheumaFlow"}
+                    {contributorType === "partner" && "Describe your vision for the partnership"}
+                  </CardDescription>
                </CardHeader>
                <CardContent>
                  <FormField
@@ -747,7 +1128,13 @@
                      <FormItem>
                        <FormControl>
                          <Textarea 
-                           placeholder="Describe your clinical and research experience in rheumatology, key areas of expertise, and how you plan to contribute to RheumaFlow..."
+                            placeholder={
+                              contributorType === "clinical" 
+                                ? "Describe your clinical and research experience in rheumatology, key areas of expertise, and how you plan to contribute to RheumaFlow..."
+                                : contributorType === "developer"
+                                ? "Tell us about your background, why you're interested in healthcare technology, and what you hope to build..."
+                                : "Explain your organization's mission, how you envision the partnership, and the mutual benefits..."
+                            }
                            className="min-h-[120px]"
                            {...field}
                          />
