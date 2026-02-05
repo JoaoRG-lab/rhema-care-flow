@@ -1,0 +1,59 @@
+ import { useEffect, useState } from "react";
+ import { useNavigate } from "react-router-dom";
+ import { supabase } from "@/integrations/supabase/client";
+ import { Loader2 } from "lucide-react";
+ 
+ export default function AuthCallback() {
+   const navigate = useNavigate();
+   const [error, setError] = useState<string | null>(null);
+ 
+   useEffect(() => {
+     const handleCallback = async () => {
+       try {
+         // Get the session from URL hash (OAuth providers return tokens in hash)
+         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+         
+         if (sessionError) {
+           throw sessionError;
+         }
+ 
+         if (session) {
+           // Successfully authenticated, redirect to dashboard
+           navigate("/dashboard", { replace: true });
+         } else {
+           // No session found, redirect to login
+           navigate("/login", { replace: true });
+         }
+       } catch (err) {
+         console.error("Auth callback error:", err);
+         setError(err instanceof Error ? err.message : "Authentication failed");
+         // Redirect to login after showing error briefly
+         setTimeout(() => navigate("/login", { replace: true }), 2000);
+       }
+     };
+ 
+     handleCallback();
+   }, [navigate]);
+ 
+   if (error) {
+     return (
+       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+         <div className="text-center space-y-4">
+           <div className="text-destructive text-lg font-medium">Authentication Error</div>
+           <p className="text-muted-foreground">{error}</p>
+           <p className="text-sm text-muted-foreground">Redirecting to login...</p>
+         </div>
+       </div>
+     );
+   }
+ 
+   return (
+     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+       <div className="text-center space-y-4">
+         <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+         <h2 className="text-xl font-semibold text-foreground">Completing sign in...</h2>
+         <p className="text-muted-foreground">Please wait while we verify your credentials</p>
+       </div>
+     </div>
+   );
+ }
