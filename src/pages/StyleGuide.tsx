@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
  import { Button } from "@/components/ui/button";
  import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
  import { Label } from "@/components/ui/label";
  import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Info, AlertTriangle, Sun, Moon, Monitor } from "lucide-react";
-import { Download, FileJson, Copy, Check } from "lucide-react";
+import { Download, FileJson, Copy, Check, Filter } from "lucide-react";
 import { FileCode } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -379,6 +380,71 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
  export default function StyleGuide() {
   const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+
+  // Categories for filtering
+  const categories = [
+    { id: "all", label: "All" },
+    { id: "colors", label: "Colors" },
+    { id: "disease", label: "Disease" },
+    { id: "status", label: "Status" },
+    { id: "typography", label: "Typography" },
+    { id: "spacing", label: "Spacing" },
+    { id: "shadows", label: "Shadows" },
+    { id: "buttons", label: "Buttons" },
+    { id: "forms", label: "Forms" },
+    { id: "alerts", label: "Alerts" },
+    { id: "utility", label: "Utility" },
+  ];
+
+  // Helper to check if a section should be visible
+  const isSectionVisible = (sectionId: string, keywords: string[]) => {
+    const categoryMatch = activeCategory === "all" || activeCategory === sectionId;
+    if (!searchQuery) return categoryMatch;
+    
+    const query = searchQuery.toLowerCase();
+    const keywordMatch = keywords.some(kw => kw.toLowerCase().includes(query));
+    return categoryMatch && keywordMatch;
+  };
+
+  // Section visibility flags
+  const showCoreColors = isSectionVisible("colors", [
+    "background", "foreground", "card", "muted", "primary", "accent", "secondary", "brand", "surface", "text", "color"
+  ]);
+  const showDiseaseColors = isSectionVisible("disease", [
+    "disease", "ra", "sle", "spa", "psa", "vasculitis", "fm", "rheumatoid", "lupus", "arthritis", "fibromyalgia", "spondyloarthritis", "category", "tag"
+  ]);
+  const showRiskTags = isSectionVisible("disease", [
+    "risk", "therapy", "biologic", "infusion", "pregnancy", "infection", "tag"
+  ]);
+  const showStatusColors = isSectionVisible("status", [
+    "status", "success", "warning", "info", "destructive", "error", "completed", "pending", "overdue", "badge"
+  ]);
+  const showTypography = isSectionVisible("typography", [
+    "typography", "font", "heading", "text", "h1", "h2", "h3", "h4", "body", "small", "inter", "size", "weight"
+  ]);
+  const showShadows = isSectionVisible("shadows", [
+    "shadow", "elevation", "depth", "soft", "medium", "elevated"
+  ]);
+  const showButtons = isSectionVisible("buttons", [
+    "button", "primary", "secondary", "outline", "ghost", "destructive", "link", "click", "action"
+  ]);
+  const showForms = isSectionVisible("forms", [
+    "form", "input", "textarea", "switch", "toggle", "badge", "control", "label"
+  ]);
+  const showAlerts = isSectionVisible("alerts", [
+    "alert", "notification", "feedback", "information", "success", "warning", "error"
+  ]);
+  const showUtility = isSectionVisible("utility", [
+    "utility", "class", "stat-card", "glass", "gradient", "custom"
+  ]);
+  const showSpacing = isSectionVisible("spacing", [
+    "spacing", "gap", "margin", "padding", "scale", "px", "unit"
+  ]);
+
+  const hasVisibleSections = showCoreColors || showDiseaseColors || showRiskTags || showStatusColors || 
+    showTypography || showShadows || showButtons || showForms || showAlerts || showUtility || showSpacing;
 
   const handleExport = () => {
     const blob = new Blob([STYLE_GUIDE_MARKDOWN], { type: "text/markdown" });
@@ -458,7 +524,7 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
           </div>
           
           {/* Theme Toggle */}
-          <div className="flex items-center gap-3">
+           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm text-muted-foreground">Theme:</span>
             <Tabs value={theme} onValueChange={(v) => setTheme(v as "light" | "dark" | "system")}>
               <TabsList>
@@ -503,11 +569,59 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
             </DropdownMenu>
           </div>
          </div>
+
+         {/* Search and Filter Bar */}
+         <div className="flex flex-col sm:flex-row gap-4">
+           <div className="relative flex-1">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+             <Input
+               placeholder="Search tokens, colors, components..."
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value)}
+               className="pl-9 pr-9"
+             />
+             {searchQuery && (
+               <Button
+                 variant="ghost"
+                 size="icon"
+                 className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                 onClick={() => setSearchQuery("")}
+               >
+                 <X className="h-4 w-4" />
+               </Button>
+             )}
+           </div>
+           <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+             <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+             {categories.map((cat) => (
+               <Button
+                 key={cat.id}
+                 variant={activeCategory === cat.id ? "default" : "outline"}
+                 size="sm"
+                 onClick={() => setActiveCategory(cat.id)}
+                 className="flex-shrink-0"
+               >
+                 {cat.label}
+               </Button>
+             ))}
+           </div>
+         </div>
  
          <Separator />
+
+         {/* No results message */}
+         {!hasVisibleSections && (
+           <div className="text-center py-12">
+             <p className="text-muted-foreground">No design tokens found matching "{searchQuery}"</p>
+             <Button variant="link" onClick={() => { setSearchQuery(""); setActiveCategory("all"); }}>
+               Clear filters
+             </Button>
+           </div>
+         )}
  
          {/* Core Colors */}
-         <section className="space-y-6">
+         {showCoreColors && (
+         <section className="space-y-6" id="colors">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Core Colors</h2>
              <p className="text-muted-foreground">Foundation colors for surfaces, text, and interactions</p>
@@ -550,11 +664,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </Card>
            </div>
          </section>
+         )}
  
-         <Separator />
+         {showCoreColors && showDiseaseColors && <Separator />}
  
          {/* Disease Category Colors */}
-         <section className="space-y-6">
+         {showDiseaseColors && (
+         <section className="space-y-6" id="disease">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Disease Category Colors</h2>
              <p className="text-muted-foreground">Color-coded system for rheumatologic conditions</p>
@@ -590,11 +706,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </Card>
            </div>
          </section>
+         )}
  
-         <Separator />
+         {showDiseaseColors && showRiskTags && <Separator />}
  
          {/* Risk & Therapy Tags */}
-         <section className="space-y-6">
+         {showRiskTags && (
+         <section className="space-y-6" id="risk-tags">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Risk & Therapy Tags</h2>
              <p className="text-muted-foreground">Tags for treatment and risk factor identification</p>
@@ -609,11 +727,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </CardContent>
            </Card>
          </section>
+         )}
  
-         <Separator />
+         {showRiskTags && showStatusColors && <Separator />}
  
          {/* Status Colors */}
-         <section className="space-y-6">
+         {showStatusColors && (
+         <section className="space-y-6" id="status">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Status Colors</h2>
              <p className="text-muted-foreground">Feedback and state indication</p>
@@ -646,11 +766,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </Card>
            </div>
          </section>
+         )}
  
-         <Separator />
+         {showStatusColors && showTypography && <Separator />}
  
          {/* Typography */}
-         <section className="space-y-6">
+         {showTypography && (
+         <section className="space-y-6" id="typography">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Typography</h2>
              <p className="text-muted-foreground">Font family: Inter, system-ui, sans-serif</p>
@@ -685,11 +807,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </CardContent>
            </Card>
          </section>
+         )}
  
-         <Separator />
+         {showTypography && showShadows && <Separator />}
  
          {/* Shadows */}
-         <section className="space-y-6">
+         {showShadows && (
+         <section className="space-y-6" id="shadows">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Shadows</h2>
              <p className="text-muted-foreground">Elevation and depth hierarchy</p>
@@ -701,11 +825,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              <ShadowCard name="shadow-elevated" description="Modals, dropdowns" />
            </div>
          </section>
+         )}
  
-         <Separator />
+         {showShadows && showButtons && <Separator />}
  
          {/* Buttons */}
-         <section className="space-y-6">
+         {showButtons && (
+         <section className="space-y-6" id="buttons">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Buttons</h2>
              <p className="text-muted-foreground">Interactive button variants</p>
@@ -729,11 +855,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </CardContent>
            </Card>
          </section>
+         )}
  
-         <Separator />
+         {showButtons && showForms && <Separator />}
  
          {/* Form Elements */}
-         <section className="space-y-6">
+         {showForms && (
+         <section className="space-y-6" id="forms">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Form Elements</h2>
              <p className="text-muted-foreground">Input components and form controls</p>
@@ -775,11 +903,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </Card>
            </div>
          </section>
+         )}
  
-         <Separator />
+         {showForms && showAlerts && <Separator />}
  
          {/* Alerts */}
-         <section className="space-y-6">
+         {showAlerts && (
+         <section className="space-y-6" id="alerts">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Alerts</h2>
              <p className="text-muted-foreground">Feedback and notification patterns</p>
@@ -808,11 +938,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </Alert>
            </div>
          </section>
+         )}
  
-         <Separator />
+         {showAlerts && showUtility && <Separator />}
  
          {/* Component Classes */}
-         <section className="space-y-6">
+         {showUtility && (
+         <section className="space-y-6" id="utility">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Utility Classes</h2>
              <p className="text-muted-foreground">Custom component classes defined in index.css</p>
@@ -841,11 +973,13 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </CardContent>
            </Card>
          </section>
+         )}
  
-         <Separator />
+         {showUtility && showSpacing && <Separator />}
  
          {/* Spacing Reference */}
-         <section className="space-y-6">
+         {showSpacing && (
+         <section className="space-y-6" id="spacing">
            <div>
              <h2 className="text-2xl font-semibold mb-2">Spacing Scale</h2>
              <p className="text-muted-foreground">Tailwind spacing units (base 4px = 1 unit)</p>
@@ -863,12 +997,15 @@ const ShadowCard = ({ name, description }: { name: string; description: string }
              </CardContent>
            </Card>
          </section>
+         )}
  
          {/* Footer */}
+         {hasVisibleSections && (
          <div className="text-center py-8 text-muted-foreground text-sm">
            <p>RheumaFlow Design System v1.0</p>
            <p>Medical-Tech Professional Theme</p>
          </div>
+         )}
        </div>
      </div>
    );
