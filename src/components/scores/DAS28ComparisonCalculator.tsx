@@ -12,6 +12,8 @@
  import { addToHistory } from '@/lib/calculators';
  import { cn } from '@/lib/utils';
  import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  interface ScoreResult {
    score: number;
@@ -24,6 +26,7 @@
  
  export function DAS28ComparisonCalculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [tjc, setTjc] = useState<number>(0);
    const [sjc, setSjc] = useState<number>(0);
    const [esr, setEsr] = useState<number>(1);
@@ -73,6 +76,13 @@
    };
  
    const saveScore = async (type: 'esr' | 'crp') => {
+     const result = type === 'esr' ? esrResult : crpResult;
+     if (!result) return;
+     
+     if (!requireAuth(() => performSave(type))) return;
+   };
+ 
+   const performSave = async (type: 'esr' | 'crp') => {
      if (!user) return;
      const result = type === 'esr' ? esrResult : crpResult;
      if (!result) return;
@@ -100,8 +110,10 @@
    };
  
    const saveBoth = async () => {
-     await saveScore('esr');
-     await saveScore('crp');
+     if (!requireAuth(async () => {
+       await performSave('esr');
+       await performSave('crp');
+     })) return;
    };
  
    const resetForm = () => {
@@ -368,6 +380,12 @@
            )}
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }

@@ -9,9 +9,12 @@
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
  import { addToHistory } from '@/lib/calculators';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  export function DAS28CRPCalculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [tjc, setTjc] = useState<number>(0);
    const [sjc, setSjc] = useState<number>(0);
    const [crp, setCrp] = useState<number>(0);
@@ -38,7 +41,13 @@
    };
  
    const saveScore = async () => {
-     if (!user || result === null) return;
+     if (result === null) return;
+     
+     if (!requireAuth(() => performSave())) return;
+   };
+ 
+   const performSave = async () => {
+     if (!user) return;
      setIsSaving(true);
      
      try {
@@ -179,16 +188,16 @@
                    <p>Moderate: 3.2-5.1 | High: &gt;5.1</p>
                  </div>
                  
-                 <Button 
-                   variant="outline" 
-                   size="sm" 
-                   className="mt-4 gap-2" 
-                   onClick={saveScore}
-                   disabled={isSaving}
-                 >
-                   <Save className="h-4 w-4" />
-                   {isSaving ? 'Saving...' : 'Save Score'}
-                 </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-4 gap-2" 
+                    onClick={saveScore}
+                    disabled={isSaving}
+                  >
+                    <Save className="h-4 w-4" />
+                    {isSaving ? 'Saving...' : 'Save Score'}
+                  </Button>
                </>
              ) : (
                <div className="text-center">
@@ -201,6 +210,12 @@
            </div>
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }

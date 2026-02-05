@@ -7,29 +7,46 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
+ import { useLoginPrompt } from '@/hooks/useLoginPrompt';
+ import { LoginPromptDialog } from './LoginPromptDialog';
  
  export function CDAICalculator() {
    const { user } = useAuth();
+   const { showLoginDialog, setShowLoginDialog, requireAuth, goToLogin, goToSignup } = useLoginPrompt();
    const [tjc, setTjc] = useState<number>(0);
    const [sjc, setSjc] = useState<number>(0);
    const [patient, setPatient] = useState<number>(0);
    const [physician, setPhysician] = useState<number>(0);
    const [result, setResult] = useState<number | null>(null);
+   const [isSaving, setIsSaving] = useState(false);
  
    const calculate = () => {
      setResult(tjc + sjc + patient + physician);
    };
  
    const saveScore = async () => {
-     if (!user || result === null) return;
-     const { error } = await supabase.from('score_entries').insert({
-       user_id: user.id,
-       score_type: 'CDAI',
-       data_json: { tjc, sjc, patient, physician } as any,
-       calculated_score: result,
-     });
-     if (error) toast.error('Failed to save score');
-     else toast.success('CDAI score saved');
+     if (result === null) return;
+     if (!requireAuth(() => performSave())) return;
+   };
+ 
+   const performSave = async () => {
+     if (!user) return;
+     setIsSaving(true);
+     try {
+       const { error } = await supabase.from('score_entries').insert({
+         user_id: user.id,
+         score_type: 'CDAI',
+         data_json: { tjc, sjc, patient, physician } as any,
+         calculated_score: result,
+       });
+       if (error) throw error;
+       toast.success('CDAI score saved');
+     } catch (error) {
+       console.error('Error saving score:', error);
+       toast.error('Failed to save score');
+     } finally {
+       setIsSaving(false);
+     }
    };
  
    const getInterpretation = (score: number) => {
@@ -78,9 +95,9 @@
                  <p className={`text-lg font-medium mt-2 ${getInterpretation(result).color}`}>
                    {getInterpretation(result).text}
                  </p>
-                 <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={saveScore}>
+                 <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={saveScore} disabled={isSaving}>
                    <Save className="h-4 w-4" />
-                   Save Score
+                   {isSaving ? 'Saving...' : 'Save Score'}
                  </Button>
                </>
              ) : (
@@ -89,6 +106,12 @@
            </div>
          </div>
        </CardContent>
+       <LoginPromptDialog
+         open={showLoginDialog}
+         onOpenChange={setShowLoginDialog}
+         onLogin={goToLogin}
+         onSignup={goToSignup}
+       />
      </Card>
    );
  }
