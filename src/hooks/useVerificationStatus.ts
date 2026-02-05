@@ -1,20 +1,14 @@
  import { useState, useEffect } from 'react';
  import { useAuth } from '@/contexts/AuthContext';
  import { supabase } from '@/integrations/supabase/client';
- import type { VerificationTier } from '@/components/ui/VerifiedBadge';
-import type { ContributorType } from '@/components/ui/VerifiedBadge';
+ import type { VerificationTier, ContributorType, VerificationStatusState } from '@/types/verification';
  
- export interface VerificationStatus {
-   status: 'pending' | 'under_review' | 'approved' | 'rejected' | null;
-   tier: VerificationTier;
-  contributorType: ContributorType | null;
-  fullName: string | null;
-   loading: boolean;
- }
+ // Re-export types for convenience
+ export type { VerificationStatusState as VerificationStatus };
  
  export function useVerificationStatus() {
    const { user } = useAuth();
-   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({
+   const [verificationStatus, setVerificationStatus] = useState<VerificationStatusState>({
      status: null,
      tier: null,
     contributorType: null,
@@ -41,7 +35,7 @@ import type { ContributorType } from '@/components/ui/VerifiedBadge';
          if (error) throw error;
  
          setVerificationStatus({
-            status: (data?.status as VerificationStatus['status']) ?? null,
+            status: (data?.status as VerificationStatusState['status']) ?? null,
             tier: (data?.tier as VerificationTier) ?? null,
            contributorType: null, // Not available in secure view
            fullName: data?.full_name ?? null,

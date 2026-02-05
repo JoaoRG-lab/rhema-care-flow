@@ -3,27 +3,10 @@
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
  import { addDays, format } from 'date-fns';
+ import type { InfusionEvent, CreateInfusionInput } from '@/types/clinical';
  
- export interface InfusionEvent {
-   id: string;
-   drug: string;
-   interval_days: number;
-   next_date: string;
-   notes: string | null;
-   patient_card_id: string | null;
-   pre_checklist?: any;
-   created_at?: string;
-   updated_at?: string;
- }
- 
- export interface CreateInfusionInput {
-   drug: string;
-   interval_days: number;
-   next_date: string;
-   notes?: string | null;
-   patient_card_id?: string | null;
-   pre_checklist?: any;
- }
+ // Re-export types for convenience
+ export type { InfusionEvent, CreateInfusionInput };
  
  export function useInfusions() {
    const { user } = useAuth();

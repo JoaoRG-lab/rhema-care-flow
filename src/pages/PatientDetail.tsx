@@ -17,19 +17,7 @@
  import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
  import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
 import { useAuditLog } from '@/hooks/useAuditLog';
- 
- interface PatientCard {
-   id: string;
-   patient_code: string;
-   mrn_last4: string | null;
-   diagnosis_tags: string[];
-   therapy_tags: string[];
-   risk_flags: string[];
-   last_visit_date: string | null;
-   next_followup_date: string | null;
-   notes: string | null;
-   created_at: string;
- }
+ import type { PatientCard } from '@/types/clinical';
  
  export default function PatientDetail() {
    const { id } = useParams<{ id: string }>();

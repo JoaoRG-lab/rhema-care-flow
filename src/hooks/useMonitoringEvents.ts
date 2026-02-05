@@ -2,28 +2,14 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { toast } from 'sonner';
+ import type { 
+   MonitoringEvent, 
+   MonitoringEventWithPatient, 
+   CreateMonitoringEventInput 
+ } from '@/types/clinical';
  
- export interface MonitoringEvent {
-   id: string;
-   event_type: string;
-   due_date: string;
-   status: string;
-   completed_at: string | null;
-   notes: string | null;
-   patient_card_id: string | null;
-   created_at?: string;
- }
- 
- export interface MonitoringEventWithPatient extends MonitoringEvent {
-   patient_cards?: { patient_code: string } | null;
- }
- 
- export interface CreateMonitoringEventInput {
-   event_type: string;
-   due_date: string;
-   notes?: string | null;
-   patient_card_id?: string | null;
- }
+ // Re-export types for convenience
+ export type { MonitoringEvent, MonitoringEventWithPatient, CreateMonitoringEventInput };
  
  interface UseMonitoringEventsOptions {
    patientId?: string;

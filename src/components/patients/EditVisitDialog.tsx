@@ -7,19 +7,8 @@
  import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
  import { supabase } from '@/integrations/supabase/client';
  import { toast } from 'sonner';
- import type { Json } from '@/integrations/supabase/types';
  import { ACTION_OPTIONS, LAB_OPTIONS, IMAGING_OPTIONS } from '@/config/clinical';
- 
- interface Visit {
-   id: string;
-   visit_date: string;
-   disease_activity: Json | null;
-   actions: string[] | null;
-   labs_ordered: string[] | null;
-   imaging: string[] | null;
-   next_steps: string | null;
-   attachments: string[] | null;
- }
+ import type { Visit } from '@/types/clinical';
  
  interface EditVisitDialogProps {
    visit: Visit;
