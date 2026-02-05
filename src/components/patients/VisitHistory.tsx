@@ -16,6 +16,7 @@
  import { useAuth } from '@/contexts/AuthContext';
  import { format } from 'date-fns';
  import { Calendar, FlaskConical, Image, ArrowRight, Pencil, Trash2 } from 'lucide-react';
+ import { Paperclip } from 'lucide-react';
  import { toast } from 'sonner';
  import { EditVisitDialog } from './EditVisitDialog';
  
@@ -30,6 +31,7 @@
    imaging: string[] | null;
    next_steps: string | null;
    created_at: string;
+   attachments: string[] | null;
  }
  
  interface VisitHistoryProps {
@@ -44,6 +46,22 @@
    const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
    const [deletingVisitId, setDeletingVisitId] = useState<string | null>(null);
    const [isDeleting, setIsDeleting] = useState(false);
+ 
+   const handleDownloadAttachment = async (path: string) => {
+     const { data } = await supabase.storage
+       .from('visit-attachments')
+       .createSignedUrl(path, 3600);
+     if (data?.signedUrl) {
+       window.open(data.signedUrl, '_blank');
+     }
+   };
+ 
+   const getAttachmentName = (path: string) => {
+     const parts = path.split('/');
+     const fileName = parts[parts.length - 1];
+     const match = fileName.match(/^\d+-[a-z0-9]+-(.+)$/);
+     return match ? match[1] : fileName;
+   };
  
    const fetchVisits = async () => {
      if (!user) return;
@@ -186,7 +204,30 @@
                  <p className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
                    <ArrowRight className="h-3 w-3" /> Next Steps
                  </p>
-                 <p className="text-sm">{visit.next_steps}</p>
+                 <div 
+                   className="text-sm prose prose-sm max-w-none" 
+                   dangerouslySetInnerHTML={{ __html: visit.next_steps }} 
+                 />
+               </div>
+             )}
+             
+             {visit.attachments && visit.attachments.length > 0 && (
+               <div>
+                 <p className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                   <Paperclip className="h-3 w-3" /> Attachments
+                 </p>
+                 <div className="flex flex-wrap gap-1.5">
+                   {visit.attachments.map((attachment, idx) => (
+                     <Badge 
+                       key={idx} 
+                       variant="outline" 
+                       className="cursor-pointer hover:bg-muted"
+                       onClick={() => handleDownloadAttachment(attachment)}
+                     >
+                       {getAttachmentName(attachment)}
+                     </Badge>
+                   ))}
+                 </div>
                </div>
              )}
            </CardContent>

@@ -2,7 +2,8 @@
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
  import { Label } from '@/components/ui/label';
- import { Textarea } from '@/components/ui/textarea';
+ import { RichTextEditor } from '@/components/ui/RichTextEditor';
+ import { FileAttachments } from './FileAttachments';
  import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
  import { supabase } from '@/integrations/supabase/client';
  import { toast } from 'sonner';
@@ -16,6 +17,7 @@
    labs_ordered: string[] | null;
    imaging: string[] | null;
    next_steps: string | null;
+   attachments: string[] | null;
  }
  
  interface EditVisitDialogProps {
@@ -37,6 +39,7 @@
    const [nextSteps, setNextSteps] = useState(visit.next_steps || '');
    const [diseaseScore, setDiseaseScore] = useState('');
    const [saving, setSaving] = useState(false);
+   const [attachments, setAttachments] = useState<string[]>(visit.attachments || []);
  
    useEffect(() => {
      setVisitDate(visit.visit_date);
@@ -44,6 +47,7 @@
      setLabs(visit.labs_ordered || []);
      setImaging(visit.imaging || []);
      setNextSteps(visit.next_steps || '');
+     setAttachments(visit.attachments || []);
      
      // Extract score from disease_activity JSON
      if (visit.disease_activity && typeof visit.disease_activity === 'object' && !Array.isArray(visit.disease_activity)) {
@@ -77,6 +81,7 @@
          imaging,
          next_steps: nextSteps || null,
          disease_activity: diseaseActivity as any,
+         attachments,
        })
        .eq('id', visit.id);
  
@@ -174,14 +179,23 @@
  
            <div>
              <Label htmlFor="nextSteps">Next Steps</Label>
-             <Textarea
-               id="nextSteps"
-               value={nextSteps}
-               onChange={(e) => setNextSteps(e.target.value)}
+             <RichTextEditor
+               content={nextSteps}
+               onChange={setNextSteps}
                placeholder="Follow-up plan, pending items..."
-               className="mt-1"
-               rows={3}
+               className="mt-1 min-h-[100px]"
              />
+           </div>
+ 
+           <div>
+             <Label>Attachments</Label>
+             <div className="mt-2">
+               <FileAttachments
+                 attachments={attachments}
+                 onChange={setAttachments}
+                 disabled={saving}
+               />
+             </div>
            </div>
  
            <Button type="submit" className="w-full" disabled={saving}>
