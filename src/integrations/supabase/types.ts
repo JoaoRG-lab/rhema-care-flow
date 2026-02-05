@@ -122,6 +122,13 @@ export type Database = {
             referencedRelation: "patient_cards"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "infusion_events_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
         ]
       }
       monitoring_events: {
@@ -132,6 +139,7 @@ export type Database = {
           event_type: string
           id: string
           notes: string | null
+          notes_encrypted: string | null
           patient_card_id: string | null
           status: string | null
           user_id: string
@@ -143,6 +151,7 @@ export type Database = {
           event_type: string
           id?: string
           notes?: string | null
+          notes_encrypted?: string | null
           patient_card_id?: string | null
           status?: string | null
           user_id: string
@@ -154,6 +163,7 @@ export type Database = {
           event_type?: string
           id?: string
           notes?: string | null
+          notes_encrypted?: string | null
           patient_card_id?: string | null
           status?: string | null
           user_id?: string
@@ -164,6 +174,13 @@ export type Database = {
             columns: ["patient_card_id"]
             isOneToOne: false
             referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitoring_events_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -204,6 +221,7 @@ export type Database = {
           mrn_last4: string | null
           next_followup_date: string | null
           notes: string | null
+          notes_encrypted: string | null
           patient_code: string
           risk_flags: string[] | null
           therapy_tags: string[] | null
@@ -218,6 +236,7 @@ export type Database = {
           mrn_last4?: string | null
           next_followup_date?: string | null
           notes?: string | null
+          notes_encrypted?: string | null
           patient_code: string
           risk_flags?: string[] | null
           therapy_tags?: string[] | null
@@ -232,6 +251,7 @@ export type Database = {
           mrn_last4?: string | null
           next_followup_date?: string | null
           notes?: string | null
+          notes_encrypted?: string | null
           patient_code?: string
           risk_flags?: string[] | null
           therapy_tags?: string[] | null
@@ -343,6 +363,13 @@ export type Database = {
             columns: ["patient_card_id"]
             isOneToOne: false
             referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "score_entries_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
             referencedColumns: ["id"]
           },
           {
@@ -630,11 +657,113 @@ export type Database = {
             referencedRelation: "patient_cards"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "visits_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      monitoring_events_secure: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          due_date: string | null
+          event_type: string | null
+          id: string | null
+          notes: string | null
+          patient_card_id: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          event_type?: string | null
+          id?: string | null
+          notes?: never
+          patient_card_id?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          event_type?: string | null
+          id?: string | null
+          notes?: never
+          patient_card_id?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitoring_events_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitoring_events_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_cards_secure: {
+        Row: {
+          created_at: string | null
+          diagnosis_tags: string[] | null
+          id: string | null
+          last_visit_date: string | null
+          mrn_last4: string | null
+          next_followup_date: string | null
+          notes: string | null
+          patient_code: string | null
+          risk_flags: string[] | null
+          therapy_tags: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          diagnosis_tags?: string[] | null
+          id?: string | null
+          last_visit_date?: string | null
+          mrn_last4?: string | null
+          next_followup_date?: string | null
+          notes?: never
+          patient_code?: string | null
+          risk_flags?: string[] | null
+          therapy_tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          diagnosis_tags?: string[] | null
+          id?: string | null
+          last_visit_date?: string | null
+          mrn_last4?: string | null
+          next_followup_date?: string | null
+          notes?: never
+          patient_code?: string | null
+          risk_flags?: string[] | null
+          therapy_tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_rate_limit: {
@@ -647,6 +776,8 @@ export type Database = {
         Returns: boolean
       }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      decrypt_sensitive_data: { Args: { p_encrypted: string }; Returns: string }
+      encrypt_sensitive_data: { Args: { p_data: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
