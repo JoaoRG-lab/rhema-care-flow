@@ -67,7 +67,7 @@ const StyleGuide = lazy(() => import("./pages/StyleGuide"));
                 <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
                 <Route path="/focus" element={<ProtectedRoute><Focus /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/style-guide" element={<StyleGuide />} />
+                <Route path="/style-guide" element={<StyleGuide />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
