@@ -1,105 +1,230 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-}
+ @tailwind base;
+ @tailwind components;
+ @tailwind utilities;
+ 
+ /* RheumaFlow Design System - Medical-Tech Professional Theme */
+ 
+ @layer base {
+   :root {
+     /* Core backgrounds */
+     --background: 210 20% 98%;
+     --foreground: 215 25% 15%;
+ 
+     /* Card surfaces */
+     --card: 0 0% 100%;
+     --card-foreground: 215 25% 15%;
+ 
+     /* Popovers */
+     --popover: 0 0% 100%;
+     --popover-foreground: 215 25% 15%;
+ 
+     /* Primary - Deep Teal */
+     --primary: 185 65% 30%;
+     --primary-foreground: 0 0% 100%;
+ 
+     /* Secondary - Warm Gray */
+     --secondary: 210 15% 93%;
+     --secondary-foreground: 215 25% 25%;
+ 
+     /* Muted */
+     --muted: 210 15% 95%;
+     --muted-foreground: 215 15% 45%;
+ 
+     /* Accent - Soft Cyan */
+     --accent: 185 55% 92%;
+     --accent-foreground: 185 65% 25%;
+ 
+     /* Destructive */
+     --destructive: 0 72% 51%;
+     --destructive-foreground: 0 0% 100%;
+ 
+     /* Borders & Inputs */
+     --border: 210 20% 88%;
+     --input: 210 20% 88%;
+     --ring: 185 65% 35%;
+ 
+     --radius: 0.5rem;
+ 
+     /* Sidebar */
+     --sidebar-background: 215 25% 15%;
+     --sidebar-foreground: 210 20% 90%;
+     --sidebar-primary: 185 65% 45%;
+     --sidebar-primary-foreground: 0 0% 100%;
+     --sidebar-accent: 215 25% 22%;
+     --sidebar-accent-foreground: 210 20% 95%;
+     --sidebar-border: 215 25% 25%;
+     --sidebar-ring: 185 65% 45%;
+ 
+     /* Disease category colors */
+     --ra: 210 75% 50%;
+     --sle: 280 60% 55%;
+     --spa: 185 65% 40%;
+     --psa: 35 90% 50%;
+     --vasculitis: 0 65% 50%;
+     --fm: 320 55% 55%;
+ 
+     /* Status colors */
+     --success: 150 60% 40%;
+     --warning: 40 90% 50%;
+     --info: 200 75% 50%;
+ 
+     /* Gradient tokens */
+     --gradient-primary: linear-gradient(135deg, hsl(185 65% 30%), hsl(185 75% 40%));
+     --gradient-hero: linear-gradient(135deg, hsl(215 25% 15%), hsl(215 35% 25%));
+     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 20% 98%));
+     --gradient-accent: linear-gradient(135deg, hsl(185 55% 92%), hsl(185 45% 85%));
+   }
+ 
+   .dark {
+     --background: 215 30% 10%;
+     --foreground: 210 20% 95%;
+ 
+     --card: 215 30% 14%;
+     --card-foreground: 210 20% 95%;
+ 
+     --popover: 215 30% 12%;
+     --popover-foreground: 210 20% 95%;
+ 
+     --primary: 185 60% 45%;
+     --primary-foreground: 215 30% 10%;
+ 
+     --secondary: 215 25% 20%;
+     --secondary-foreground: 210 20% 90%;
+ 
+     --muted: 215 25% 18%;
+     --muted-foreground: 215 15% 55%;
+ 
+     --accent: 185 50% 20%;
+     --accent-foreground: 185 60% 70%;
+ 
+     --destructive: 0 65% 45%;
+     --destructive-foreground: 0 0% 100%;
+ 
+     --border: 215 25% 22%;
+     --input: 215 25% 22%;
+     --ring: 185 60% 50%;
+ 
+     --sidebar-background: 215 35% 8%;
+     --sidebar-foreground: 210 20% 90%;
+     --sidebar-primary: 185 60% 50%;
+     --sidebar-primary-foreground: 215 35% 8%;
+     --sidebar-accent: 215 30% 15%;
+     --sidebar-accent-foreground: 210 20% 95%;
+     --sidebar-border: 215 30% 18%;
+     --sidebar-ring: 185 60% 50%;
+   }
+ }
+ 
+ @layer base {
+   * {
+     @apply border-border;
+   }
+ 
+   body {
+     @apply bg-background text-foreground antialiased;
+     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+   }
+ 
+   /* Typography scales */
+   h1, h2, h3, h4, h5, h6 {
+     @apply font-semibold tracking-tight;
+   }
+ }
+ 
+ @layer components {
+   /* Stat cards */
+   .stat-card {
+     @apply bg-card border border-border rounded-lg p-4 shadow-sm transition-shadow hover:shadow-md;
+   }
+ 
+   /* Disease tag chips */
+   .tag-ra {
+     @apply bg-[hsl(210_75%_95%)] text-[hsl(210_75%_35%)] border-[hsl(210_75%_85%)];
+   }
+   .tag-sle {
+     @apply bg-[hsl(280_60%_95%)] text-[hsl(280_60%_40%)] border-[hsl(280_60%_85%)];
+   }
+   .tag-spa {
+     @apply bg-[hsl(185_65%_92%)] text-[hsl(185_65%_30%)] border-[hsl(185_65%_82%)];
+   }
+   .tag-psa {
+     @apply bg-[hsl(35_90%_92%)] text-[hsl(35_90%_35%)] border-[hsl(35_90%_80%)];
+   }
+   .tag-vasculitis {
+     @apply bg-[hsl(0_65%_95%)] text-[hsl(0_65%_40%)] border-[hsl(0_65%_85%)];
+   }
+   .tag-fm {
+     @apply bg-[hsl(320_55%_95%)] text-[hsl(320_55%_40%)] border-[hsl(320_55%_85%)];
+   }
+   .tag-biologic {
+     @apply bg-[hsl(150_60%_92%)] text-[hsl(150_60%_30%)] border-[hsl(150_60%_80%)];
+   }
+   .tag-infusion {
+     @apply bg-[hsl(200_75%_92%)] text-[hsl(200_75%_35%)] border-[hsl(200_75%_80%)];
+   }
+   .tag-pregnancy {
+     @apply bg-[hsl(340_70%_95%)] text-[hsl(340_70%_40%)] border-[hsl(340_70%_85%)];
+   }
+   .tag-infection {
+     @apply bg-[hsl(25_85%_93%)] text-[hsl(25_85%_35%)] border-[hsl(25_85%_80%)];
+   }
+ 
+   /* Status badges */
+   .status-pending {
+     @apply bg-[hsl(40_90%_92%)] text-[hsl(40_90%_35%)];
+   }
+   .status-overdue {
+     @apply bg-[hsl(0_72%_95%)] text-[hsl(0_72%_45%)];
+   }
+   .status-completed {
+     @apply bg-[hsl(150_60%_92%)] text-[hsl(150_60%_30%)];
+   }
+ 
+   /* Focus ring utility */
+   .focus-ring {
+     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+   }
+ 
+   /* Glass morphism */
+   .glass {
+     @apply bg-white/80 backdrop-blur-lg border border-white/20;
+   }
+ 
+   /* Gradient text */
+   .gradient-text {
+     @apply bg-clip-text text-transparent;
+     background-image: var(--gradient-primary);
+   }
+ }
+ 
+ @layer utilities {
+   .animate-in {
+     animation: animate-in 0.3s ease-out;
+   }
+ 
+   @keyframes animate-in {
+     from {
+       opacity: 0;
+       transform: translateY(4px);
+     }
+     to {
+       opacity: 1;
+       transform: translateY(0);
+     }
+   }
+ 
+   .slide-in-left {
+     animation: slide-in-left 0.3s ease-out;
+   }
+ 
+   @keyframes slide-in-left {
+     from {
+       opacity: 0;
+       transform: translateX(-10px);
+     }
+     to {
+       opacity: 1;
+       transform: translateX(0);
+     }
+   }
+ }
