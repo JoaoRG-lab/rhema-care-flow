@@ -6,8 +6,9 @@
  import { Badge } from '@/components/ui/badge';
  import { ScrollArea } from '@/components/ui/scroll-area';
  import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
  import { 
-   Activity, Search, Star, Clock, Trash2, ArrowLeft,
+  Activity, Search, Star, Clock, Trash2, ArrowLeft, Menu,
    Calculator, BookOpen, HeartPulse, TrendingUp, ClipboardCheck,
    AlertTriangle, CheckCircle, Info
  } from 'lucide-react';
@@ -47,6 +48,7 @@ import { ACREULARRACalculator } from '@/components/scores/ACREULARRACalculator';
    const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
    const [favorites, setFavorites] = useState<string[]>([]);
    const [historyCount, setHistoryCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
  
    useEffect(() => {
      setFavorites(getFavorites());
@@ -106,161 +108,197 @@ import { ACREULARRACalculator } from '@/components/scores/ACREULARRACalculator';
  
    const selectedCalc = selectedCalculator ? CALCULATORS.find(c => c.id === selectedCalculator) : null;
  
+  const handleSelectCalculator = (calcId: string) => {
+    setSelectedCalculator(calcId);
+    setSidebarOpen(false);
+  };
+
+  // Sidebar content - reusable for both desktop and mobile
+  const SidebarContent = () => (
+    <>
+      <div className="p-4 border-b">
+        <h1 className="text-lg font-semibold flex items-center gap-2">
+          <Activity className="h-5 w-5 text-primary" />
+          Calculators
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          Rheumatology scores & criteria
+        </p>
+      </div>
+
+      {/* Search */}
+      <div className="p-3 border-b">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search calculators..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+      </div>
+
+      {/* Category Filters */}
+      <div className="p-3 border-b space-y-1">
+        <div className="flex flex-wrap gap-1.5">
+          <Button
+            variant={selectedCategory === 'favorites' ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs gap-1"
+            onClick={() => setSelectedCategory('favorites')}
+          >
+            <Star className="h-3 w-3" />
+            Favorites ({favorites.length})
+          </Button>
+          <Button
+            variant={selectedCategory === 'all' ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => setSelectedCategory('all')}
+          >
+            All
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {Object.entries(CALCULATOR_CATEGORIES).map(([key, { label }]) => {
+            const Icon = CATEGORY_ICONS[key as CalculatorCategory];
+            return (
+              <Button
+                key={key}
+                variant={selectedCategory === key ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => setSelectedCategory(key as CalculatorCategory)}
+              >
+                <Icon className="h-3 w-3" />
+                {label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Calculator List */}
+      <ScrollArea className="flex-1">
+        <div className="p-2 space-y-1">
+          {filteredCalculators.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No calculators found
+            </p>
+          ) : (
+            filteredCalculators.map((calc) => (
+              <button
+                key={calc.id}
+                onClick={() => handleSelectCalculator(calc.id)}
+                className={cn(
+                  'w-full text-left p-3 rounded-lg border transition-colors',
+                  selectedCalculator === calc.id
+                    ? 'border-primary bg-primary/5'
+                    : 'border-transparent hover:bg-muted/50'
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm truncate">{calc.shortName}</span>
+                      {!calc.implemented && (
+                        <Badge variant="outline" className="text-[10px] h-4 px-1">Soon</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                      {calc.description}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {calc.diseases.map((d) => (
+                        <span
+                          key={d}
+                          className={cn(
+                            'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border',
+                            DISEASE_LABELS[d].color
+                          )}
+                        >
+                          {DISEASE_LABELS[d].label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => handleToggleFavorite(calc.id, e)}
+                    className="p-1 hover:bg-muted rounded"
+                  >
+                    <Star
+                      className={cn(
+                        'h-4 w-4',
+                        favorites.includes(calc.id)
+                          ? 'fill-warning text-warning'
+                          : 'text-muted-foreground'
+                      )}
+                    />
+                  </button>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* History Footer */}
+      <div className="p-3 border-t flex items-center justify-between text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5" />
+          {historyCount} calculations
+        </span>
+        {historyCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs gap-1"
+            onClick={handleClearHistory}
+          >
+            <Trash2 className="h-3 w-3" />
+            Clear
+          </Button>
+        )}
+      </div>
+    </>
+  );
+
    return (
      <AppLayout>
-       <div className="flex h-[calc(100vh-64px)]">
-         {/* Sidebar */}
-         <aside className="w-80 border-r bg-card flex flex-col shrink-0">
-           <div className="p-4 border-b">
-             <h1 className="text-lg font-semibold flex items-center gap-2">
-               <Activity className="h-5 w-5 text-primary" />
-               Calculators
-             </h1>
-             <p className="text-xs text-muted-foreground mt-1">
-               Rheumatology scores & criteria
-             </p>
-           </div>
+      <div className="flex h-[calc(100vh-64px)] w-full">
+        {/* Desktop Sidebar - hidden on mobile */}
+        <aside className="hidden md:flex w-80 border-r bg-card flex-col shrink-0">
+          <SidebarContent />
+        </aside>
  
-           {/* Search */}
-           <div className="p-3 border-b">
-             <div className="relative">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-               <Input
-                 placeholder="Search calculators..."
-                 value={searchQuery}
-                 onChange={(e) => setSearchQuery(e.target.value)}
-                 className="pl-9 h-9"
-               />
-             </div>
-           </div>
- 
-           {/* Category Filters */}
-           <div className="p-3 border-b space-y-1">
-             <div className="flex flex-wrap gap-1.5">
-               <Button
-                 variant={selectedCategory === 'favorites' ? 'default' : 'outline'}
-                 size="sm"
-                 className="h-7 text-xs gap-1"
-                 onClick={() => setSelectedCategory('favorites')}
-               >
-                 <Star className="h-3 w-3" />
-                 Favorites ({favorites.length})
-               </Button>
-               <Button
-                 variant={selectedCategory === 'all' ? 'default' : 'outline'}
-                 size="sm"
-                 className="h-7 text-xs"
-                 onClick={() => setSelectedCategory('all')}
-               >
-                 All
-               </Button>
-             </div>
-             <div className="flex flex-wrap gap-1.5 pt-1">
-               {Object.entries(CALCULATOR_CATEGORIES).map(([key, { label }]) => {
-                 const Icon = CATEGORY_ICONS[key as CalculatorCategory];
-                 return (
-                   <Button
-                     key={key}
-                     variant={selectedCategory === key ? 'default' : 'outline'}
-                     size="sm"
-                     className="h-7 text-xs gap-1"
-                     onClick={() => setSelectedCategory(key as CalculatorCategory)}
-                   >
-                     <Icon className="h-3 w-3" />
-                     {label}
-                   </Button>
-                 );
-               })}
-             </div>
-           </div>
- 
-           {/* Calculator List */}
-           <ScrollArea className="flex-1">
-             <div className="p-2 space-y-1">
-               {filteredCalculators.length === 0 ? (
-                 <p className="text-sm text-muted-foreground text-center py-8">
-                   No calculators found
-                 </p>
-               ) : (
-                 filteredCalculators.map((calc) => (
-                   <button
-                     key={calc.id}
-                     onClick={() => setSelectedCalculator(calc.id)}
-                     className={cn(
-                       'w-full text-left p-3 rounded-lg border transition-colors',
-                       selectedCalculator === calc.id
-                         ? 'border-primary bg-primary/5'
-                         : 'border-transparent hover:bg-muted/50'
-                     )}
-                   >
-                     <div className="flex items-start justify-between gap-2">
-                       <div className="flex-1 min-w-0">
-                         <div className="flex items-center gap-2">
-                           <span className="font-medium text-sm truncate">{calc.shortName}</span>
-                           {!calc.implemented && (
-                             <Badge variant="outline" className="text-[10px] h-4 px-1">Soon</Badge>
-                           )}
-                         </div>
-                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                           {calc.description}
-                         </p>
-                         <div className="flex flex-wrap gap-1 mt-1.5">
-                           {calc.diseases.map((d) => (
-                             <span
-                               key={d}
-                               className={cn(
-                                 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border',
-                                 DISEASE_LABELS[d].color
-                               )}
-                             >
-                               {DISEASE_LABELS[d].label}
-                             </span>
-                           ))}
-                         </div>
-                       </div>
-                       <button
-                         onClick={(e) => handleToggleFavorite(calc.id, e)}
-                         className="p-1 hover:bg-muted rounded"
-                       >
-                         <Star
-                           className={cn(
-                             'h-4 w-4',
-                             favorites.includes(calc.id)
-                               ? 'fill-warning text-warning'
-                               : 'text-muted-foreground'
-                           )}
-                         />
-                       </button>
-                     </div>
-                   </button>
-                 ))
-               )}
-             </div>
-           </ScrollArea>
- 
-           {/* History Footer */}
-           <div className="p-3 border-t flex items-center justify-between text-xs text-muted-foreground">
-             <span className="flex items-center gap-1.5">
-               <Clock className="h-3.5 w-3.5" />
-               {historyCount} calculations
-             </span>
-             {historyCount > 0 && (
-               <Button
-                 variant="ghost"
-                 size="sm"
-                 className="h-6 text-xs gap-1"
-                 onClick={handleClearHistory}
-               >
-                 <Trash2 className="h-3 w-3" />
-                 Clear
-               </Button>
-             )}
-           </div>
-         </aside>
+        {/* Mobile Sidebar - Sheet */}
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="w-80 p-0 flex flex-col">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
  
          {/* Main Content */}
          <main className="flex-1 overflow-auto">
            <div className="p-6 max-w-4xl mx-auto">
+            {/* Mobile Header with Menu Button */}
+            <div className="md:hidden flex items-center gap-3 mb-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-lg font-semibold">Calculators</h1>
+                <p className="text-xs text-muted-foreground">
+                  {selectedCalc ? selectedCalc.shortName : 'Select a calculator'}
+                </p>
+              </div>
+            </div>
+
              {selectedCalc ? (
                <>
                  {/* Back button and header */}
@@ -268,7 +306,7 @@ import { ACREULARRACalculator } from '@/components/scores/ACREULARRACalculator';
                    <Button
                      variant="ghost"
                      size="sm"
-                     className="mb-3 -ml-2"
+                    className="mb-3 -ml-2 hidden md:inline-flex"
                      onClick={() => setSelectedCalculator(null)}
                    >
                      <ArrowLeft className="h-4 w-4 mr-1" />
