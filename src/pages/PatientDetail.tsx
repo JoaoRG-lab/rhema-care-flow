@@ -8,11 +8,13 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
  import { ArrowLeft, Calendar, Plus, Activity, ClipboardList, TrendingUp } from 'lucide-react';
+ import { Shield } from 'lucide-react';
  import { format } from 'date-fns';
  import { toast } from 'sonner';
  import { VisitHistory } from '@/components/patients/VisitHistory';
  import { ScoreTrends } from '@/components/patients/ScoreTrends';
  import { AddVisitDialog } from '@/components/patients/AddVisitDialog';
+ import { PatientMonitoring } from '@/components/patients/PatientMonitoring';
  
  interface PatientCard {
    id: string;
@@ -193,6 +195,10 @@
                <TrendingUp className="h-4 w-4" />
                Score Trends
              </TabsTrigger>
+             <TabsTrigger value="monitoring" className="gap-2">
+               <Shield className="h-4 w-4" />
+               Monitoring
+             </TabsTrigger>
            </TabsList>
  
            <TabsContent value="visits">
@@ -201,6 +207,10 @@
  
            <TabsContent value="scores">
              <ScoreTrends patientId={patient.id} refreshKey={refreshKey} />
+           </TabsContent>
+ 
+           <TabsContent value="monitoring">
+             <PatientMonitoring patientId={patient.id} refreshKey={refreshKey} />
            </TabsContent>
          </Tabs>
        </div>
