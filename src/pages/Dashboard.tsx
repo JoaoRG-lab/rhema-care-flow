@@ -9,6 +9,7 @@
  import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
+ import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
  import {
    Users,
    AlertTriangle,
@@ -158,6 +159,11 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
                New Patient Card
              </Button>
            </Link>
+         </div>
+ 
+         {/* Welcome Card with Tier-based Actions */}
+         <div className="mb-8">
+           <WelcomeCard tier={tier} fullName={fullName} />
          </div>
  
          {/* Stats Grid */}
