@@ -316,15 +316,16 @@
    },
    
    // Monitoring
-   {
-     id: 'eular-response',
-     name: 'EULAR Response Criteria',
-     shortName: 'EULAR Resp',
-     description: 'Treatment response classification (DAS28-based)',
-     category: 'monitoring',
-     diseases: ['ra'],
-     implemented: false,
-   },
+  {
+    id: 'eular-response',
+    name: 'EULAR Response Criteria',
+    shortName: 'EULAR Resp',
+    description: 'Treatment response classification (DAS28-based)',
+    category: 'monitoring',
+    diseases: ['ra'],
+    reference: 'van Gestel et al. 1996',
+    implemented: true,
+  },
    {
      id: 'acr-response',
      name: 'ACR20/50/70 Response',

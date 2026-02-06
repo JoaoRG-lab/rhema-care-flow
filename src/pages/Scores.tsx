@@ -25,20 +25,21 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
    type CalculatorCategory,
    type DiseaseType,
  } from '@/lib/calculators';
- import { DAS28Calculator } from '@/components/scores/DAS28Calculator';
- import { CDAICalculator } from '@/components/scores/CDAICalculator';
- import { BASDAICalculator } from '@/components/scores/BASDAICalculator';
- import { SLEDAICalculator } from '@/components/scores/SLEDAICalculator';
+import { DAS28Calculator } from '@/components/scores/DAS28Calculator';
+import { CDAICalculator } from '@/components/scores/CDAICalculator';
+import { BASDAICalculator } from '@/components/scores/BASDAICalculator';
+import { SLEDAICalculator } from '@/components/scores/SLEDAICalculator';
 import { DAS28CRPCalculator } from '@/components/scores/DAS28CRPCalculator';
 import { ACREULARRACalculator } from '@/components/scores/ACREULARRACalculator';
 import { DAS28ComparisonCalculator } from '@/components/scores/DAS28ComparisonCalculator';
 import { SDAICalculator } from '@/components/scores/SDAICalculator';
- import { CASPARCalculator } from '@/components/scores/CASPARCalculator';
- import { DAPSACalculator } from '@/components/scores/DAPSACalculator';
- import { MDACalculator } from '@/components/scores/MDACalculator';
- import { ACRResponseCalculator } from '@/components/scores/ACRResponseCalculator';
- import { Alert, AlertDescription } from '@/components/ui/alert';
- import { toast } from 'sonner';
+import { CASPARCalculator } from '@/components/scores/CASPARCalculator';
+import { DAPSACalculator } from '@/components/scores/DAPSACalculator';
+import { MDACalculator } from '@/components/scores/MDACalculator';
+import { ACRResponseCalculator } from '@/components/scores/ACRResponseCalculator';
+import { EULARResponseCalculator } from '@/components/scores/EULARResponseCalculator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
  
  const CATEGORY_ICONS: Record<CalculatorCategory, typeof Activity> = {
    'disease-activity': Activity,
@@ -117,11 +118,13 @@ import { SDAICalculator } from '@/components/scores/SDAICalculator';
          return <DAPSACalculator />;
        case 'mda':
          return <MDACalculator />;
-       case 'acr-response':
-         return <ACRResponseCalculator />;
-       default:
-         return null;
-     }
+      case 'acr-response':
+        return <ACRResponseCalculator />;
+      case 'eular-response':
+        return <EULARResponseCalculator />;
+      default:
+        return null;
+    }
    };
  
    const selectedCalc = selectedCalculator ? CALCULATORS.find(c => c.id === selectedCalculator) : null;
