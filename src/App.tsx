@@ -33,6 +33,7 @@ const KnowledgeLibrary = lazy(() => import("./pages/KnowledgeLibrary"));
 const PatientEducationLibrary = lazy(() => import("./pages/PatientEducationLibrary"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const AIAssistant = lazy(() => import("./pages/AIAssistant"));
+const BlockchainRegistry = lazy(() => import("./pages/BlockchainRegistry"));
 
 const queryClient = new QueryClient();
 
@@ -90,6 +91,7 @@ const queryClient = new QueryClient();
                 <Route path="/learn" element={<PatientEducationLibrary />} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                 <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
+                <Route path="/blockchain" element={<ProtectedRoute><BlockchainRegistry /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

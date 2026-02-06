@@ -22,6 +22,7 @@
   FileText,
   TrendingUp,
   Bot,
+  Blocks,
 } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -53,6 +54,7 @@ const navItems = [
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
   { path: '/focus', label: 'Focus', icon: Timer },
   { path: '/ai-assistant', label: 'AI Assistant', icon: Bot },
+  { path: '/blockchain', label: 'Blockchain', icon: Blocks },
 ];
  
  const academicNavItems = [

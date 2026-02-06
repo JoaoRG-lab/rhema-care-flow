@@ -59,6 +59,36 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (Lovable Cloud)
+- Solana/Anchor (Blockchain integration)
+
+## URV Health Value Chain - Blockchain Integration
+
+This project includes a privacy-preserving blockchain registry for healthcare data integrity.
+
+### Privacy Design
+
+**CRITICAL: No PHI/PII is ever stored on-chain.**
+
+#### What IS stored on-chain:
+- **Data Hashes**: SHA-256 hashes of canonical JSON records
+- **URI Pointers**: References to encrypted off-chain storage
+- **Score Updates**: Chained hashes for audit trail integrity
+
+#### What is NOT stored on-chain:
+- Patient names, addresses, or contact information
+- Medical records, diagnoses, or treatment details
+- Any data that could identify an individual
+
+### Production Deployment
+
+1. Navigate to the `/anchor` folder
+2. Build: `anchor build`
+3. Deploy: `anchor deploy --provider.cluster devnet`
+4. Copy the IDL from `target/idl/urv_privacy.json` to `src/idl/urv_privacy.json`
+5. Update `URV_PROGRAM_ID` in `src/lib/solana.ts` with the deployed program ID
+
+See `/anchor/README.md` for detailed instructions.
 
 ## How can I deploy this project?
 

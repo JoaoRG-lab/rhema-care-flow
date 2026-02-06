@@ -1,0 +1,15 @@
+{
+  "_comment": "TODO: Paste the real IDL here after running `anchor build` in the /anchor directory.",
+  "_instructions": [
+    "1. Navigate to the /anchor folder in your terminal",
+    "2. Run: anchor build",
+    "3. Find the generated IDL at: target/idl/urv_privacy.json",
+    "4. Copy the entire contents and replace this placeholder",
+    "5. Update URV_PROGRAM_ID in src/lib/solana.ts with the program ID from target/deploy/urv_privacy-keypair.json"
+  ],
+  "version": "0.1.0",
+  "name": "urv_privacy",
+  "instructions": [],
+  "accounts": [],
+  "types": []
+}
