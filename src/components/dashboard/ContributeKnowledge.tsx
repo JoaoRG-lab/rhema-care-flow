@@ -1,119 +1,103 @@
- import { useState } from 'react';
- import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import { Input } from '@/components/ui/input';
- import { Label } from '@/components/ui/label';
- import { Textarea } from '@/components/ui/textarea';
- import { Badge } from '@/components/ui/badge';
- import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
- import {
-   Select,
-   SelectContent,
-   SelectItem,
-   SelectTrigger,
-   SelectValue,
- } from '@/components/ui/select';
- import {
-   Lightbulb,
-   BookOpen,
-   Stethoscope,
-   FileText,
-   Send,
-   Sparkles,
-   Users,
-   CheckCircle2,
-   ExternalLink,
- } from 'lucide-react';
- import { toast } from 'sonner';
- import { useVerificationStatus } from '@/hooks/useVerificationStatus';
- import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
- import { cn } from '@/lib/utils';
- 
- const KNOWLEDGE_CATEGORIES = [
-   { id: 'clinical_pearl', label: 'Clinical Pearl', icon: Lightbulb, description: 'Quick tips from practice' },
-   { id: 'guideline_summary', label: 'Guideline Summary', icon: BookOpen, description: 'Summarize key guidelines' },
-   { id: 'case_insight', label: 'Case Insight', icon: Stethoscope, description: 'Anonymized case learnings' },
-   { id: 'resource', label: 'Resource Link', icon: FileText, description: 'Share useful resources' },
- ];
- 
- const DISEASE_AREAS = ['RA', 'SLE', 'SpA', 'PsA', 'Gout', 'OA', 'Vasculitis', 'Myositis', 'General'];
- 
- // Sample community contributions
- const SAMPLE_CONTRIBUTIONS = [
-   {
-     id: '1',
-     category: 'clinical_pearl',
-     title: 'MTX dosing with renal impairment',
-     content: 'Consider 50% dose reduction when GFR < 30. Monitor weekly CBC initially.',
-     author: 'Dr. Sarah M.',
-     tier: 'gold' as const,
-     diseaseArea: 'RA',
-     likes: 24,
-   },
-   {
-     id: '2',
-     category: 'guideline_summary',
-     title: 'ACR 2024 RA Treatment Update',
-     content: 'Key change: JAKi now positioned equally with bDMARDs after csDMARD failure in most patients.',
-     author: 'Dr. James K.',
-     tier: 'expert' as const,
-     diseaseArea: 'RA',
-     likes: 47,
-   },
-   {
-     id: '3',
-     category: 'case_insight',
-     title: 'SLE flare masking infection',
-     content: 'Always rule out infection in SLE flares. Procalcitonin can help differentiate - typically elevated in bacterial infection but not lupus activity.',
-     author: 'Dr. Maria L.',
-     tier: 'silver' as const,
-     diseaseArea: 'SLE',
-     likes: 18,
-   },
- ];
- 
- export function ContributeKnowledge() {
-   const { tier } = useVerificationStatus();
-   const [selectedCategory, setSelectedCategory] = useState<string>('');
-   const [title, setTitle] = useState('');
-   const [content, setContent] = useState('');
-   const [diseaseArea, setDiseaseArea] = useState('');
-   const [resourceUrl, setResourceUrl] = useState('');
-   const [isSubmitting, setIsSubmitting] = useState(false);
- 
-   const handleSubmit = async () => {
-     if (!selectedCategory || !title.trim() || !content.trim()) {
-       toast.error('Please fill in all required fields');
-       return;
-     }
- 
-     if (!tier) {
-       toast.error('Please verify your credentials to contribute');
-       return;
-     }
- 
-     setIsSubmitting(true);
-     
-     // Simulate submission - in production this would save to database
-     await new Promise(resolve => setTimeout(resolve, 1000));
-     
-     toast.success('Thank you for your contribution!', {
-       description: 'Your knowledge will be reviewed and published soon.',
-     });
-     
-     // Reset form
-     setSelectedCategory('');
-     setTitle('');
-     setContent('');
-     setDiseaseArea('');
-     setResourceUrl('');
-     setIsSubmitting(false);
-   };
- 
-   const getCategoryIcon = (categoryId: string) => {
-     const cat = KNOWLEDGE_CATEGORIES.find(c => c.id === categoryId);
-     return cat?.icon || Lightbulb;
-   };
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Lightbulb,
+  BookOpen,
+  Stethoscope,
+  FileText,
+  Send,
+  Sparkles,
+  Users,
+  ThumbsUp,
+  ExternalLink,
+  Loader2,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
+import { cn } from '@/lib/utils';
+import { useKnowledgeContributions, ContributionCategory } from '@/hooks/useKnowledgeContributions';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const KNOWLEDGE_CATEGORIES = [
+  { id: 'clinical_pearl' as ContributionCategory, label: 'Clinical Pearl', icon: Lightbulb, description: 'Quick tips from practice' },
+  { id: 'guideline_summary' as ContributionCategory, label: 'Guideline Summary', icon: BookOpen, description: 'Summarize key guidelines' },
+  { id: 'case_insight' as ContributionCategory, label: 'Case Insight', icon: Stethoscope, description: 'Anonymized case learnings' },
+  { id: 'resource' as ContributionCategory, label: 'Resource Link', icon: FileText, description: 'Share useful resources' },
+];
+
+const DISEASE_AREAS = ['RA', 'SLE', 'SpA', 'PsA', 'Gout', 'OA', 'Vasculitis', 'Myositis', 'General'];
+
+export function ContributeKnowledge() {
+  const { tier } = useVerificationStatus();
+  const { 
+    contributions, 
+    loading, 
+    createContribution, 
+    voteOnContribution 
+  } = useKnowledgeContributions();
+  
+  const [selectedCategory, setSelectedCategory] = useState<ContributionCategory | ''>('');
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [diseaseArea, setDiseaseArea] = useState('');
+  const [resourceUrl, setResourceUrl] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!selectedCategory || !title.trim() || !content.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!tier) {
+      toast.error('Please verify your credentials to contribute');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    const success = await createContribution({
+      category: selectedCategory,
+      title: title.trim(),
+      content: content.trim(),
+      disease_area: diseaseArea || undefined,
+      resource_url: resourceUrl.trim() || undefined,
+    });
+    
+    if (success) {
+      // Reset form
+      setSelectedCategory('');
+      setTitle('');
+      setContent('');
+      setDiseaseArea('');
+      setResourceUrl('');
+    }
+    
+    setIsSubmitting(false);
+  };
+
+  const handleVote = async (contributionId: string) => {
+    await voteOnContribution(contributionId);
+  };
+
+  const getCategoryIcon = (categoryId: string) => {
+    const cat = KNOWLEDGE_CATEGORIES.find(c => c.id === categoryId);
+    return cat?.icon || Lightbulb;
+  };
  
    return (
      <Card>
@@ -139,47 +123,85 @@
              </TabsTrigger>
            </TabsList>
  
-           {/* Browse Community Contributions */}
-           <TabsContent value="browse" className="space-y-3">
-             {SAMPLE_CONTRIBUTIONS.map((contribution) => {
-               const Icon = getCategoryIcon(contribution.category);
-               return (
-                 <div
-                   key={contribution.id}
-                   className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                 >
-                   <div className="flex items-start justify-between gap-2 mb-2">
-                     <div className="flex items-center gap-2">
-                       <div className="p-1.5 rounded-md bg-primary/10">
-                         <Icon className="h-3.5 w-3.5 text-primary" />
-                       </div>
-                       <span className="font-medium text-sm">{contribution.title}</span>
-                     </div>
-                     <Badge variant="outline" className="text-xs shrink-0">
-                       {contribution.diseaseArea}
-                     </Badge>
-                   </div>
-                   <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                     {contribution.content}
-                   </p>
-                   <div className="flex items-center justify-between text-xs">
-                     <div className="flex items-center gap-2">
-                       <span className="text-muted-foreground">{contribution.author}</span>
-                       <VerifiedBadge tier={contribution.tier} size="xs" />
-                     </div>
-                     <div className="flex items-center gap-1 text-muted-foreground">
-                       <CheckCircle2 className="h-3 w-3" />
-                       <span>{contribution.likes} found helpful</span>
-                     </div>
-                   </div>
-                 </div>
-               );
-             })}
-             <Button variant="outline" className="w-full mt-2" size="sm">
-               <ExternalLink className="h-4 w-4 mr-2" />
-               View All Contributions
-             </Button>
-           </TabsContent>
+          {/* Browse Community Contributions */}
+          <TabsContent value="browse" className="space-y-3">
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-3 rounded-lg border bg-card space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+              ))
+            ) : contributions.length === 0 ? (
+              <div className="text-center py-6">
+                <Lightbulb className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">
+                  No contributions yet. Be the first to share!
+                </p>
+              </div>
+            ) : (
+              contributions.map((contribution) => {
+                const Icon = getCategoryIcon(contribution.category);
+                return (
+                  <div
+                    key={contribution.id}
+                    className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-md bg-primary/10">
+                          <Icon className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span className="font-medium text-sm">{contribution.title}</span>
+                      </div>
+                      {contribution.disease_area && (
+                        <Badge variant="outline" className="text-xs shrink-0">
+                          {contribution.disease_area}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                      {contribution.content}
+                    </p>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{contribution.author_name}</span>
+                        {contribution.author_tier && (
+                          <VerifiedBadge tier={contribution.author_tier as any} size="xs" />
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleVote(contribution.id)}
+                        className={cn(
+                          'flex items-center gap-1 px-2 py-1 rounded-md transition-colors',
+                          contribution.user_has_voted 
+                            ? 'text-primary bg-primary/10' 
+                            : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
+                        )}
+                      >
+                        <ThumbsUp className={cn(
+                          'h-3 w-3',
+                          contribution.user_has_voted && 'fill-current'
+                        )} />
+                        <span>{contribution.helpful_count}</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            {contributions.length > 0 && (
+              <Button variant="outline" className="w-full mt-2" size="sm">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View All Contributions
+              </Button>
+            )}
+          </TabsContent>
  
            {/* Contribute Form */}
            <TabsContent value="contribute" className="space-y-4">
