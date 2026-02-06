@@ -663,6 +663,204 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_campaigns: {
+        Row: {
+          campaign_type: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          email_body: string
+          email_subject: string
+          id: string
+          name: string
+          scheduled_at: string | null
+          sender_email: string
+          sender_name: string
+          started_at: string | null
+          status: string
+          target_audience: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_type?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          email_body: string
+          email_subject: string
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          sender_email?: string
+          sender_name?: string
+          started_at?: string | null
+          status?: string
+          target_audience?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_type?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          email_body?: string
+          email_subject?: string
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          sender_email?: string
+          sender_name?: string
+          started_at?: string | null
+          status?: string
+          target_audience?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      outreach_contacts: {
+        Row: {
+          country: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          notes: string | null
+          organization: string | null
+          organization_type: string | null
+          position: string | null
+          status: string
+          tags: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          organization?: string | null
+          organization_type?: string | null
+          position?: string | null
+          status?: string
+          tags?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          organization?: string | null
+          organization_type?: string | null
+          position?: string | null
+          status?: string
+          tags?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      outreach_sends: {
+        Row: {
+          campaign_id: string
+          clicked_at: string | null
+          contact_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          resend_message_id: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          clicked_at?: string | null
+          contact_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          resend_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          clicked_at?: string | null
+          contact_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          resend_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_sends_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_templates: {
+        Row: {
+          body: string
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          subject: string
+          template_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          subject: string
+          template_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          subject?: string
+          template_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_cards: {
         Row: {
           created_at: string
@@ -1788,6 +1986,7 @@ export type Database = {
         | "expert"
         | "developer"
         | "partner"
+        | "ultimate"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1931,6 +2130,7 @@ export const Constants = {
         "expert",
         "developer",
         "partner",
+        "ultimate",
       ],
     },
   },
