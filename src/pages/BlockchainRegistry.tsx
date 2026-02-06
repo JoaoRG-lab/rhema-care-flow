@@ -33,6 +33,24 @@ export default function BlockchainRegistry() {
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>
             <div className="container max-w-6xl py-6 space-y-6">
+              {/* Welcome Banner */}
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <span className="text-xs font-medium text-primary uppercase tracking-wider">Revolutionary Healthcare Integration</span>
+                  </div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                    Welcome to HealthOS
+                  </h1>
+                  <p className="text-muted-foreground mt-2 max-w-2xl">
+                    A revolutionary new way to integrate health data with blockchain technology. 
+                    Secure, transparent, and privacy-preserving healthcare value chain.
+                  </p>
+                </div>
+              </div>
+
               {/* Header */}
               <div>
                 <div className="flex items-center gap-3 mb-2">
