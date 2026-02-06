@@ -16,6 +16,7 @@ import { QuickPatientSearch } from '@/components/clinical/QuickPatientSearch';
 import { VoiceNoteButton } from '@/components/clinical/VoiceNoteButton';
 import { ContributeKnowledge } from '@/components/dashboard/ContributeKnowledge';
 import { PatientStatistics } from '@/components/dashboard/PatientStatistics';
+import { SessionList } from '@/components/consultations/SessionList';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
 import { useDailyCompliment } from '@/hooks/useDailyCompliment';
@@ -396,9 +397,12 @@ export default function Dashboard() {
              </CardContent>
            </Card>
 
-           {/* Contribute Knowledge */}
-           <ContributeKnowledge />
-         </div>
+            {/* Contribute Knowledge */}
+            <ContributeKnowledge />
+
+            {/* Patient Consultation Sessions */}
+            <SessionList compact />
+          </div>
        </div>
      </AppLayout>
    );

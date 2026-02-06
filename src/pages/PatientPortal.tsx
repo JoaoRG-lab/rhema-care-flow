@@ -1,24 +1,29 @@
- import { useState, useEffect } from 'react';
- import { AppLayout } from '@/components/layout/AppLayout';
- import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import { Badge } from '@/components/ui/badge';
- import { Progress } from '@/components/ui/progress';
- import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
- import {
-   Heart,
-   Calendar,
-   TrendingUp,
-   Bell,
-   BookOpen,
-   Pill,
-   Activity,
-   CheckCircle2,
-   Clock,
-   ChevronRight,
- } from 'lucide-react';
- import { format, addDays, isBefore } from 'date-fns';
- import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { useState, useEffect } from 'react';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Heart,
+  Calendar,
+  TrendingUp,
+  Bell,
+  BookOpen,
+  Pill,
+  Activity,
+  CheckCircle2,
+  Clock,
+  ChevronRight,
+  Video,
+  Phone,
+  Mail,
+} from 'lucide-react';
+import { format, addDays, isBefore, parseISO, isToday, isTomorrow } from 'date-fns';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { SessionList } from '@/components/consultations/SessionList';
+import { useConsultationSessions } from '@/hooks/useConsultationSessions';
  
  // Educational resources
  const EDUCATION_RESOURCES = [
@@ -116,13 +121,14 @@
            </Card>
          </div>
  
-         <Tabs defaultValue="overview" className="w-full">
-           <TabsList className="grid w-full grid-cols-4 mb-6">
-             <TabsTrigger value="overview">Overview</TabsTrigger>
-             <TabsTrigger value="appointments">Appointments</TabsTrigger>
-             <TabsTrigger value="medications">Medications</TabsTrigger>
-             <TabsTrigger value="learn">Learn</TabsTrigger>
-           </TabsList>
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="sessions">Sessions</TabsTrigger>
+              <TabsTrigger value="appointments">Appointments</TabsTrigger>
+              <TabsTrigger value="medications">Medications</TabsTrigger>
+              <TabsTrigger value="learn">Learn</TabsTrigger>
+            </TabsList>
  
            {/* Overview Tab */}
            <TabsContent value="overview" className="space-y-4">
@@ -206,7 +212,12 @@
                  </CardContent>
                </Card>
              </div>
-           </TabsContent>
+            </TabsContent>
+
+            {/* Sessions Tab */}
+            <TabsContent value="sessions" className="space-y-4">
+              <SessionList />
+            </TabsContent>
  
            {/* Appointments Tab */}
            <TabsContent value="appointments" className="space-y-4">

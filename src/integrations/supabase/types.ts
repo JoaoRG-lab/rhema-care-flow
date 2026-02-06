@@ -50,6 +50,81 @@ export type Database = {
         }
         Relationships: []
       }
+      consultation_sessions: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          patient_card_id: string | null
+          patient_email: string | null
+          patient_notes: string | null
+          patient_phone: string | null
+          provider_id: string
+          provider_notes: string | null
+          reminder_sent: boolean | null
+          scheduled_date: string
+          session_type: string
+          start_time: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          patient_card_id?: string | null
+          patient_email?: string | null
+          patient_notes?: string | null
+          patient_phone?: string | null
+          provider_id: string
+          provider_notes?: string | null
+          reminder_sent?: boolean | null
+          scheduled_date: string
+          session_type?: string
+          start_time: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          patient_card_id?: string | null
+          patient_email?: string | null
+          patient_notes?: string | null
+          patient_phone?: string | null
+          provider_id?: string
+          provider_notes?: string | null
+          reminder_sent?: boolean | null
+          scheduled_date?: string
+          session_type?: string
+          start_time?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_sessions_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultation_sessions_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contribution_comments: {
         Row: {
           content: string
