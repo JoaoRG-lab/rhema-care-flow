@@ -82,11 +82,49 @@ This project includes a privacy-preserving blockchain registry for healthcare da
 
 ### Production Deployment
 
-1. Navigate to the `/anchor` folder
-2. Build: `anchor build`
-3. Deploy: `anchor deploy --provider.cluster devnet`
-4. Copy the IDL from `target/idl/urv_privacy.json` to `src/idl/urv_privacy.json`
-5. Update `URV_PROGRAM_ID` in `src/lib/solana.ts` with the deployed program ID
+#### Prerequisites
+
+```bash
+# Install Solana CLI
+sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
+
+# Install Anchor CLI  
+cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+avm install latest
+avm use latest
+```
+
+#### Deploy to Devnet
+
+```bash
+# 1. Configure Solana for devnet
+solana config set --url devnet
+
+# 2. Create a new keypair (or use existing)
+solana-keygen new --outfile ~/.config/solana/id.json
+
+# 3. Airdrop SOL for deployment fees
+solana airdrop 2
+
+# 4. Navigate to anchor folder and build
+cd anchor
+anchor build
+
+# 5. Deploy to devnet
+anchor deploy --provider.cluster devnet
+```
+
+#### Update Frontend After Deployment
+
+```bash
+# 1. Copy the generated IDL
+cp anchor/target/idl/urv_privacy.json src/idl/urv_privacy.json
+
+# 2. Get the program ID from deployment output or:
+solana address -k anchor/target/deploy/urv_privacy-keypair.json
+
+# 3. Update URV_PROGRAM_ID in src/lib/solana.ts with the program ID
+```
 
 See `/anchor/README.md` for detailed instructions.
 
