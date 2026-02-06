@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,13 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Search, 
   BookOpen, 
@@ -21,6 +28,7 @@ import {
   ArrowLeft,
   ExternalLink,
   Stethoscope,
+  Filter,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
@@ -28,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { usePublicEducationContent } from '@/hooks/usePublicEducationContent';
 import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
 import { EDUCATION_CATEGORIES, type EducationContent, type ContentType } from '@/types/education';
+import { SPECIALTIES, getActiveSpecialties } from '@/config/specialties';
 
 const CONTENT_TYPE_ICONS: Record<ContentType, typeof FileText> = {
   article: FileText,
@@ -38,11 +47,34 @@ const CONTENT_TYPE_ICONS: Record<ContentType, typeof FileText> = {
 };
 
 export default function PatientEducationLibrary() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { content, loading } = usePublicEducationContent();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<string>('all');
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
   const [viewingContent, setViewingContent] = useState<EducationContent | null>(null);
+
+  // Get specialty from URL params on mount
+  useEffect(() => {
+    const specialty = searchParams.get('specialty');
+    if (specialty) {
+      setSelectedSpecialty(specialty);
+    }
+  }, [searchParams]);
+
+  // Update URL when specialty changes
+  const handleSpecialtyChange = (value: string) => {
+    setSelectedSpecialty(value);
+    if (value === 'all') {
+      searchParams.delete('specialty');
+    } else {
+      searchParams.set('specialty', value);
+    }
+    setSearchParams(searchParams);
+  };
+
+  const activeSpecialties = getActiveSpecialties();
 
   // Get unique diagnosis tags from all content
   const allDiagnosisTags = useMemo(() => {
@@ -68,10 +100,16 @@ export default function PatientEducationLibrary() {
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       const matchesDiagnosis = selectedDiagnosis === 'all' || 
         item.diagnosis_tags?.includes(selectedDiagnosis);
+      const matchesSpecialty = selectedSpecialty === 'all' || 
+        item.specialty === selectedSpecialty ||
+        (!item.specialty && selectedSpecialty === 'rheumatology'); // Default old content to rheumatology
       
-      return matchesSearch && matchesCategory && matchesDiagnosis;
+      return matchesSearch && matchesCategory && matchesDiagnosis && matchesSpecialty;
     });
-  }, [content, searchQuery, selectedCategory, selectedDiagnosis]);
+  }, [content, searchQuery, selectedCategory, selectedDiagnosis, selectedSpecialty]);
+
+  // Get current specialty info for header
+  const currentSpecialty = activeSpecialties.find(s => s.id === selectedSpecialty);
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,15 +122,18 @@ export default function PatientEducationLibrary() {
                 <Stethoscope className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">RheumaFlow</h1>
-                <p className="text-xs text-muted-foreground">Patient Education Library</p>
+                <h1 className="text-xl font-bold">UHS Health OS</h1>
+                <p className="text-xs text-muted-foreground">Biblioteca de Conhecimento</p>
               </div>
             </div>
-            <Button variant="outline" asChild>
-              <Link to="/login">
-                Sign In
+            <div className="flex items-center gap-2">
+              <Link to="/especialidades">
+                <Button variant="ghost" size="sm">Especialidades</Button>
               </Link>
-            </Button>
+              <Button variant="outline" asChild>
+                <Link to="/login">Entrar</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -101,23 +142,34 @@ export default function PatientEducationLibrary() {
         {/* Hero Section */}
         <section className="text-center space-y-4 py-8">
           <h2 className="text-3xl md:text-4xl font-bold">
-            Understanding Your <span className="text-primary">Rheumatic Condition</span>
+            Biblioteca de <span className="text-primary">Conhecimento Médico</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Expert-curated educational resources to help you better understand and manage your health
+            Artigos baseados em evidências para profissionais de saúde
           </p>
           
-          {/* Search */}
-          <div className="max-w-xl mx-auto pt-4">
-            <div className="relative">
+          {/* Search + Specialty Filter */}
+          <div className="max-w-2xl mx-auto pt-4 flex gap-3">
+            <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
-                placeholder="Search articles, guides, and resources..."
+                placeholder="Buscar artigos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-12 text-base"
               />
             </div>
+            <Select value={selectedSpecialty} onValueChange={handleSpecialtyChange}>
+              <SelectTrigger className="w-48 h-12">
+                <SelectValue placeholder="Especialidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {activeSpecialties.map(spec => (
+                  <SelectItem key={spec.id} value={spec.id}>{spec.namePt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </section>
 

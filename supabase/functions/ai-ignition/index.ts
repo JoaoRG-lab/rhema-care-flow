@@ -658,6 +658,28 @@ Respond in JSON:
               .replace(/\s+/g, '-')
               .slice(0, 100);
 
+            // Map disease_area to specialty
+            const specialtyMap: Record<string, string> = {
+              'Rheumatology': 'rheumatology',
+              'Cardiology': 'cardiology',
+              'Oncology': 'oncology',
+              'Neurology': 'neurology',
+              'Endocrinology': 'endocrinology',
+              'Nephrology': 'nephrology',
+              'Hematology': 'hematology',
+              'Infectious Disease': 'infectious-disease',
+              'Pulmonology': 'pulmonology',
+              'Gastroenterology': 'gastroenterology',
+              'Psychiatry': 'psychiatry',
+              'Dermatology': 'dermatology',
+              'Emergency Medicine': 'emergency-medicine',
+              'Pediatrics': 'pediatrics',
+              'Critical Care': 'intensive-care',
+              'Geriatrics': 'geriatrics',
+            };
+            
+            const specialty = specialtyMap[topic.disease_area || 'Rheumatology'] || 'rheumatology';
+
             await supabase.from('education_content').insert({
               author_id: '00000000-0000-0000-0000-000000000000',
               title: article.title,
@@ -665,6 +687,7 @@ Respond in JSON:
               content: article.content,
               slug: `${slug}-${Date.now()}`,
               category: topic.category,
+              specialty: specialty,
               content_type: 'article',
               is_published: true,
               published_at: new Date().toISOString(),

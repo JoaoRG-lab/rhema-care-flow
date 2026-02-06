@@ -4,44 +4,46 @@
  
  export type ContentType = 'article' | 'video' | 'infographic' | 'guide' | 'faq';
  
- export interface EducationContent {
-   id: string;
-   title: string;
-   slug: string;
-   summary: string | null;
-   content: string;
-   content_type: ContentType;
-   category: string;
-   diagnosis_tags: string[];
-   reading_time_minutes: number | null;
-   featured_image_url: string | null;
-   external_url: string | null;
-   is_published: boolean;
-   is_featured: boolean;
-   view_count: number;
-   author_id: string;
-   created_at: string;
-   updated_at: string;
-   published_at: string | null;
- }
+export interface EducationContent {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  content: string;
+  content_type: ContentType;
+  category: string;
+  specialty: string | null;
+  diagnosis_tags: string[];
+  reading_time_minutes: number | null;
+  featured_image_url: string | null;
+  external_url: string | null;
+  is_published: boolean;
+  is_featured: boolean;
+  view_count: number;
+  author_id: string;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
+}
  
- export interface CreateEducationContentInput {
-   title: string;
-   summary?: string;
-   content: string;
-   content_type: ContentType;
-   category: string;
-   diagnosis_tags?: string[];
-   reading_time_minutes?: number;
-   featured_image_url?: string;
-   external_url?: string;
-   is_published?: boolean;
-   is_featured?: boolean;
- }
- 
- export interface UpdateEducationContentInput extends Partial<CreateEducationContentInput> {
-   id: string;
- }
+export interface CreateEducationContentInput {
+  title: string;
+  summary?: string;
+  content: string;
+  content_type: ContentType;
+  category: string;
+  specialty?: string;
+  diagnosis_tags?: string[];
+  reading_time_minutes?: number;
+  featured_image_url?: string;
+  external_url?: string;
+  is_published?: boolean;
+  is_featured?: boolean;
+}
+
+export interface UpdateEducationContentInput extends Partial<CreateEducationContentInput> {
+  id: string;
+}
  
  export const CONTENT_TYPES: { value: ContentType; label: string; icon: string }[] = [
    { value: 'article', label: 'Article', icon: 'FileText' },

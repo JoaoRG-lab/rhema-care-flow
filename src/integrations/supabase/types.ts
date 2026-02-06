@@ -46,6 +46,7 @@ export type Database = {
           sentinel_flags: Json | null
           sentinel_last_check: string | null
           source_count: number | null
+          specialty: string | null
           status: string
           topic: string
           updated_at: string
@@ -82,6 +83,7 @@ export type Database = {
           sentinel_flags?: Json | null
           sentinel_last_check?: string | null
           source_count?: number | null
+          specialty?: string | null
           status?: string
           topic: string
           updated_at?: string
@@ -118,6 +120,7 @@ export type Database = {
           sentinel_flags?: Json | null
           sentinel_last_check?: string | null
           source_count?: number | null
+          specialty?: string | null
           status?: string
           topic?: string
           updated_at?: string
@@ -382,6 +385,7 @@ export type Database = {
           published_at: string | null
           reading_time_minutes: number | null
           slug: string
+          specialty: string | null
           summary: string | null
           title: string
           updated_at: string
@@ -402,6 +406,7 @@ export type Database = {
           published_at?: string | null
           reading_time_minutes?: number | null
           slug: string
+          specialty?: string | null
           summary?: string | null
           title: string
           updated_at?: string
@@ -422,6 +427,7 @@ export type Database = {
           published_at?: string | null
           reading_time_minutes?: number | null
           slug?: string
+          specialty?: string | null
           summary?: string | null
           title?: string
           updated_at?: string
@@ -785,6 +791,7 @@ export type Database = {
           parent_topic_id: string | null
           priority: number | null
           source: string | null
+          specialty: string | null
           status: string
           topic: string
         }
@@ -798,6 +805,7 @@ export type Database = {
           parent_topic_id?: string | null
           priority?: number | null
           source?: string | null
+          specialty?: string | null
           status?: string
           topic: string
         }
@@ -811,6 +819,7 @@ export type Database = {
           parent_topic_id?: string | null
           priority?: number | null
           source?: string | null
+          specialty?: string | null
           status?: string
           topic?: string
         }

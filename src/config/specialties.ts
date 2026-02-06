@@ -1,0 +1,374 @@
+import {
+  Heart,
+  Activity,
+  Brain,
+  Syringe,
+  Shield,
+  Pill,
+  Stethoscope,
+  Droplets,
+  Microscope,
+  Thermometer,
+  Eye,
+  Users,
+  Zap,
+  Bone,
+  Wind,
+  Flame,
+  LucideIcon,
+} from 'lucide-react';
+
+export interface SpecialtyTool {
+  label: string;
+  description: string;
+  href: string;
+  icon: LucideIcon;
+  badge?: string;
+}
+
+export interface SpecialtyCondition {
+  name: string;
+  color: string;
+}
+
+export interface SpecialtyConfig {
+  id: string;
+  name: string;
+  namePt: string;
+  shortName: string;
+  icon: LucideIcon;
+  color: string;
+  bgGradient: string;
+  society: string;
+  societyUrl?: string;
+  description: string;
+  descriptionPt: string;
+  isActive: boolean;
+  conditions: SpecialtyCondition[];
+  tools: SpecialtyTool[];
+  diseaseAreas: string[];
+}
+
+// Priority specialties that are active
+export const ACTIVE_SPECIALTIES = [
+  'rheumatology',
+  'cardiology',
+  'oncology',
+  'neurology',
+  'endocrinology',
+  'nephrology',
+  'hematology',
+];
+
+export const SPECIALTIES: SpecialtyConfig[] = [
+  {
+    id: 'rheumatology',
+    name: 'Rheumatology',
+    namePt: 'Reumatologia',
+    shortName: 'Reumato',
+    icon: Bone,
+    color: 'hsl(168 55% 42%)',
+    bgGradient: 'from-[hsl(168_55%_42%)] to-[hsl(165_60%_48%)]',
+    society: 'SBR - Sociedade Brasileira de Reumatologia',
+    societyUrl: 'https://www.reumatologia.org.br',
+    description: 'Autoimmune and inflammatory musculoskeletal diseases',
+    descriptionPt: 'Doenças autoimunes e inflamatórias musculoesqueléticas',
+    isActive: true,
+    conditions: [
+      { name: 'Artrite Reumatoide', color: 'bg-[hsl(210_75%_50%)]' },
+      { name: 'Espondiloartrites', color: 'bg-[hsl(168_55%_42%)]' },
+      { name: 'Artrite Psoriásica', color: 'bg-[hsl(35_85%_52%)]' },
+      { name: 'Lúpus (LES)', color: 'bg-[hsl(280_55%_55%)]' },
+      { name: 'Vasculites', color: 'bg-[hsl(0_60%_52%)]' },
+      { name: 'Fibromialgia', color: 'bg-[hsl(320_50%_55%)]' },
+    ],
+    tools: [
+      { label: 'DAS28 / CDAI / SDAI', description: 'Calculadoras de atividade de doença', href: '/scores', icon: Activity, badge: 'Core' },
+      { label: 'SLEDAI / BILAG', description: 'Scores de atividade do lúpus', href: '/scores', icon: Activity },
+      { label: 'Critérios ACR/EULAR', description: 'Classificação de doenças reumáticas', href: '/scores', icon: Shield },
+      { label: 'Monitorização DMARDs', description: 'Protocolos de segurança laboratorial', href: '/monitoring', icon: Shield },
+      { label: 'Gestão de Infusões', description: 'Agendamento de biológicos', href: '/infusions', icon: Syringe },
+      { label: 'Biblioteca de Conhecimento', description: 'Artigos e guidelines', href: '/knowledge', icon: Stethoscope },
+    ],
+    diseaseAreas: ['RA', 'SLE', 'SpA', 'PsA', 'Gout', 'OA', 'Vasculitis', 'Myositis', 'Fibromyalgia'],
+  },
+  {
+    id: 'cardiology',
+    name: 'Cardiology',
+    namePt: 'Cardiologia',
+    shortName: 'Cardio',
+    icon: Heart,
+    color: 'hsl(0 72% 51%)',
+    bgGradient: 'from-[hsl(0_72%_51%)] to-[hsl(350_70%_55%)]',
+    society: 'SBC - Sociedade Brasileira de Cardiologia',
+    societyUrl: 'https://www.cardiol.br',
+    description: 'Cardiovascular diseases and heart conditions',
+    descriptionPt: 'Doenças cardiovasculares e condições cardíacas',
+    isActive: true,
+    conditions: [
+      { name: 'Insuficiência Cardíaca', color: 'bg-[hsl(0_72%_51%)]' },
+      { name: 'Fibrilação Atrial', color: 'bg-[hsl(210_75%_50%)]' },
+      { name: 'Síndrome Coronariana', color: 'bg-[hsl(35_85%_52%)]' },
+      { name: 'Hipertensão', color: 'bg-[hsl(168_55%_42%)]' },
+      { name: 'Valvopatias', color: 'bg-[hsl(280_55%_55%)]' },
+      { name: 'Cardiomiopatias', color: 'bg-[hsl(320_50%_55%)]' },
+    ],
+    tools: [
+      { label: 'HEART Score', description: 'Risco de SCA', href: '/scores', icon: Heart, badge: 'Core' },
+      { label: 'CHA2DS2-VASc', description: 'Risco de AVC na FA', href: '/scores', icon: Activity },
+      { label: 'HAS-BLED', description: 'Risco de sangramento', href: '/scores', icon: Droplets },
+      { label: 'NYHA / ACC Stages', description: 'Classificação de IC', href: '/scores', icon: Activity },
+      { label: 'Risco Cardiovascular', description: 'Framingham, ASCVD', href: '/scores', icon: Shield },
+      { label: 'Biblioteca de Conhecimento', description: 'Guidelines ACC/ESC', href: '/knowledge', icon: Stethoscope },
+    ],
+    diseaseAreas: ['Heart Failure', 'Atrial Fibrillation', 'ACS', 'Hypertension', 'Valvular Disease', 'Cardiomyopathy'],
+  },
+  {
+    id: 'oncology',
+    name: 'Oncology',
+    namePt: 'Oncologia',
+    shortName: 'Onco',
+    icon: Microscope,
+    color: 'hsl(280 55% 55%)',
+    bgGradient: 'from-[hsl(280_55%_55%)] to-[hsl(290_60%_60%)]',
+    society: 'SBOC - Sociedade Brasileira de Oncologia Clínica',
+    societyUrl: 'https://www.sboc.org.br',
+    description: 'Cancer diagnosis, treatment and survivorship',
+    descriptionPt: 'Diagnóstico, tratamento e sobrevivência do câncer',
+    isActive: true,
+    conditions: [
+      { name: 'Câncer de Mama', color: 'bg-[hsl(320_50%_55%)]' },
+      { name: 'Câncer de Pulmão', color: 'bg-[hsl(210_75%_50%)]' },
+      { name: 'Câncer Colorretal', color: 'bg-[hsl(35_85%_52%)]' },
+      { name: 'Melanoma', color: 'bg-[hsl(0_60%_40%)]' },
+      { name: 'Linfomas', color: 'bg-[hsl(280_55%_55%)]' },
+      { name: 'Próstata', color: 'bg-[hsl(168_55%_42%)]' },
+    ],
+    tools: [
+      { label: 'ECOG / Karnofsky', description: 'Performance status', href: '/scores', icon: Activity, badge: 'Core' },
+      { label: 'TNM Staging', description: 'Estadiamento tumoral', href: '/scores', icon: Microscope },
+      { label: 'Toxicidade CTCAE', description: 'Graus de toxicidade', href: '/scores', icon: Shield },
+      { label: 'Clearance de Creatinina', description: 'Dose de quimioterapia', href: '/scores', icon: Droplets },
+      { label: 'Emergências Oncológicas', description: 'Protocolos de urgência', href: '/knowledge', icon: Zap },
+      { label: 'Biblioteca de Conhecimento', description: 'Guidelines ASCO/ESMO', href: '/knowledge', icon: Stethoscope },
+    ],
+    diseaseAreas: ['Breast Cancer', 'Lung Cancer', 'Colorectal Cancer', 'Melanoma', 'Lymphoma', 'Prostate Cancer'],
+  },
+  {
+    id: 'neurology',
+    name: 'Neurology',
+    namePt: 'Neurologia',
+    shortName: 'Neuro',
+    icon: Brain,
+    color: 'hsl(210 75% 50%)',
+    bgGradient: 'from-[hsl(210_75%_50%)] to-[hsl(220_70%_55%)]',
+    society: 'ABN - Academia Brasileira de Neurologia',
+    societyUrl: 'https://www.abneuro.org.br',
+    description: 'Neurological disorders and brain diseases',
+    descriptionPt: 'Distúrbios neurológicos e doenças cerebrais',
+    isActive: true,
+    conditions: [
+      { name: 'AVC', color: 'bg-[hsl(0_72%_51%)]' },
+      { name: 'Esclerose Múltipla', color: 'bg-[hsl(210_75%_50%)]' },
+      { name: 'Parkinson', color: 'bg-[hsl(168_55%_42%)]' },
+      { name: 'Epilepsia', color: 'bg-[hsl(280_55%_55%)]' },
+      { name: 'Alzheimer', color: 'bg-[hsl(35_85%_52%)]' },
+      { name: 'Enxaqueca', color: 'bg-[hsl(320_50%_55%)]' },
+    ],
+    tools: [
+      { label: 'NIHSS', description: 'Escala de AVC', href: '/scores', icon: Brain, badge: 'Core' },
+      { label: 'mRS / Barthel', description: 'Escalas funcionais', href: '/scores', icon: Activity },
+      { label: 'EDSS', description: 'Esclerose múltipla', href: '/scores', icon: Activity },
+      { label: 'MoCA / MMSE', description: 'Avaliação cognitiva', href: '/scores', icon: Brain },
+      { label: 'Classificação de Crises', description: 'ILAE 2017', href: '/scores', icon: Zap },
+      { label: 'Biblioteca de Conhecimento', description: 'Guidelines AAN', href: '/knowledge', icon: Stethoscope },
+    ],
+    diseaseAreas: ['Stroke', 'Multiple Sclerosis', 'Parkinson', 'Epilepsy', 'Alzheimer', 'Migraine', 'Neuropathy'],
+  },
+  {
+    id: 'endocrinology',
+    name: 'Endocrinology',
+    namePt: 'Endocrinologia',
+    shortName: 'Endo',
+    icon: Thermometer,
+    color: 'hsl(35 85% 52%)',
+    bgGradient: 'from-[hsl(35_85%_52%)] to-[hsl(45_80%_55%)]',
+    society: 'SBEM - Sociedade Brasileira de Endocrinologia e Metabologia',
+    societyUrl: 'https://www.endocrino.org.br',
+    description: 'Hormonal and metabolic disorders',
+    descriptionPt: 'Distúrbios hormonais e metabólicos',
+    isActive: true,
+    conditions: [
+      { name: 'Diabetes Mellitus', color: 'bg-[hsl(35_85%_52%)]' },
+      { name: 'Doenças da Tireoide', color: 'bg-[hsl(210_75%_50%)]' },
+      { name: 'Osteoporose', color: 'bg-[hsl(168_55%_42%)]' },
+      { name: 'Obesidade', color: 'bg-[hsl(0_72%_51%)]' },
+      { name: 'Doenças Adrenais', color: 'bg-[hsl(280_55%_55%)]' },
+      { name: 'Hipófise', color: 'bg-[hsl(320_50%_55%)]' },
+    ],
+    tools: [
+      { label: 'HbA1c / FINDRISC', description: 'Avaliação do diabetes', href: '/scores', icon: Droplets, badge: 'Core' },
+      { label: 'FRAX', description: 'Risco de fratura', href: '/scores', icon: Bone },
+      { label: 'Tirads', description: 'Nódulos de tireoide', href: '/scores', icon: Eye },
+      { label: 'IMC / Circunferência', description: 'Avaliação metabólica', href: '/scores', icon: Activity },
+      { label: 'Insulina e GLP-1', description: 'Protocolos de tratamento', href: '/knowledge', icon: Syringe },
+      { label: 'Biblioteca de Conhecimento', description: 'Guidelines ADA/AACE', href: '/knowledge', icon: Stethoscope },
+    ],
+    diseaseAreas: ['Diabetes', 'Thyroid', 'Osteoporosis', 'Obesity', 'Adrenal', 'Pituitary'],
+  },
+  {
+    id: 'nephrology',
+    name: 'Nephrology',
+    namePt: 'Nefrologia',
+    shortName: 'Nefro',
+    icon: Droplets,
+    color: 'hsl(200 70% 50%)',
+    bgGradient: 'from-[hsl(200_70%_50%)] to-[hsl(190_65%_55%)]',
+    society: 'SBN - Sociedade Brasileira de Nefrologia',
+    societyUrl: 'https://www.sbn.org.br',
+    description: 'Kidney diseases and renal replacement therapy',
+    descriptionPt: 'Doenças renais e terapia renal substitutiva',
+    isActive: true,
+    conditions: [
+      { name: 'Doença Renal Crônica', color: 'bg-[hsl(200_70%_50%)]' },
+      { name: 'Injúria Renal Aguda', color: 'bg-[hsl(0_72%_51%)]' },
+      { name: 'Glomerulonefrites', color: 'bg-[hsl(280_55%_55%)]' },
+      { name: 'Nefropatia Diabética', color: 'bg-[hsl(35_85%_52%)]' },
+      { name: 'Diálise', color: 'bg-[hsl(210_75%_50%)]' },
+      { name: 'Transplante Renal', color: 'bg-[hsl(168_55%_42%)]' },
+    ],
+    tools: [
+      { label: 'TFGe (CKD-EPI)', description: 'Estimativa de função renal', href: '/scores', icon: Droplets, badge: 'Core' },
+      { label: 'KDIGO Staging', description: 'Estadiamento de DRC', href: '/scores', icon: Activity },
+      { label: 'Albumina/Creatinina', description: 'Proteinúria', href: '/scores', icon: Microscope },
+      { label: 'Correção de Eletrólitos', description: 'Sódio, potássio, cálcio', href: '/scores', icon: Pill },
+      { label: 'Adequação de Diálise', description: 'Kt/V, URR', href: '/scores', icon: Activity },
+      { label: 'Biblioteca de Conhecimento', description: 'Guidelines KDIGO', href: '/knowledge', icon: Stethoscope },
+    ],
+    diseaseAreas: ['CKD', 'AKI', 'Glomerulonephritis', 'Diabetic Nephropathy', 'Dialysis', 'Transplant'],
+  },
+  {
+    id: 'hematology',
+    name: 'Hematology',
+    namePt: 'Hematologia',
+    shortName: 'Hemato',
+    icon: Droplets,
+    color: 'hsl(350 70% 50%)',
+    bgGradient: 'from-[hsl(350_70%_50%)] to-[hsl(0_65%_55%)]',
+    society: 'ABHH - Associação Brasileira de Hematologia, Hemoterapia e Terapia Celular',
+    societyUrl: 'https://www.abhh.org.br',
+    description: 'Blood disorders and hematologic malignancies',
+    descriptionPt: 'Distúrbios do sangue e neoplasias hematológicas',
+    isActive: true,
+    conditions: [
+      { name: 'Anemias', color: 'bg-[hsl(350_70%_50%)]' },
+      { name: 'Tromboembolismo', color: 'bg-[hsl(0_72%_51%)]' },
+      { name: 'Leucemias', color: 'bg-[hsl(280_55%_55%)]' },
+      { name: 'Linfomas', color: 'bg-[hsl(210_75%_50%)]' },
+      { name: 'Mieloma Múltiplo', color: 'bg-[hsl(35_85%_52%)]' },
+      { name: 'Coagulopatias', color: 'bg-[hsl(168_55%_42%)]' },
+    ],
+    tools: [
+      { label: 'Wells / Geneva', description: 'Risco de TEV/TEP', href: '/scores', icon: Activity, badge: 'Core' },
+      { label: 'ISTH-DIC', description: 'Score de CIVD', href: '/scores', icon: Droplets },
+      { label: 'IPSS / IPSS-R', description: 'Prognóstico SMD', href: '/scores', icon: Microscope },
+      { label: 'Anticoagulação', description: 'DOACs vs Warfarina', href: '/knowledge', icon: Pill },
+      { label: 'Transfusão', description: 'Protocolos transfusionais', href: '/knowledge', icon: Syringe },
+      { label: 'Biblioteca de Conhecimento', description: 'Guidelines ASH', href: '/knowledge', icon: Stethoscope },
+    ],
+    diseaseAreas: ['Anemia', 'VTE', 'Leukemia', 'Lymphoma', 'Myeloma', 'Coagulopathy', 'MDS'],
+  },
+  // Inactive specialties (Coming Soon)
+  {
+    id: 'infectious-disease',
+    name: 'Infectious Disease',
+    namePt: 'Infectologia',
+    shortName: 'Infecto',
+    icon: Shield,
+    color: 'hsl(120 50% 45%)',
+    bgGradient: 'from-[hsl(120_50%_45%)] to-[hsl(130_55%_50%)]',
+    society: 'SBI - Sociedade Brasileira de Infectologia',
+    description: 'Infectious diseases and antimicrobial stewardship',
+    descriptionPt: 'Doenças infecciosas e uso racional de antimicrobianos',
+    isActive: false,
+    conditions: [],
+    tools: [],
+    diseaseAreas: ['HIV', 'Sepsis', 'Pneumonia', 'Tuberculosis', 'Hepatitis'],
+  },
+  {
+    id: 'pulmonology',
+    name: 'Pulmonology',
+    namePt: 'Pneumologia',
+    shortName: 'Pneumo',
+    icon: Wind,
+    color: 'hsl(190 60% 50%)',
+    bgGradient: 'from-[hsl(190_60%_50%)] to-[hsl(200_55%_55%)]',
+    society: 'SBPT - Sociedade Brasileira de Pneumologia e Tisiologia',
+    description: 'Respiratory diseases and pulmonary conditions',
+    descriptionPt: 'Doenças respiratórias e condições pulmonares',
+    isActive: false,
+    conditions: [],
+    tools: [],
+    diseaseAreas: ['COPD', 'Asthma', 'Pulmonary Fibrosis', 'Lung Cancer', 'Sleep Apnea'],
+  },
+  {
+    id: 'gastroenterology',
+    name: 'Gastroenterology',
+    namePt: 'Gastroenterologia',
+    shortName: 'Gastro',
+    icon: Flame,
+    color: 'hsl(25 80% 50%)',
+    bgGradient: 'from-[hsl(25_80%_50%)] to-[hsl(35_75%_55%)]',
+    society: 'FBG - Federação Brasileira de Gastroenterologia',
+    description: 'Digestive system diseases',
+    descriptionPt: 'Doenças do sistema digestivo',
+    isActive: false,
+    conditions: [],
+    tools: [],
+    diseaseAreas: ['IBD', 'Cirrhosis', 'GERD', 'Pancreatitis', 'HCC'],
+  },
+  {
+    id: 'geriatrics',
+    name: 'Geriatrics',
+    namePt: 'Geriatria',
+    shortName: 'Geri',
+    icon: Users,
+    color: 'hsl(270 50% 55%)',
+    bgGradient: 'from-[hsl(270_50%_55%)] to-[hsl(280_45%_60%)]',
+    society: 'SBGG - Sociedade Brasileira de Geriatria e Gerontologia',
+    description: 'Care for older adults',
+    descriptionPt: 'Cuidados ao idoso',
+    isActive: false,
+    conditions: [],
+    tools: [],
+    diseaseAreas: ['Frailty', 'Dementia', 'Polypharmacy', 'Falls'],
+  },
+  {
+    id: 'intensive-care',
+    name: 'Intensive Care',
+    namePt: 'Medicina Intensiva',
+    shortName: 'UTI',
+    icon: Zap,
+    color: 'hsl(0 80% 45%)',
+    bgGradient: 'from-[hsl(0_80%_45%)] to-[hsl(10_75%_50%)]',
+    society: 'AMIB - Associação de Medicina Intensiva Brasileira',
+    description: 'Critical care medicine',
+    descriptionPt: 'Medicina de cuidados críticos',
+    isActive: false,
+    conditions: [],
+    tools: [],
+    diseaseAreas: ['Sepsis', 'ARDS', 'Shock', 'Mechanical Ventilation'],
+  },
+];
+
+export function getSpecialtyById(id: string): SpecialtyConfig | undefined {
+  return SPECIALTIES.find(s => s.id === id);
+}
+
+export function getActiveSpecialties(): SpecialtyConfig[] {
+  return SPECIALTIES.filter(s => s.isActive);
+}
+
+export function getInactiveSpecialties(): SpecialtyConfig[] {
+  return SPECIALTIES.filter(s => !s.isActive);
+}
