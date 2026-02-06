@@ -480,6 +480,7 @@ export type Database = {
           specialty: string | null
           updated_at: string
           user_id: string
+          verification_tier: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -491,6 +492,7 @@ export type Database = {
           specialty?: string | null
           updated_at?: string
           user_id: string
+          verification_tier?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -502,6 +504,7 @@ export type Database = {
           specialty?: string | null
           updated_at?: string
           user_id?: string
+          verification_tier?: string | null
         }
         Relationships: []
       }
@@ -882,10 +885,12 @@ export type Database = {
           reviewer_notes: string | null
           status: Database["public"]["Enums"]["verification_status"]
           submitted_at: string
+          sumsub_applicant_id: string | null
           technical_expertise: string[] | null
           tier: Database["public"]["Enums"]["verification_tier"] | null
           updated_at: string
           user_id: string
+          verified_at: string | null
           years_in_practice: number | null
         }
         Insert: {
@@ -929,10 +934,12 @@ export type Database = {
           reviewer_notes?: string | null
           status?: Database["public"]["Enums"]["verification_status"]
           submitted_at?: string
+          sumsub_applicant_id?: string | null
           technical_expertise?: string[] | null
           tier?: Database["public"]["Enums"]["verification_tier"] | null
           updated_at?: string
           user_id: string
+          verified_at?: string | null
           years_in_practice?: number | null
         }
         Update: {
@@ -976,10 +983,12 @@ export type Database = {
           reviewer_notes?: string | null
           status?: Database["public"]["Enums"]["verification_status"]
           submitted_at?: string
+          sumsub_applicant_id?: string | null
           technical_expertise?: string[] | null
           tier?: Database["public"]["Enums"]["verification_tier"] | null
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
           years_in_practice?: number | null
         }
         Relationships: []
