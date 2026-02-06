@@ -1,29 +1,50 @@
- import { useState } from 'react';
- import { AppLayout } from '@/components/layout/AppLayout';
- import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import { Input } from '@/components/ui/input';
- import { Label } from '@/components/ui/label';
- import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
- import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
- import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
- import { Shield, Plus, Check, Clock, AlertTriangle, User } from 'lucide-react';
- import { format, isBefore } from 'date-fns';
- import { useMonitoringEvents, MonitoringEventWithPatient } from '@/hooks/useMonitoringEvents';
- import { usePatients } from '@/hooks/usePatients';
- import { EVENT_TYPES, MED_CLASS_RECOMMENDATIONS } from '@/config/clinical';
- import { Link } from 'react-router-dom';
+import { useState, useCallback } from 'react';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Shield, Plus, Check, Clock, AlertTriangle, User } from 'lucide-react';
+import { format, isBefore } from 'date-fns';
+import { useMonitoringEvents, MonitoringEventWithPatient } from '@/hooks/useMonitoringEvents';
+import { usePatients } from '@/hooks/usePatients';
+import { EVENT_TYPES, MED_CLASS_RECOMMENDATIONS } from '@/config/clinical';
+import { Link } from 'react-router-dom';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
+import { SkeletonList, RefreshSkeletonOverlay } from '@/components/ui/skeleton-loader';
+import { useIsMobile } from '@/hooks/use-mobile';
  
- export default function Monitoring() {
-   const { events, loading, createEvent, markComplete } = useMonitoringEvents();
-   const { patients } = usePatients();
-   const [isOpen, setIsOpen] = useState(false);
- 
-   // Form state
-   const [eventType, setEventType] = useState('');
-   const [dueDate, setDueDate] = useState('');
-   const [notes, setNotes] = useState('');
-   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+export default function Monitoring() {
+  const isMobile = useIsMobile();
+  const { events, loading, fetchEvents, createEvent, markComplete } = useMonitoringEvents();
+  const { patients } = usePatients();
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Form state
+  const [eventType, setEventType] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [notes, setNotes] = useState('');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+
+  // Pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    await fetchEvents();
+  }, [fetchEvents]);
+
+  const {
+    ref: pullRef,
+    pullDistance,
+    isRefreshing,
+    progress,
+    shouldTrigger,
+  } = usePullToRefresh<HTMLDivElement>({
+    onRefresh: handleRefresh,
+    enabled: isMobile,
+  });
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
@@ -53,9 +74,15 @@
    const overdueEvents = pendingEvents.filter(e => isBefore(new Date(e.due_date), new Date()));
    const upcomingEvents = pendingEvents.filter(e => !isBefore(new Date(e.due_date), new Date()));
  
-   return (
-     <AppLayout>
-       <div className="p-6 lg:p-8">
+  return (
+    <AppLayout>
+      <div ref={pullRef} className="p-6 lg:p-8 relative overflow-auto min-h-screen">
+        <PullToRefreshIndicator
+          pullDistance={pullDistance}
+          isRefreshing={isRefreshing}
+          progress={progress}
+          shouldTrigger={shouldTrigger}
+        />
          <div className="flex items-center justify-between mb-6">
            <div>
              <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -145,19 +172,23 @@
            </CardContent>
          </Card>
  
-         <Tabs defaultValue="pending" className="space-y-6">
-           <TabsList>
-             <TabsTrigger value="pending" className="gap-2">
-               <Clock className="h-4 w-4" />
-               Pending ({pendingEvents.length})
-             </TabsTrigger>
-             <TabsTrigger value="completed" className="gap-2">
-               <Check className="h-4 w-4" />
-               Completed ({completedEvents.length})
-             </TabsTrigger>
-           </TabsList>
- 
-           <TabsContent value="pending">
+        {loading && !isRefreshing ? (
+          <SkeletonList count={5} />
+        ) : (
+          <RefreshSkeletonOverlay isRefreshing={isRefreshing}>
+            <Tabs defaultValue="pending" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="pending" className="gap-2">
+                  <Clock className="h-4 w-4" />
+                  Pending ({pendingEvents.length})
+                </TabsTrigger>
+                <TabsTrigger value="completed" className="gap-2">
+                  <Check className="h-4 w-4" />
+                  Completed ({completedEvents.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="pending">
              {overdueEvents.length > 0 && (
                <Card className="mb-4 border-destructive/50">
                  <CardHeader className="pb-2">
@@ -251,9 +282,11 @@
                  )}
                </CardContent>
              </Card>
-           </TabsContent>
-         </Tabs>
-       </div>
-     </AppLayout>
-   );
- }
+              </TabsContent>
+            </Tabs>
+          </RefreshSkeletonOverlay>
+        )}
+      </div>
+    </AppLayout>
+  );
+}
