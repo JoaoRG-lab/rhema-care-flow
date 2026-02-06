@@ -1,25 +1,27 @@
- import { useState, useMemo } from 'react';
- import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import { Badge } from '@/components/ui/badge';
- import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
- import { 
-   ArrowDown, 
-   ArrowUp, 
-   Minus, 
-   TrendingDown, 
-   TrendingUp, 
-   Activity,
-   ArrowRightLeft,
-   Info,
-   Download,
- } from 'lucide-react';
- import { format } from 'date-fns';
- import { cn } from '@/lib/utils';
- import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
- import { exportScoreComparisonPDF } from '@/lib/pdfExport';
- import { toast } from 'sonner';
- import type { ScoreEntry } from '@/types/clinical';
+import { useState, useMemo } from 'react';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  ArrowDown, 
+  ArrowUp, 
+  Minus, 
+  TrendingDown, 
+  TrendingUp, 
+  Activity,
+  ArrowRightLeft,
+  Info,
+  Download,
+  Mail,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { exportScoreComparisonPDF, generateScoreComparisonPDFBase64 } from '@/lib/pdfExport';
+import { toast } from 'sonner';
+import { SendReportDialog } from './SendReportDialog';
+import type { ScoreEntry } from '@/types/clinical';
  
  interface ScoreComparisonProps {
    scores: ScoreEntry[];
@@ -117,11 +119,12 @@
    return { state: 'high', label: 'High Activity', color: 'text-destructive', bg: 'bg-destructive/10' };
  };
  
- export function ScoreComparison({ scores, scoreType, patientCode = 'Unknown' }: ScoreComparisonProps) {
-   const scoreTypes = useMemo(() => [...new Set(scores.map(s => s.score_type))], [scores]);
-   const [selectedType, setSelectedType] = useState(scoreType || scoreTypes[0] || '');
-   const [baselineId, setBaselineId] = useState<string>('');
-   const [comparisonId, setComparisonId] = useState<string>('');
+export function ScoreComparison({ scores, scoreType, patientCode = 'Unknown' }: ScoreComparisonProps) {
+    const scoreTypes = useMemo(() => [...new Set(scores.map(s => s.score_type))], [scores]);
+    const [selectedType, setSelectedType] = useState(scoreType || scoreTypes[0] || '');
+    const [baselineId, setBaselineId] = useState<string>('');
+    const [comparisonId, setComparisonId] = useState<string>('');
+    const [showEmailDialog, setShowEmailDialog] = useState(false);
  
    const filteredScores = useMemo(() => 
      scores
@@ -227,9 +230,45 @@
        toast.success('PDF exported successfully');
      } catch (error) {
        console.error('PDF export error:', error);
-       toast.error('Failed to export PDF');
-     }
-   };
+      toast.error('Failed to export PDF');
+    }
+  };
+
+  const generatePdfBase64ForEmail = async (): Promise<string> => {
+    if (!comparison || !baselineScore || !comparisonScore) {
+      throw new Error('No comparison data available');
+    }
+
+    const clinicalSummary = comparison.improved
+      ? `Improvement of ${Math.abs(comparison.delta).toFixed(1)} points (${Math.abs(comparison.percentChange).toFixed(0)}%) over ${comparison.daysBetween} days.${comparison.mcidAchieved ? ' This exceeds the minimal clinically important difference.' : ''}`
+      : comparison.worsened
+        ? `Worsening of ${Math.abs(comparison.delta).toFixed(1)} points (${Math.abs(comparison.percentChange).toFixed(0)}%) over ${comparison.daysBetween} days.${comparison.mcidAchieved ? ' This represents a clinically meaningful change.' : ''}`
+        : `Stable disease activity over ${comparison.daysBetween} days.`;
+
+    return generateScoreComparisonPDFBase64({
+      patientCode,
+      scoreType: selectedType,
+      baseline: {
+        score: baselineScore.calculated_score ?? 0,
+        date: format(new Date(baselineScore.created_at), 'MMM d, yyyy'),
+        state: comparison.baselineState.label,
+      },
+      followup: {
+        score: comparisonScore.calculated_score ?? 0,
+        date: format(new Date(comparisonScore.created_at), 'MMM d, yyyy'),
+        state: comparison.comparisonState.label,
+      },
+      delta: comparison.delta,
+      percentChange: comparison.percentChange,
+      mcidAchieved: comparison.mcidAchieved,
+      mcidThreshold: SCORE_THRESHOLDS[selectedType]?.mcid || 0,
+      daysBetween: comparison.daysBetween,
+      eularResponse: comparison.eularResponse
+        ? { label: comparison.eularResponse.label, description: comparison.eularResponse.description }
+        : undefined,
+      clinicalSummary,
+    });
+  };
  
    if (scores.length === 0) {
      return (
@@ -242,49 +281,67 @@
      );
    }
  
-   return (
-     <Card>
-       <CardHeader>
-         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-           <div>
-             <CardTitle className="text-base flex items-center gap-2">
-               <ArrowRightLeft className="h-4 w-4 text-primary" />
-               Score Comparison
-             </CardTitle>
-             <CardDescription>Compare disease activity between visits</CardDescription>
-           </div>
-           <div className="flex items-center gap-2">
-             <Select value={selectedType} onValueChange={setSelectedType}>
-               <SelectTrigger className="w-[140px]">
-                 <SelectValue placeholder="Select score" />
-               </SelectTrigger>
-               <SelectContent>
-                 {scoreTypes.map(type => (
-                   <SelectItem key={type} value={type}>{type}</SelectItem>
-                 ))}
-               </SelectContent>
-             </Select>
-             {comparison && (
-               <TooltipProvider>
-                 <Tooltip>
-                   <TooltipTrigger asChild>
-                     <Button 
-                       variant="outline" 
-                       size="icon"
-                       onClick={handleExportPDF}
-                       className="shrink-0"
-                     >
-                       <Download className="h-4 w-4" />
-                     </Button>
-                   </TooltipTrigger>
-                   <TooltipContent>Export as PDF</TooltipContent>
-                 </Tooltip>
-               </TooltipProvider>
-             )}
-           </div>
-         </div>
-       </CardHeader>
-       <CardContent className="space-y-4">
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <ArrowRightLeft className="h-4 w-4 text-primary" />
+                Score Comparison
+              </CardTitle>
+              <CardDescription>Compare disease activity between visits</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select score" />
+                </SelectTrigger>
+                <SelectContent>
+                  {scoreTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {comparison && (
+                <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => setShowEmailDialog(true)}
+                          className="shrink-0"
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Send via Email</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={handleExportPDF}
+                          className="shrink-0"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Export as PDF</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
          {/* Date Selectors */}
          <div className="grid grid-cols-2 gap-3">
            <div>
@@ -479,8 +536,18 @@
              <p>Need at least 2 {selectedType} scores to compare</p>
              <p className="text-xs mt-1">Currently have {filteredScores.length} score(s)</p>
            </div>
-         )}
-       </CardContent>
-     </Card>
-   );
- }
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Email Dialog */}
+      <SendReportDialog
+        open={showEmailDialog}
+        onOpenChange={setShowEmailDialog}
+        patientName={patientCode}
+        reportType={`${selectedType} Score Comparison`}
+        generatePdfBase64={generatePdfBase64ForEmail}
+      />
+    </>
+  );
+}
