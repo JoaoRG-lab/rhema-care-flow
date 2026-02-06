@@ -1,44 +1,46 @@
- import { Link, useLocation } from 'react-router-dom';
- import {
-   LayoutDashboard,
-   Users,
-   Activity,
-   Shield,
-   Calendar,
-   CheckSquare,
-   Timer,
-   Settings,
-   LogOut,
-   Syringe,
-   Palette,
-   BadgeCheck,
-   ShieldCheck,
-   User,
-   GraduationCap,
-   Heart,
- } from 'lucide-react';
- import { useAuth } from '@/contexts/AuthContext';
- import { useUserRole } from '@/hooks/useUserRole';
- import { useVerificationStatus } from '@/hooks/useVerificationStatus';
- import { usePersona } from '@/contexts/PersonaContext';
- import { cn } from '@/lib/utils';
- import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
- import { Avatar, AvatarFallback } from '@/components/ui/avatar';
- import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
- import { Separator } from '@/components/ui/separator';
- import { ScrollArea } from '@/components/ui/scroll-area';
- import { PersonaSwitcher } from './PersonaSwitcher';
- 
- const navItems = [
-   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-   { path: '/patients', label: 'Patients', icon: Users },
-   { path: '/scores', label: 'Scores & Tools', icon: Activity },
-   { path: '/monitoring', label: 'Monitoring', icon: Shield },
-   { path: '/infusions', label: 'Infusions', icon: Syringe },
-   { path: '/calendar', label: 'Calendar', icon: Calendar },
-   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
-   { path: '/focus', label: 'Focus', icon: Timer },
- ];
+import { Link, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Users,
+  Activity,
+  Shield,
+  Calendar,
+  CheckSquare,
+  Timer,
+  Settings,
+  LogOut,
+  Syringe,
+  Palette,
+  BadgeCheck,
+  ShieldCheck,
+  User,
+  GraduationCap,
+  Heart,
+  BookOpen,
+} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+import { usePersona } from '@/contexts/PersonaContext';
+import { cn } from '@/lib/utils';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { PersonaSwitcher } from './PersonaSwitcher';
+
+const navItems = [
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/patients', label: 'Patients', icon: Users },
+  { path: '/scores', label: 'Scores & Tools', icon: Activity },
+  { path: '/monitoring', label: 'Monitoring', icon: Shield },
+  { path: '/infusions', label: 'Infusions', icon: Syringe },
+  { path: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { path: '/calendar', label: 'Calendar', icon: Calendar },
+  { path: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { path: '/focus', label: 'Focus', icon: Timer },
+];
  
  const academicNavItems = [
    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },

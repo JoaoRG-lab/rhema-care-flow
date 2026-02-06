@@ -38,17 +38,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
  
- const navItems = [
-   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-   { path: '/patients', label: 'Patients', icon: Users },
-   { path: '/scores', label: 'Scores & Tools', icon: Activity },
-   { path: '/monitoring', label: 'Monitoring', icon: Shield },
-   { path: '/infusions', label: 'Infusions', icon: Syringe },
-   { path: '/education', label: 'Education', icon: FileText },
-   { path: '/calendar', label: 'Calendar', icon: Calendar },
-   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
-   { path: '/focus', label: 'Focus', icon: Timer },
- ];
+const navItems = [
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/patients', label: 'Patients', icon: Users },
+  { path: '/scores', label: 'Scores & Tools', icon: Activity },
+  { path: '/monitoring', label: 'Monitoring', icon: Shield },
+  { path: '/infusions', label: 'Infusions', icon: Syringe },
+  { path: '/education', label: 'Education', icon: FileText },
+  { path: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { path: '/calendar', label: 'Calendar', icon: Calendar },
+  { path: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { path: '/focus', label: 'Focus', icon: Timer },
+];
  
  const academicNavItems = [
    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
