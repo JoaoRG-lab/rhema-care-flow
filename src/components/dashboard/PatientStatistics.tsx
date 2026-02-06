@@ -1,21 +1,46 @@
- import { useEffect, useState } from 'react';
- import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
- import { Badge } from '@/components/ui/badge';
- import { supabase } from '@/integrations/supabase/client';
- import { useAuth } from '@/contexts/AuthContext';
- import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
- import { 
-   Users, 
-   Activity, 
-   TrendingUp, 
-   TrendingDown,
-   Calendar,
-   ClipboardList,
-   Stethoscope,
-   BarChart3
- } from 'lucide-react';
- 
- interface StatsData {
+import { useEffect, useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { 
+  Users, 
+  Activity, 
+  TrendingUp, 
+  TrendingDown,
+  Calendar,
+  ClipboardList,
+  Stethoscope,
+  BarChart3
+} from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
+
+// Chart color palette using HSL values that work in both light/dark modes
+const CHART_COLORS = [
+  'hsl(var(--primary))',
+  'hsl(var(--success))',
+  'hsl(var(--warning))',
+  'hsl(var(--info))',
+  'hsl(var(--destructive))',
+  'hsl(210, 70%, 60%)',
+  'hsl(280, 60%, 55%)',
+  'hsl(30, 80%, 55%)',
+];
+
+interface StatsData {
    totalPatients: number;
    newPatientsThisMonth: number;
    totalVisitsThisMonth: number;
@@ -219,72 +244,137 @@
            </div>
          </div>
  
-         {/* Breakdown Sections */}
-         <div className="grid md:grid-cols-3 gap-6">
-           {/* Diagnosis Distribution */}
-           <div>
-             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-               <ClipboardList className="h-4 w-4 text-muted-foreground" />
-               Top Diagnoses
-             </h4>
-             <div className="space-y-2">
-               {stats.diagnosisBreakdown.map(({ diagnosis, count }) => (
-                 <div key={diagnosis} className="flex items-center justify-between">
-                   <Badge variant="secondary" className="font-normal">
-                     {diagnosis}
-                   </Badge>
-                   <span className="text-sm text-muted-foreground">{count}</span>
-                 </div>
-               ))}
-               {stats.diagnosisBreakdown.length === 0 && (
-                 <p className="text-sm text-muted-foreground">No diagnoses recorded</p>
-               )}
-             </div>
-           </div>
- 
-           {/* Therapy Distribution */}
-           <div>
-             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-               <Stethoscope className="h-4 w-4 text-muted-foreground" />
-               Top Therapies
-             </h4>
-             <div className="space-y-2">
-               {stats.therapyBreakdown.map(({ therapy, count }) => (
-                 <div key={therapy} className="flex items-center justify-between">
-                   <Badge variant="outline" className="font-normal">
-                     {therapy}
-                   </Badge>
-                   <span className="text-sm text-muted-foreground">{count}</span>
-                 </div>
-               ))}
-               {stats.therapyBreakdown.length === 0 && (
-                 <p className="text-sm text-muted-foreground">No therapies recorded</p>
-               )}
-             </div>
-           </div>
- 
-           {/* Recent Score Averages */}
-           <div>
-             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-               <Activity className="h-4 w-4 text-muted-foreground" />
-               Recent Score Averages
-             </h4>
-             <div className="space-y-2">
-               {stats.recentScores.map(({ scoreType, avgScore, count }) => (
-                 <div key={scoreType} className="flex items-center justify-between">
-                   <div>
-                     <span className="text-sm font-medium">{scoreType}</span>
-                     <span className="text-xs text-muted-foreground ml-2">({count})</span>
-                   </div>
-                   <span className="text-sm font-mono">{avgScore}</span>
-                 </div>
-               ))}
-               {stats.recentScores.length === 0 && (
-                 <p className="text-sm text-muted-foreground">No scores recorded yet</p>
-               )}
-             </div>
-           </div>
-         </div>
+          {/* Charts Section */}
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            {/* Diagnosis Pie Chart */}
+            {stats.diagnosisBreakdown.length > 0 && (
+              <div className="p-4 rounded-lg border bg-card">
+                <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                  Diagnosis Distribution
+                </h4>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={stats.diagnosisBreakdown.map(d => ({ name: d.diagnosis, value: d.count }))}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={70}
+                        paddingAngle={2}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        labelLine={false}
+                      >
+                        {stats.diagnosisBreakdown.map((_, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--popover))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Therapy Bar Chart */}
+            {stats.therapyBreakdown.length > 0 && (
+              <div className="p-4 rounded-lg border bg-card">
+                <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                  <Stethoscope className="h-4 w-4 text-muted-foreground" />
+                  Therapy Distribution
+                </h4>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart 
+                      data={stats.therapyBreakdown.map(t => ({ name: t.therapy, count: t.count }))}
+                      layout="vertical"
+                      margin={{ left: 0, right: 20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tick={{ fontSize: 12 }} />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        tick={{ fontSize: 11 }} 
+                        width={80}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--popover))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                        }}
+                      />
+                      <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Score Averages Bar Chart */}
+          {stats.recentScores.length > 0 && (
+            <div className="p-4 rounded-lg border bg-card">
+              <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                Recent Score Averages (Last 30 Days)
+              </h4>
+              <div className="h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={stats.recentScores.map(s => ({ 
+                      name: s.scoreType, 
+                      avg: s.avgScore,
+                      count: s.count 
+                    }))}
+                    margin={{ top: 10, right: 20, bottom: 20, left: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 11 }} 
+                      angle={-20}
+                      textAnchor="end"
+                      height={50}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--popover))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                      formatter={(value: number, name: string) => [
+                        name === 'avg' ? value.toFixed(1) : value,
+                        name === 'avg' ? 'Average Score' : 'Count'
+                      ]}
+                    />
+                    <Bar dataKey="avg" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Average" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Empty states */}
+          {stats.diagnosisBreakdown.length === 0 && stats.therapyBreakdown.length === 0 && stats.recentScores.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>Add patient data to see detailed charts</p>
+            </div>
+          )}
        </CardContent>
      </Card>
    );
