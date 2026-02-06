@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Heart,
   BookOpen,
+  TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -37,6 +38,7 @@ const navItems = [
   { path: '/monitoring', label: 'Monitoring', icon: Shield },
   { path: '/infusions', label: 'Infusions', icon: Syringe },
   { path: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { path: '/analytics', label: 'Analytics', icon: TrendingUp },
   { path: '/calendar', label: 'Calendar', icon: Calendar },
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
   { path: '/focus', label: 'Focus', icon: Timer },

@@ -31,6 +31,7 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Education = lazy(() => import("./pages/Education"));
 const KnowledgeLibrary = lazy(() => import("./pages/KnowledgeLibrary"));
 const PatientEducationLibrary = lazy(() => import("./pages/PatientEducationLibrary"));
+const Analytics = lazy(() => import("./pages/Analytics"));
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const queryClient = new QueryClient();
                <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
                 <Route path="/knowledge" element={<ProtectedRoute><KnowledgeLibrary /></ProtectedRoute>} />
                 <Route path="/learn" element={<PatientEducationLibrary />} />
+                <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
