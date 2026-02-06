@@ -1474,7 +1474,7 @@ export type Database = {
           is_seed_permanently_hidden: boolean | null
           last_auth_at: string | null
           locked_until: string | null
-          seed_hash: string
+          seed_hash: string | null
           seed_reveal_expires_at: string | null
           seed_revealed_at: string | null
           transfer_completed_at: string | null
@@ -1495,7 +1495,7 @@ export type Database = {
           is_seed_permanently_hidden?: boolean | null
           last_auth_at?: string | null
           locked_until?: string | null
-          seed_hash: string
+          seed_hash?: string | null
           seed_reveal_expires_at?: string | null
           seed_revealed_at?: string | null
           transfer_completed_at?: string | null
@@ -1516,7 +1516,7 @@ export type Database = {
           is_seed_permanently_hidden?: boolean | null
           last_auth_at?: string | null
           locked_until?: string | null
-          seed_hash?: string
+          seed_hash?: string | null
           seed_reveal_expires_at?: string | null
           seed_revealed_at?: string | null
           transfer_completed_at?: string | null
