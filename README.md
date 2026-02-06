@@ -80,18 +80,17 @@ This project includes a privacy-preserving blockchain registry for healthcare da
 - Medical records, diagnoses, or treatment details
 - Any data that could identify an individual
 
-## Anchor (Solana) — Deploy to Devnet and Frontend Integration
+## Solana (Devnet) + Anchor — Deploy e Integração
 
-### 1) Configure Solana for Devnet
+### Devnet
 
 ```bash
 solana config set --url https://api.devnet.solana.com
-solana-keygen new --outfile ~/.config/solana/id.json
 solana airdrop 2
 solana balance
 ```
 
-### 2) Build and Deploy the Program (Anchor)
+### Build/Deploy Anchor
 
 ```bash
 cd anchor
@@ -99,49 +98,51 @@ anchor build
 anchor deploy
 ```
 
-### 3) Copy the IDL to Frontend
+### IDL
 
-After `anchor build`, copy the generated IDL:
-
-```bash
-cp anchor/target/idl/urv_privacy.json src/idl/urv_privacy.json
+Copie:
+```
+anchor/target/idl/urv_privacy.json
 ```
 
-### 4) Update ProgramId in Frontend
-
-After `anchor deploy`, get the ProgramId from the output and update:
-
-**File:** `src/components/blockchain/UrvDemo.tsx`
-
-```typescript
-const PROGRAM_ID = new PublicKey('YOUR_DEPLOYED_PROGRAM_ID_HERE');
+E cole em:
+```
+src/idl/urv_privacy.json
 ```
 
-### 5) Run the App
+### ProgramId
 
-```bash
-npm install
-npm run dev
-```
+Após deploy, cole o ProgramId em:
+- `src/components/UrvDemo.tsx` (PROGRAM_ID)
+- `src/components/blockchain/UrvDemo.tsx` (PROGRAM_ID)
 
-### Privacy Design
+### Privacidade
 
-**Plaintext is never stored on-chain.** On-chain records only:
+**Plaintext nunca vai on-chain.** On-chain registra apenas:
+- Hashes/commitments
+- Score e confidence
+- Encadeamento (prev_hash → new_hash)
 
-- **Hashes (commitments)**: SHA-256 of canonical JSON
-- **Score & Confidence**: Numeric values
-- **Chain links**: `prev_hash → new_hash` for immutable audit trail
-- **Timestamps**: When records were created
+---
 
-### Score Update Chaining
+## Teste rápido (ordem certa)
 
-The `postScoreUpdate()` function implements real chaining:
+1. **Conectar Phantom** (wallet)
+2. **Init State** - Inicializa o state PDA
+3. **Create Record** - Cria um record com hash do payload
+4. **Post Score Update** - Posta atualização de score encadeada
 
-1. Fetches `state.lastScoreHash` via `program.account.state.fetch(statePda)`
-2. Computes `features_hash` from canonical JSON features object
-3. Computes `new_score_hash = sha256(prev_hash + features_hash + score_u32_LE + conf_bps_LE)`
-4. Derives update PDA: `["upd", statePda, new_score_hash]`
-5. Posts the update with both prev and new hashes
+> ⚠️ Se der erro "account does not exist" no `postScoreUpdate`, é porque você ainda não inicializou o state (passo 2).
+
+---
+
+## Acesso ao URV Demo
+
+O componente URV está disponível em duas rotas:
+- `/urv` - Página dedicada com providers Solana
+- `/blockchain` - Página de Blockchain Registry (requer autenticação)
+
+---
 
 ## How can I deploy this project?
 
