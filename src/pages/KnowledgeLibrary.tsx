@@ -27,6 +27,7 @@ import {
   ExternalLink,
   ChevronDown,
   X,
+  MessageCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useKnowledgeContributions, ContributionCategory, KnowledgeContribution } from '@/hooks/useKnowledgeContributions';
@@ -37,6 +38,7 @@ import { cn } from '@/lib/utils';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CommentThread } from '@/components/knowledge/CommentThread';
 import {
   Sheet,
   SheetContent,
@@ -301,22 +303,38 @@ export default function KnowledgeLibrary() {
                     · {format(new Date(contribution.created_at), 'MMM d, yyyy')}
                   </span>
                 </div>
-                <button
-                  onClick={(e) => handleVote(contribution.id, e)}
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors',
-                    contribution.user_has_voted 
-                      ? 'text-primary bg-primary/10 font-medium' 
-                      : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
-                  )}
-                >
-                  <ThumbsUp className={cn(
-                    'h-4 w-4',
-                    contribution.user_has_voted && 'fill-current'
-                  )} />
-                  <span>{contribution.helpful_count}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    {contribution.comment_count || 0}
+                  </span>
+                  <button
+                    onClick={(e) => handleVote(contribution.id, e)}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors',
+                      contribution.user_has_voted 
+                        ? 'text-primary bg-primary/10 font-medium' 
+                        : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
+                    )}
+                  >
+                    <ThumbsUp className={cn(
+                      'h-4 w-4',
+                      contribution.user_has_voted && 'fill-current'
+                    )} />
+                    <span>{contribution.helpful_count}</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Comments Section - only when expanded */}
+              {isExpanded && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <CommentThread 
+                    contributionId={contribution.id} 
+                    commentCount={contribution.comment_count || 0}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </CardContent>

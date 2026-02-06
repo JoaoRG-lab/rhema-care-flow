@@ -21,6 +21,7 @@ export interface KnowledgeContribution {
   reviewed_by: string | null;
   reviewed_at: string | null;
   reviewer_notes: string | null;
+  comment_count: number;
   created_at: string;
   updated_at: string;
   // Joined fields
