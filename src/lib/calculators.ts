@@ -346,6 +346,16 @@
     reference: 'Anderson et al. 2001',
     implemented: true,
   },
+  {
+    id: 'treatment-response-comparison',
+    name: 'Treatment Response Comparison',
+    shortName: 'Response Compare',
+    description: 'Track ACR/EULAR responses across multiple visits',
+    category: 'monitoring',
+    diseases: ['ra'],
+    reference: 'ACR/EULAR Guidelines',
+    implemented: true,
+  },
    {
      id: 'sle-responder-index',
      name: 'SLE Responder Index',
