@@ -5,91 +5,232 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// High-impact sources for medical literature search
+// High-impact sources for medical literature search - ALL CLINICAL MEDICINE
 const AUTHORITATIVE_SOURCES = [
-  'eular.org',
-  'rheumatology.org', // ACR
+  // General Medicine
+  'nejm.org',
   'thelancet.com',
   'nature.com',
-  'nejm.org',
-  'reumatologia.org.br', // SBR
-  'ard.bmj.com', // Annals of Rheumatic Diseases
-  'arthritis-research.biomedcentral.com',
+  'bmj.com',
+  'jamanetwork.com',
+  'annals.org', // Annals of Internal Medicine
   'pubmed.ncbi.nlm.nih.gov',
+  
+  // Rheumatology
+  'eular.org',
+  'rheumatology.org',
+  'ard.bmj.com',
+  'reumatologia.org.br',
+  
+  // Cardiology
+  'acc.org',
+  'escardio.org',
+  'ahajournals.org',
+  'jacc.org',
+  
+  // Oncology
+  'asco.org',
+  'esmo.org',
+  'cancer.gov',
+  'jco.ascopubs.org',
+  
+  // Neurology
+  'aan.com',
+  'neurology.org',
+  
+  // Infectious Disease
+  'idsociety.org',
+  'cdc.gov',
+  'who.int',
+  
+  // Endocrinology
+  'endocrine.org',
+  'diabetes.org',
+  'thyroid.org',
+  
+  // Pulmonology
+  'thoracic.org',
+  'ersnet.org',
+  
+  // Gastroenterology
+  'gastro.org',
+  'ueg.eu',
+  
+  // Nephrology
+  'asn-online.org',
+  'kdigo.org',
+  
+  // Hematology
+  'hematology.org',
+  
+  // Psychiatry
+  'psychiatry.org',
+  
+  // Pediatrics
+  'aap.org',
+  
+  // Emergency Medicine
+  'acep.org',
+  
+  // Surgery
+  'facs.org',
 ];
 
-// Comprehensive seed topics for rheumatology knowledge base
+// Comprehensive seed topics for ALL CLINICAL MEDICINE knowledge base
 const SEED_TOPICS = [
-  // Rheumatoid Arthritis - High Priority from Major Journals
-  { topic: 'ACR/EULAR 2024 Rheumatoid Arthritis Classification Criteria', category: 'Guidelines', disease_area: 'Rheumatoid Arthritis', priority: 10, sources: ['ACR', 'EULAR'] },
-  { topic: 'Treat-to-Target Strategy in Rheumatoid Arthritis', category: 'Treatment Protocols', disease_area: 'Rheumatoid Arthritis', priority: 9, sources: ['NEJM', 'Lancet Rheumatology'] },
-  { topic: 'Methotrexate Optimization in RA: Dosing and Monitoring', category: 'Pharmacology', disease_area: 'Rheumatoid Arthritis', priority: 9, sources: ['ACR', 'EULAR'] },
-  { topic: 'JAK Inhibitors Comparative Efficacy and Safety in Rheumatoid Arthritis', category: 'Pharmacology', disease_area: 'Rheumatoid Arthritis', priority: 10, sources: ['NEJM', 'Lancet'] },
-  { topic: 'Biologic DMARDs Selection Algorithm for RA', category: 'Treatment Protocols', disease_area: 'Rheumatoid Arthritis', priority: 8, sources: ['ACR', 'EULAR'] },
-  { topic: 'RA Remission Criteria: DAS28 vs CDAI vs Boolean', category: 'Clinical Assessment', disease_area: 'Rheumatoid Arthritis', priority: 8, sources: ['EULAR', 'ACR'] },
+  // ============ RHEUMATOLOGY ============
+  { topic: 'ACR/EULAR 2024 Rheumatoid Arthritis Classification Criteria', category: 'Guidelines', disease_area: 'Rheumatology', priority: 10, sources: ['ACR', 'EULAR'] },
+  { topic: 'JAK Inhibitors Comparative Efficacy and Safety in Rheumatoid Arthritis', category: 'Pharmacology', disease_area: 'Rheumatology', priority: 10, sources: ['NEJM', 'Lancet'] },
+  { topic: 'EULAR/ACR 2019 SLE Classification Criteria Update 2024', category: 'Guidelines', disease_area: 'Rheumatology', priority: 10, sources: ['EULAR', 'ACR'] },
+  { topic: 'Lupus Nephritis: ISN/RPS Classification and KDIGO Management', category: 'Guidelines', disease_area: 'Rheumatology', priority: 10, sources: ['NEJM', 'Nature Reviews'] },
+  { topic: 'ANCA-Associated Vasculitis: ACR/EULAR 2022 Classification', category: 'Guidelines', disease_area: 'Rheumatology', priority: 10, sources: ['ACR', 'EULAR'] },
+  { topic: 'ASAS Classification Criteria for Axial Spondyloarthritis', category: 'Guidelines', disease_area: 'Rheumatology', priority: 9, sources: ['ASAS', 'EULAR'] },
+  { topic: 'Psoriatic Arthritis: CASPAR Criteria and Treatment Algorithm', category: 'Guidelines', disease_area: 'Rheumatology', priority: 9, sources: ['ACR', 'GRAPPA'] },
+  { topic: 'Gout Management: ACR Guidelines 2024', category: 'Guidelines', disease_area: 'Rheumatology', priority: 9, sources: ['ACR'] },
   
-  // Systemic Lupus Erythematosus - High Impact Studies
-  { topic: 'EULAR/ACR 2019 SLE Classification Criteria Update 2024', category: 'Guidelines', disease_area: 'Systemic Lupus Erythematosus', priority: 10, sources: ['EULAR', 'ACR'] },
-  { topic: 'Lupus Nephritis: ISN/RPS Classification and KDIGO Management', category: 'Guidelines', disease_area: 'Systemic Lupus Erythematosus', priority: 10, sources: ['NEJM', 'Nature Reviews'] },
-  { topic: 'Voclosporin in Lupus Nephritis: AURORA Trial Evidence', category: 'Pharmacology', disease_area: 'Systemic Lupus Erythematosus', priority: 9, sources: ['NEJM', 'Lancet'] },
-  { topic: 'Belimumab and Anifrolumab: Type I Interferon Pathway in SLE', category: 'Pharmacology', disease_area: 'Systemic Lupus Erythematosus', priority: 9, sources: ['NEJM', 'Nature Medicine'] },
-  { topic: 'SLEDAI-2K and BILAG in SLE Disease Activity Monitoring', category: 'Clinical Assessment', disease_area: 'Systemic Lupus Erythematosus', priority: 8, sources: ['ACR', 'EULAR'] },
-  { topic: 'Hydroxychloroquine Retinopathy Screening: AAO Guidelines', category: 'Safety', disease_area: 'Systemic Lupus Erythematosus', priority: 8, sources: ['ACR', 'AAO'] },
+  // ============ CARDIOLOGY ============
+  { topic: 'ACC/AHA Heart Failure Guidelines 2024', category: 'Guidelines', disease_area: 'Cardiology', priority: 10, sources: ['ACC', 'AHA'] },
+  { topic: 'SGLT2 Inhibitors in Heart Failure: Evidence and Practice', category: 'Pharmacology', disease_area: 'Cardiology', priority: 10, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Atrial Fibrillation: ESC Guidelines and Anticoagulation', category: 'Guidelines', disease_area: 'Cardiology', priority: 10, sources: ['ESC'] },
+  { topic: 'Acute Coronary Syndrome: STEMI and NSTEMI Management', category: 'Treatment Protocols', disease_area: 'Cardiology', priority: 10, sources: ['ACC', 'ESC'] },
+  { topic: 'Hypertension Management: JNC and ESC Guidelines', category: 'Guidelines', disease_area: 'Cardiology', priority: 9, sources: ['ACC', 'ESC'] },
+  { topic: 'Lipid Management and PCSK9 Inhibitors', category: 'Pharmacology', disease_area: 'Cardiology', priority: 9, sources: ['ACC', 'NEJM'] },
+  { topic: 'Cardiac Amyloidosis: Diagnosis and Treatment', category: 'Clinical Assessment', disease_area: 'Cardiology', priority: 8, sources: ['JACC', 'NEJM'] },
+  { topic: 'Valvular Heart Disease: TAVR and Surgical Management', category: 'Treatment Protocols', disease_area: 'Cardiology', priority: 8, sources: ['ACC', 'ESC'] },
+  { topic: 'Pulmonary Arterial Hypertension: Classification and Treatment', category: 'Guidelines', disease_area: 'Cardiology', priority: 8, sources: ['ESC', 'CHEST'] },
+  { topic: 'Cardiac Resynchronization and ICD Therapy', category: 'Treatment Protocols', disease_area: 'Cardiology', priority: 7, sources: ['ACC', 'ESC'] },
   
-  // Spondyloarthritis - ASAS and EULAR Focus
-  { topic: 'ASAS Classification Criteria for Axial Spondyloarthritis 2024', category: 'Guidelines', disease_area: 'Spondyloarthritis', priority: 10, sources: ['ASAS', 'EULAR'] },
-  { topic: 'Non-Radiographic Axial SpA: Early Diagnosis and Treatment', category: 'Clinical Assessment', disease_area: 'Spondyloarthritis', priority: 9, sources: ['EULAR', 'Lancet Rheumatology'] },
-  { topic: 'IL-17 Inhibitors vs TNF Inhibitors in Ankylosing Spondylitis', category: 'Pharmacology', disease_area: 'Spondyloarthritis', priority: 9, sources: ['NEJM', 'Lancet'] },
-  { topic: 'BASDAI and ASDAS: Disease Activity Monitoring Standards', category: 'Clinical Assessment', disease_area: 'Spondyloarthritis', priority: 8, sources: ['ASAS', 'EULAR'] },
-  { topic: 'Extra-Articular Manifestations in Spondyloarthritis', category: 'Clinical Assessment', disease_area: 'Spondyloarthritis', priority: 8, sources: ['EULAR', 'ACR'] },
+  // ============ ONCOLOGY ============
+  { topic: 'Immune Checkpoint Inhibitors: Mechanisms and Management', category: 'Pharmacology', disease_area: 'Oncology', priority: 10, sources: ['ASCO', 'NEJM'] },
+  { topic: 'CAR-T Cell Therapy: Current Indications and Toxicity Management', category: 'Treatment Protocols', disease_area: 'Oncology', priority: 10, sources: ['ASCO', 'NEJM'] },
+  { topic: 'Non-Small Cell Lung Cancer: Molecular Testing and Targeted Therapy', category: 'Treatment Protocols', disease_area: 'Oncology', priority: 10, sources: ['ASCO', 'ESMO'] },
+  { topic: 'Breast Cancer: HER2, ER/PR and Treatment Algorithm', category: 'Guidelines', disease_area: 'Oncology', priority: 10, sources: ['ASCO', 'NCCN'] },
+  { topic: 'Colorectal Cancer Screening and Treatment', category: 'Guidelines', disease_area: 'Oncology', priority: 9, sources: ['ASCO', 'ACS'] },
+  { topic: 'Prostate Cancer: Active Surveillance and Treatment', category: 'Treatment Protocols', disease_area: 'Oncology', priority: 9, sources: ['ASCO', 'AUA'] },
+  { topic: 'Melanoma: BRAF/MEK Inhibition and Immunotherapy', category: 'Pharmacology', disease_area: 'Oncology', priority: 9, sources: ['ASCO', 'NEJM'] },
+  { topic: 'Oncologic Emergencies: Recognition and Management', category: 'Treatment Protocols', disease_area: 'Oncology', priority: 8, sources: ['ASCO'] },
+  { topic: 'Cancer Survivorship and Long-term Effects', category: 'Clinical Assessment', disease_area: 'Oncology', priority: 7, sources: ['ASCO', 'NCI'] },
+  { topic: 'Palliative Care Integration in Oncology', category: 'Treatment Protocols', disease_area: 'Oncology', priority: 8, sources: ['ASCO'] },
   
-  // Psoriatic Arthritis - ACR/EULAR/GRAPPA
-  { topic: 'CASPAR Criteria and ACR/EULAR PsA Treatment Recommendations', category: 'Guidelines', disease_area: 'Psoriatic Arthritis', priority: 10, sources: ['ACR', 'EULAR', 'GRAPPA'] },
-  { topic: 'Minimal Disease Activity in Psoriatic Arthritis: MDA Criteria', category: 'Clinical Assessment', disease_area: 'Psoriatic Arthritis', priority: 9, sources: ['GRAPPA', 'ACR'] },
-  { topic: 'IL-23 and IL-17 Pathway Inhibition in PsA: Head-to-Head Trials', category: 'Pharmacology', disease_area: 'Psoriatic Arthritis', priority: 9, sources: ['NEJM', 'Lancet'] },
-  { topic: 'Nail Psoriasis and Enthesitis Assessment in PsA', category: 'Clinical Assessment', disease_area: 'Psoriatic Arthritis', priority: 7, sources: ['GRAPPA', 'EULAR'] },
+  // ============ NEUROLOGY ============
+  { topic: 'Acute Ischemic Stroke: Thrombolysis and Thrombectomy', category: 'Treatment Protocols', disease_area: 'Neurology', priority: 10, sources: ['AAN', 'NEJM'] },
+  { topic: 'Multiple Sclerosis: DMTs and Disease Monitoring', category: 'Treatment Protocols', disease_area: 'Neurology', priority: 10, sources: ['AAN', 'Lancet Neurology'] },
+  { topic: 'Parkinson Disease: Diagnosis and Management', category: 'Guidelines', disease_area: 'Neurology', priority: 9, sources: ['AAN', 'MDS'] },
+  { topic: 'Epilepsy: Seizure Classification and AED Selection', category: 'Treatment Protocols', disease_area: 'Neurology', priority: 9, sources: ['AAN', 'ILAE'] },
+  { topic: 'Alzheimer Disease: Diagnosis and Anti-Amyloid Therapy', category: 'Treatment Protocols', disease_area: 'Neurology', priority: 9, sources: ['AAN', 'NEJM'] },
+  { topic: 'Migraine: Acute and Preventive Treatment', category: 'Treatment Protocols', disease_area: 'Neurology', priority: 8, sources: ['AAN', 'AHS'] },
+  { topic: 'Guillain-Barré Syndrome and CIDP: Diagnosis and Treatment', category: 'Clinical Assessment', disease_area: 'Neurology', priority: 8, sources: ['AAN', 'NEJM'] },
+  { topic: 'Myasthenia Gravis: Diagnosis and Treatment', category: 'Treatment Protocols', disease_area: 'Neurology', priority: 8, sources: ['AAN'] },
+  { topic: 'Status Epilepticus: Emergency Management', category: 'Treatment Protocols', disease_area: 'Neurology', priority: 9, sources: ['AAN'] },
+  { topic: 'Neuropathic Pain: Diagnosis and Management', category: 'Treatment Protocols', disease_area: 'Neurology', priority: 7, sources: ['AAN', 'IASP'] },
   
-  // Vasculitis - ACR/EULAR Classification 2022
-  { topic: 'ANCA-Associated Vasculitis: ACR/EULAR 2022 Classification and Treatment', category: 'Guidelines', disease_area: 'Vasculitis', priority: 10, sources: ['ACR', 'EULAR', 'NEJM'] },
-  { topic: 'Giant Cell Arteritis Fast-Track Pathway and Tocilizumab', category: 'Treatment Protocols', disease_area: 'Vasculitis', priority: 9, sources: ['NEJM', 'Lancet'] },
-  { topic: 'Rituximab vs Cyclophosphamide in ANCA Vasculitis: RAVE and RITUXVAS', category: 'Pharmacology', disease_area: 'Vasculitis', priority: 9, sources: ['NEJM', 'Lancet'] },
-  { topic: 'Avacopan in ANCA Vasculitis: ADVOCATE Trial', category: 'Pharmacology', disease_area: 'Vasculitis', priority: 9, sources: ['NEJM'] },
-  { topic: 'Takayasu Arteritis: Imaging and Biologics', category: 'Clinical Assessment', disease_area: 'Vasculitis', priority: 8, sources: ['ACR', 'EULAR'] },
+  // ============ INFECTIOUS DISEASE ============
+  { topic: 'Antimicrobial Stewardship: Principles and Practice', category: 'Treatment Protocols', disease_area: 'Infectious Disease', priority: 10, sources: ['IDSA', 'CDC'] },
+  { topic: 'Sepsis and Septic Shock: Surviving Sepsis Campaign', category: 'Guidelines', disease_area: 'Infectious Disease', priority: 10, sources: ['SCCM', 'IDSA'] },
+  { topic: 'Community-Acquired Pneumonia: Diagnosis and Treatment', category: 'Guidelines', disease_area: 'Infectious Disease', priority: 9, sources: ['IDSA', 'ATS'] },
+  { topic: 'HIV: ART Guidelines and Prevention (PrEP/PEP)', category: 'Treatment Protocols', disease_area: 'Infectious Disease', priority: 10, sources: ['DHHS', 'WHO'] },
+  { topic: 'Hepatitis C: DAA Treatment and Cure', category: 'Treatment Protocols', disease_area: 'Infectious Disease', priority: 9, sources: ['AASLD', 'IDSA'] },
+  { topic: 'MRSA and VRE: Diagnosis and Treatment', category: 'Treatment Protocols', disease_area: 'Infectious Disease', priority: 9, sources: ['IDSA'] },
+  { topic: 'Clostridioides difficile Infection: Diagnosis and Treatment', category: 'Guidelines', disease_area: 'Infectious Disease', priority: 9, sources: ['IDSA', 'ACG'] },
+  { topic: 'Fungal Infections in Immunocompromised Patients', category: 'Treatment Protocols', disease_area: 'Infectious Disease', priority: 8, sources: ['IDSA'] },
+  { topic: 'Travel Medicine and Tropical Infections', category: 'Clinical Assessment', disease_area: 'Infectious Disease', priority: 7, sources: ['CDC', 'WHO'] },
+  { topic: 'Vaccination in Adults: ACIP Recommendations', category: 'Guidelines', disease_area: 'Infectious Disease', priority: 9, sources: ['CDC', 'ACIP'] },
   
-  // Connective Tissue Diseases
-  { topic: 'Myositis-Specific Antibodies: Clinical Phenotypes and Prognosis', category: 'Clinical Assessment', disease_area: 'Inflammatory Myopathies', priority: 9, sources: ['EULAR', 'Nature Reviews'] },
-  { topic: 'Systemic Sclerosis: Modified Rodnan Skin Score and ILD Screening', category: 'Clinical Assessment', disease_area: 'Systemic Sclerosis', priority: 9, sources: ['EULAR', 'ACR'] },
-  { topic: 'Nintedanib in SSc-ILD: SENSCIS Trial', category: 'Pharmacology', disease_area: 'Systemic Sclerosis', priority: 9, sources: ['NEJM', 'Lancet'] },
-  { topic: 'Interstitial Lung Disease in Autoimmune Diseases: Screening and Management', category: 'Treatment Protocols', disease_area: 'Connective Tissue Diseases', priority: 10, sources: ['EULAR', 'NEJM'] },
-  { topic: 'Sjögren Syndrome Classification and Novel Therapies', category: 'Guidelines', disease_area: 'Connective Tissue Diseases', priority: 8, sources: ['ACR', 'EULAR'] },
+  // ============ ENDOCRINOLOGY ============
+  { topic: 'Type 2 Diabetes: ADA Standards of Care 2024', category: 'Guidelines', disease_area: 'Endocrinology', priority: 10, sources: ['ADA', 'AACE'] },
+  { topic: 'GLP-1 Receptor Agonists: Diabetes and Beyond', category: 'Pharmacology', disease_area: 'Endocrinology', priority: 10, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Thyroid Nodules and Thyroid Cancer: ATA Guidelines', category: 'Guidelines', disease_area: 'Endocrinology', priority: 9, sources: ['ATA'] },
+  { topic: 'Osteoporosis: Diagnosis and Treatment', category: 'Guidelines', disease_area: 'Endocrinology', priority: 9, sources: ['AACE', 'Endocrine Society'] },
+  { topic: 'Adrenal Insufficiency: Diagnosis and Glucocorticoid Replacement', category: 'Treatment Protocols', disease_area: 'Endocrinology', priority: 8, sources: ['Endocrine Society'] },
+  { topic: 'Hyperthyroidism: Graves Disease Management', category: 'Treatment Protocols', disease_area: 'Endocrinology', priority: 8, sources: ['ATA'] },
+  { topic: 'Pituitary Disorders: Acromegaly, Prolactinoma, Cushing', category: 'Clinical Assessment', disease_area: 'Endocrinology', priority: 8, sources: ['Endocrine Society'] },
+  { topic: 'Hypogonadism: Testosterone Therapy Guidelines', category: 'Treatment Protocols', disease_area: 'Endocrinology', priority: 7, sources: ['Endocrine Society', 'AUA'] },
+  { topic: 'Diabetic Ketoacidosis and HHS: Emergency Management', category: 'Treatment Protocols', disease_area: 'Endocrinology', priority: 9, sources: ['ADA'] },
+  { topic: 'Continuous Glucose Monitoring and Insulin Pumps', category: 'Treatment Protocols', disease_area: 'Endocrinology', priority: 8, sources: ['ADA'] },
   
-  // Osteoarthritis - OARSI Focus
-  { topic: 'OARSI Guidelines for Knee Osteoarthritis 2024', category: 'Guidelines', disease_area: 'Osteoarthritis', priority: 9, sources: ['OARSI', 'ACR'] },
-  { topic: 'GLP-1 Agonists and Weight Management in Osteoarthritis', category: 'Pharmacology', disease_area: 'Osteoarthritis', priority: 8, sources: ['NEJM', 'Lancet'] },
-  { topic: 'Intra-articular Therapies: Evidence Review 2024', category: 'Treatment Protocols', disease_area: 'Osteoarthritis', priority: 7, sources: ['OARSI', 'ACR'] },
+  // ============ PULMONOLOGY ============
+  { topic: 'COPD: GOLD Guidelines and Treatment', category: 'Guidelines', disease_area: 'Pulmonology', priority: 10, sources: ['GOLD', 'ATS'] },
+  { topic: 'Asthma: GINA Guidelines and Biologics', category: 'Guidelines', disease_area: 'Pulmonology', priority: 10, sources: ['GINA', 'ATS'] },
+  { topic: 'Idiopathic Pulmonary Fibrosis: Diagnosis and Treatment', category: 'Treatment Protocols', disease_area: 'Pulmonology', priority: 9, sources: ['ATS', 'ERS'] },
+  { topic: 'Pulmonary Embolism: Diagnosis and Anticoagulation', category: 'Treatment Protocols', disease_area: 'Pulmonology', priority: 10, sources: ['CHEST', 'ESC'] },
+  { topic: 'Sleep Apnea: Diagnosis and CPAP Therapy', category: 'Treatment Protocols', disease_area: 'Pulmonology', priority: 8, sources: ['AASM'] },
+  { topic: 'Acute Respiratory Distress Syndrome (ARDS)', category: 'Treatment Protocols', disease_area: 'Pulmonology', priority: 9, sources: ['ATS', 'SCCM'] },
+  { topic: 'Lung Cancer Screening: USPSTF Guidelines', category: 'Guidelines', disease_area: 'Pulmonology', priority: 8, sources: ['USPSTF', 'ACS'] },
+  { topic: 'Pleural Effusion: Diagnosis and Management', category: 'Clinical Assessment', disease_area: 'Pulmonology', priority: 7, sources: ['BTS', 'ATS'] },
   
-  // Gout - ACR Guidelines
-  { topic: 'ACR Guidelines for Gout Management 2024', category: 'Guidelines', disease_area: 'Gout', priority: 10, sources: ['ACR'] },
-  { topic: 'Treat-to-Target Urate Lowering Therapy: Evidence and Practice', category: 'Treatment Protocols', disease_area: 'Gout', priority: 9, sources: ['ACR', 'EULAR'] },
-  { topic: 'Pegloticase with Immunomodulation in Refractory Gout: MIRROR Trial', category: 'Pharmacology', disease_area: 'Gout', priority: 8, sources: ['NEJM', 'Lancet'] },
-  { topic: 'Gout and Cardiovascular Risk: Management Strategies', category: 'Safety', disease_area: 'Gout', priority: 8, sources: ['NEJM', 'Nature'] },
+  // ============ GASTROENTEROLOGY ============
+  { topic: 'Inflammatory Bowel Disease: Crohn and Ulcerative Colitis', category: 'Treatment Protocols', disease_area: 'Gastroenterology', priority: 10, sources: ['ACG', 'AGA'] },
+  { topic: 'Cirrhosis and Portal Hypertension Management', category: 'Treatment Protocols', disease_area: 'Gastroenterology', priority: 10, sources: ['AASLD', 'EASL'] },
+  { topic: 'GERD and Barrett Esophagus', category: 'Guidelines', disease_area: 'Gastroenterology', priority: 8, sources: ['ACG', 'AGA'] },
+  { topic: 'Hepatocellular Carcinoma: Surveillance and Treatment', category: 'Guidelines', disease_area: 'Gastroenterology', priority: 9, sources: ['AASLD', 'ASCO'] },
+  { topic: 'Acute Pancreatitis: Diagnosis and Management', category: 'Treatment Protocols', disease_area: 'Gastroenterology', priority: 9, sources: ['ACG', 'AGA'] },
+  { topic: 'Celiac Disease: Diagnosis and Gluten-Free Diet', category: 'Guidelines', disease_area: 'Gastroenterology', priority: 7, sources: ['ACG'] },
+  { topic: 'Peptic Ulcer Disease and H. pylori Eradication', category: 'Treatment Protocols', disease_area: 'Gastroenterology', priority: 8, sources: ['ACG'] },
+  { topic: 'GI Bleeding: Upper and Lower Management', category: 'Treatment Protocols', disease_area: 'Gastroenterology', priority: 9, sources: ['ACG', 'ASGE'] },
   
-  // Safety and Monitoring - High Priority
-  { topic: 'Cardiovascular Safety of JAK Inhibitors: ORAL Surveillance and Beyond', category: 'Safety', disease_area: 'General Rheumatology', priority: 10, sources: ['NEJM', 'Lancet', 'FDA'] },
-  { topic: 'Infection Risk Stratification with Immunosuppressive Therapy', category: 'Safety', disease_area: 'General Rheumatology', priority: 9, sources: ['ACR', 'EULAR'] },
-  { topic: 'Pregnancy and Lactation in Rheumatic Diseases: ACR Guideline', category: 'Treatment Protocols', disease_area: 'General Rheumatology', priority: 9, sources: ['ACR'] },
-  { topic: 'COVID-19 Vaccination in Immunocompromised Patients: ACR Guidance', category: 'Guidelines', disease_area: 'General Rheumatology', priority: 9, sources: ['ACR', 'EULAR'] },
-  { topic: 'Biosimilar Transition in Rheumatology: Evidence and Practice', category: 'Pharmacology', disease_area: 'General Rheumatology', priority: 8, sources: ['ACR', 'EULAR'] },
+  // ============ NEPHROLOGY ============
+  { topic: 'Chronic Kidney Disease: KDIGO Guidelines', category: 'Guidelines', disease_area: 'Nephrology', priority: 10, sources: ['KDIGO', 'ASN'] },
+  { topic: 'Acute Kidney Injury: Prevention and Management', category: 'Treatment Protocols', disease_area: 'Nephrology', priority: 10, sources: ['KDIGO'] },
+  { topic: 'Glomerulonephritis: Classification and Treatment', category: 'Treatment Protocols', disease_area: 'Nephrology', priority: 9, sources: ['KDIGO', 'ASN'] },
+  { topic: 'Dialysis: Hemodialysis and Peritoneal Dialysis', category: 'Treatment Protocols', disease_area: 'Nephrology', priority: 9, sources: ['KDOQI', 'ASN'] },
+  { topic: 'Electrolyte Disorders: Sodium and Potassium', category: 'Treatment Protocols', disease_area: 'Nephrology', priority: 9, sources: ['ASN'] },
+  { topic: 'Diabetic Kidney Disease: Prevention and Treatment', category: 'Treatment Protocols', disease_area: 'Nephrology', priority: 9, sources: ['KDIGO', 'ADA'] },
+  { topic: 'Kidney Transplantation: Immunosuppression', category: 'Treatment Protocols', disease_area: 'Nephrology', priority: 8, sources: ['AST', 'KDIGO'] },
   
-  // Pediatric Rheumatology
-  { topic: 'Juvenile Idiopathic Arthritis: ILAR Classification and ACR Treatment', category: 'Guidelines', disease_area: 'Pediatric Rheumatology', priority: 9, sources: ['ACR', 'PRES'] },
-  { topic: 'Macrophage Activation Syndrome: HLH-2024 Criteria and Treatment', category: 'Clinical Assessment', disease_area: 'Pediatric Rheumatology', priority: 10, sources: ['ACR', 'PRES'] },
-  { topic: 'Pediatric SLE Management: Unique Considerations', category: 'Treatment Protocols', disease_area: 'Pediatric Rheumatology', priority: 8, sources: ['ACR', 'EULAR'] },
+  // ============ HEMATOLOGY ============
+  { topic: 'Venous Thromboembolism: DVT and PE Treatment', category: 'Treatment Protocols', disease_area: 'Hematology', priority: 10, sources: ['ASH', 'CHEST'] },
+  { topic: 'Anticoagulation: DOACs vs Warfarin', category: 'Pharmacology', disease_area: 'Hematology', priority: 10, sources: ['ASH', 'CHEST'] },
+  { topic: 'Iron Deficiency Anemia: Diagnosis and Treatment', category: 'Treatment Protocols', disease_area: 'Hematology', priority: 8, sources: ['ASH'] },
+  { topic: 'Myelodysplastic Syndromes: Diagnosis and Treatment', category: 'Treatment Protocols', disease_area: 'Hematology', priority: 8, sources: ['ASH', 'NCCN'] },
+  { topic: 'Multiple Myeloma: Diagnosis and Novel Therapies', category: 'Treatment Protocols', disease_area: 'Hematology', priority: 9, sources: ['ASH', 'IMWG'] },
+  { topic: 'Acute Leukemia: AML and ALL Treatment', category: 'Treatment Protocols', disease_area: 'Hematology', priority: 9, sources: ['ASH', 'NCCN'] },
+  { topic: 'Lymphoma: Hodgkin and Non-Hodgkin Treatment', category: 'Treatment Protocols', disease_area: 'Hematology', priority: 9, sources: ['ASH', 'NCCN'] },
+  { topic: 'Sickle Cell Disease: Hydroxyurea and Gene Therapy', category: 'Treatment Protocols', disease_area: 'Hematology', priority: 8, sources: ['ASH', 'NEJM'] },
+  { topic: 'Thrombocytopenia: ITP and TTP', category: 'Treatment Protocols', disease_area: 'Hematology', priority: 8, sources: ['ASH'] },
   
-  // Brazilian/Latin American Rheumatology
-  { topic: 'SBR Consensus on Rheumatoid Arthritis Treatment 2024', category: 'Guidelines', disease_area: 'Rheumatoid Arthritis', priority: 9, sources: ['SBR'] },
-  { topic: 'Endemic Rheumatic Diseases in Latin America', category: 'Clinical Assessment', disease_area: 'General Rheumatology', priority: 7, sources: ['SBR', 'PANLAR'] },
-  { topic: 'Chikungunya Arthropathy: Diagnosis and Management', category: 'Clinical Assessment', disease_area: 'General Rheumatology', priority: 8, sources: ['SBR', 'Lancet'] },
+  // ============ PSYCHIATRY ============
+  { topic: 'Major Depressive Disorder: Treatment Algorithms', category: 'Treatment Protocols', disease_area: 'Psychiatry', priority: 10, sources: ['APA', 'NICE'] },
+  { topic: 'Bipolar Disorder: Mood Stabilizers and Management', category: 'Treatment Protocols', disease_area: 'Psychiatry', priority: 9, sources: ['APA'] },
+  { topic: 'Schizophrenia: Antipsychotics and Long-Acting Injectables', category: 'Treatment Protocols', disease_area: 'Psychiatry', priority: 9, sources: ['APA'] },
+  { topic: 'Anxiety Disorders: GAD, Panic, Social Anxiety', category: 'Treatment Protocols', disease_area: 'Psychiatry', priority: 9, sources: ['APA'] },
+  { topic: 'PTSD: Trauma-Focused Therapy and Pharmacology', category: 'Treatment Protocols', disease_area: 'Psychiatry', priority: 8, sources: ['APA', 'VA'] },
+  { topic: 'Substance Use Disorders: MAT and Recovery', category: 'Treatment Protocols', disease_area: 'Psychiatry', priority: 9, sources: ['ASAM', 'APA'] },
+  { topic: 'ADHD: Diagnosis and Stimulant Therapy', category: 'Treatment Protocols', disease_area: 'Psychiatry', priority: 8, sources: ['APA', 'AAP'] },
+  { topic: 'Eating Disorders: Anorexia and Bulimia', category: 'Treatment Protocols', disease_area: 'Psychiatry', priority: 7, sources: ['APA'] },
+  
+  // ============ DERMATOLOGY ============
+  { topic: 'Psoriasis: Biologics and Systemic Therapy', category: 'Treatment Protocols', disease_area: 'Dermatology', priority: 9, sources: ['AAD', 'NPF'] },
+  { topic: 'Atopic Dermatitis: Dupilumab and JAK Inhibitors', category: 'Pharmacology', disease_area: 'Dermatology', priority: 9, sources: ['AAD', 'NEJM'] },
+  { topic: 'Skin Cancer: Melanoma, BCC, SCC Screening', category: 'Guidelines', disease_area: 'Dermatology', priority: 9, sources: ['AAD', 'ASCO'] },
+  { topic: 'Acne: Isotretinoin and Hormonal Therapy', category: 'Treatment Protocols', disease_area: 'Dermatology', priority: 7, sources: ['AAD'] },
+  { topic: 'Drug Eruptions: Recognition and Management', category: 'Clinical Assessment', disease_area: 'Dermatology', priority: 8, sources: ['AAD'] },
+  
+  // ============ EMERGENCY MEDICINE ============
+  { topic: 'Trauma: ATLS Principles and Management', category: 'Treatment Protocols', disease_area: 'Emergency Medicine', priority: 10, sources: ['ACEP', 'ACS'] },
+  { topic: 'Cardiac Arrest: ACLS and Post-Arrest Care', category: 'Treatment Protocols', disease_area: 'Emergency Medicine', priority: 10, sources: ['AHA', 'ACEP'] },
+  { topic: 'Toxicology: Common Overdoses and Antidotes', category: 'Treatment Protocols', disease_area: 'Emergency Medicine', priority: 9, sources: ['ACEP', 'AACT'] },
+  { topic: 'Shock: Classification and Resuscitation', category: 'Treatment Protocols', disease_area: 'Emergency Medicine', priority: 10, sources: ['SCCM', 'ACEP'] },
+  { topic: 'Acute Abdomen: Diagnosis and Surgical Emergencies', category: 'Clinical Assessment', disease_area: 'Emergency Medicine', priority: 9, sources: ['ACEP'] },
+  
+  // ============ PEDIATRICS ============
+  { topic: 'Pediatric Fever: Evaluation and Management', category: 'Treatment Protocols', disease_area: 'Pediatrics', priority: 9, sources: ['AAP'] },
+  { topic: 'Childhood Immunizations: CDC Schedule', category: 'Guidelines', disease_area: 'Pediatrics', priority: 10, sources: ['CDC', 'AAP'] },
+  { topic: 'Pediatric Asthma: NAEPP Guidelines', category: 'Guidelines', disease_area: 'Pediatrics', priority: 9, sources: ['AAP', 'NAEPP'] },
+  { topic: 'Neonatal Resuscitation: NRP Guidelines', category: 'Treatment Protocols', disease_area: 'Pediatrics', priority: 10, sources: ['AAP', 'AHA'] },
+  { topic: 'Pediatric Obesity: Prevention and Treatment', category: 'Guidelines', disease_area: 'Pediatrics', priority: 8, sources: ['AAP'] },
+  
+  // ============ CRITICAL CARE ============
+  { topic: 'Mechanical Ventilation: Strategies and Liberation', category: 'Treatment Protocols', disease_area: 'Critical Care', priority: 10, sources: ['SCCM', 'ATS'] },
+  { topic: 'Vasopressors and Inotropes: Selection and Dosing', category: 'Pharmacology', disease_area: 'Critical Care', priority: 10, sources: ['SCCM'] },
+  { topic: 'Sedation and Analgesia in ICU', category: 'Treatment Protocols', disease_area: 'Critical Care', priority: 9, sources: ['SCCM'] },
+  { topic: 'ICU Nutrition: Enteral and Parenteral', category: 'Treatment Protocols', disease_area: 'Critical Care', priority: 8, sources: ['SCCM', 'ASPEN'] },
+  { topic: 'ICU Delirium: Prevention and Management', category: 'Treatment Protocols', disease_area: 'Critical Care', priority: 8, sources: ['SCCM'] },
+  
+  // ============ GERIATRICS ============
+  { topic: 'Polypharmacy and Deprescribing in Elderly', category: 'Treatment Protocols', disease_area: 'Geriatrics', priority: 9, sources: ['AGS'] },
+  { topic: 'Frailty Assessment and Management', category: 'Clinical Assessment', disease_area: 'Geriatrics', priority: 8, sources: ['AGS'] },
+  { topic: 'Falls Prevention in Older Adults', category: 'Guidelines', disease_area: 'Geriatrics', priority: 8, sources: ['AGS', 'CDC'] },
+  { topic: 'Dementia: Non-Pharmacologic Management', category: 'Treatment Protocols', disease_area: 'Geriatrics', priority: 8, sources: ['AGS'] },
 ];
 
 // Search authoritative sources using Perplexity
@@ -109,7 +250,7 @@ async function searchMedicalLiterature(topic: string, diseaseArea: string): Prom
     };
   }
 
-  const searchQuery = `${topic} rheumatology clinical guidelines evidence-based medicine 2024`;
+  const searchQuery = `${topic} ${diseaseArea} clinical guidelines evidence-based medicine 2024`;
   
   try {
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
@@ -123,21 +264,22 @@ async function searchMedicalLiterature(topic: string, diseaseArea: string): Prom
         messages: [
           {
             role: 'system',
-            content: `You are a medical research librarian specializing in rheumatology. Search for the latest evidence-based information from authoritative sources including:
-- EULAR (European Alliance of Associations for Rheumatology)
-- ACR (American College of Rheumatology)  
-- Lancet Rheumatology
-- Nature Reviews Rheumatology
-- New England Journal of Medicine
-- Annals of Rheumatic Diseases
-- Brazilian Society of Rheumatology (SBR)
-- OARSI (Osteoarthritis Research Society International)
+            content: `You are a medical research librarian specializing in clinical medicine across ALL specialties. Search for the latest evidence-based information from authoritative sources including:
+- NEJM (New England Journal of Medicine)
+- The Lancet and subspecialty journals
+- JAMA Network
+- BMJ
+- Nature Medicine and Reviews
+- Specialty society guidelines (ACC, AHA, ASCO, AAN, IDSA, ADA, etc.)
+- CDC, WHO, FDA safety communications
+- Cochrane Reviews and meta-analyses
 
-Focus on:
+Focus on ${diseaseArea}:
 1. Current classification criteria and guidelines
 2. High-impact clinical trials (RCTs, meta-analyses)
-3. Treatment recommendations
-4. Safety data and monitoring protocols`
+3. Treatment recommendations and algorithms
+4. Safety data and monitoring protocols
+5. Recent updates or changes in practice`
           },
           {
             role: 'user',
@@ -145,12 +287,12 @@ Focus on:
 
 Provide:
 1. Key findings from major trials and guidelines
-2. Evidence level (Oxford OCEBM)
+2. Evidence level (Oxford OCEBM) 
 3. Practical clinical recommendations
-4. Recent updates or changes in practice`
+4. Recent updates or changes in practice (2023-2024)`
           }
         ],
-        search_domain_filter: AUTHORITATIVE_SOURCES,
+        // Removed domain filter - sonar model searches intelligently across medical sources
         search_recency_filter: 'year',
       }),
     });
@@ -251,13 +393,13 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Step 2: Get queued topics (prioritized)
+      // Step 2: Get queued topics (prioritized) - Process 2 at a time for timeout safety
       const { data: queuedTopics } = await supabase
         .from('research_topic_queue')
         .select('*')
         .eq('status', 'queued')
         .order('priority', { ascending: false })
-        .limit(5); // Process 5 at a time
+        .limit(2); // Reduced from 5 to 2 for edge function timeout safety
 
       if (!queuedTopics || queuedTopics.length === 0) {
         return new Response(JSON.stringify({
@@ -293,7 +435,7 @@ Deno.serve(async (req) => {
             : '';
 
           // Generate article content enhanced with real literature
-          const articlePrompt = `You are a medical content expert specializing in rheumatology writing for the UHS Health OS knowledge library. Generate a comprehensive, evidence-based article on: "${topic.topic}"
+          const articlePrompt = `You are a medical content expert specializing in ${topic.disease_area || 'Clinical Medicine'} writing for the UHS Health OS knowledge library. Generate a comprehensive, evidence-based article on: "${topic.topic}"
 
 Category: ${topic.category}
 Disease Area: ${topic.disease_area}
@@ -301,13 +443,13 @@ ${literatureContext}
 ${citationsText}
 
 CRITICAL REQUIREMENTS:
-1. Write in academic medical style suitable for practicing rheumatologists
+1. Write in academic medical style suitable for practicing clinicians in ${topic.disease_area || 'medicine'}
 2. MUST include specific evidence from major trials and guidelines (cite by name)
-3. Reference current guidelines: ACR (American College of Rheumatology), EULAR, ASAS, GRAPPA, OARSI, SBR
+3. Reference current guidelines from appropriate specialty societies
 4. Include practical clinical pearls that can be applied immediately
 5. Structure with clear sections: 
    - Clinical Overview
-   - Key Evidence (cite specific trials: e.g., ORAL Surveillance, RAVE, AURORA, etc.)
+   - Key Evidence (cite specific landmark trials by name)
    - Current Guideline Recommendations  
    - Practical Application & Clinical Pearls
    - Safety Considerations
@@ -315,6 +457,7 @@ CRITICAL REQUIREMENTS:
 6. Be factually accurate with 2024 medical knowledge
 7. Minimum 2500 words for comprehensive coverage
 8. Include specific drug names, dosages, and monitoring parameters where relevant
+9. Include tables or algorithms where appropriate (in markdown)
 
 Respond in JSON format:
 {
