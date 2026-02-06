@@ -198,8 +198,10 @@ export async function createFeaturesHash(features: {
 }
 
 /**
- * Compute new score hash for chained updates.
- * new_score_hash = SHA256(prev_score_hash || score || confidence || features_hash)
+ * Compute new score hash for chained updates (production version).
+ * new_score_hash = SHA256(prev_hash || features_hash || score_u32_LE || conf_bps_LE)
+ * 
+ * Uses little-endian byte encoding for integers to match on-chain format.
  */
 export async function computeScoreHash(
   prevScoreHash: Uint8Array,
@@ -207,11 +209,50 @@ export async function computeScoreHash(
   confidence: number,
   featuresHash: Uint8Array
 ): Promise<Uint8Array> {
-  const combined = canonicalize({
-    prev: toHex(prevScoreHash),
-    score: Math.round(score * 100), // Store as integer
-    confidence: Math.round(confidence * 10000), // Store as basis points
-    features: toHex(featuresHash),
-  });
-  return sha256(combined);
+  // Convert score to u32 (0-10000 representing 0.00-100.00)
+  const scoreU32 = Math.round(score * 100);
+  // Convert confidence to basis points (0-10000)
+  const confBps = Math.round(confidence * 10000);
+  
+  // Create buffers for little-endian encoding
+  const scoreBuffer = new ArrayBuffer(4);
+  const confBuffer = new ArrayBuffer(2);
+  new DataView(scoreBuffer).setUint32(0, scoreU32, true); // little-endian
+  new DataView(confBuffer).setUint16(0, confBps, true); // little-endian
+  
+  // Concatenate: prev_hash (32) + features_hash (32) + score_u32 (4) + conf_bps (2)
+  const combined = new Uint8Array(32 + 32 + 4 + 2);
+  combined.set(prevScoreHash, 0);
+  combined.set(featuresHash, 32);
+  combined.set(new Uint8Array(scoreBuffer), 64);
+  combined.set(new Uint8Array(confBuffer), 68);
+  
+  // Hash the concatenated bytes
+  const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
+  return new Uint8Array(hashBuffer);
+}
+
+/**
+ * Compute score hash from raw bytes (for production use).
+ * Directly hashes the concatenated binary data.
+ */
+export async function computeScoreHashBytes(
+  prevHash: Uint8Array,
+  featuresHash: Uint8Array,
+  scoreU32: number,
+  confidenceBps: number
+): Promise<Uint8Array> {
+  const scoreBuffer = new ArrayBuffer(4);
+  const confBuffer = new ArrayBuffer(2);
+  new DataView(scoreBuffer).setUint32(0, scoreU32, true);
+  new DataView(confBuffer).setUint16(0, confidenceBps, true);
+  
+  const combined = new Uint8Array(70);
+  combined.set(prevHash, 0);
+  combined.set(featuresHash, 32);
+  combined.set(new Uint8Array(scoreBuffer), 64);
+  combined.set(new Uint8Array(confBuffer), 68);
+  
+  const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
+  return new Uint8Array(hashBuffer);
 }
