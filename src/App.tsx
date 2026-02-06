@@ -36,6 +36,7 @@ const AIAssistant = lazy(() => import("./pages/AIAssistant"));
 const BlockchainRegistry = lazy(() => import("./pages/BlockchainRegistry"));
 const UrvPage = lazy(() => import("./pages/UrvPage"));
 const ReumatoPortal = lazy(() => import("./pages/ReumatoPortal"));
+const AIResearch = lazy(() => import("./pages/AIResearch"));
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,7 @@ const queryClient = new QueryClient();
                 <Route path="/blockchain" element={<ProtectedRoute><BlockchainRegistry /></ProtectedRoute>} />
                 <Route path="/urv" element={<UrvPage />} />
                 <Route path="/reumato" element={<ReumatoPortal />} />
+                <Route path="/ai-research" element={<ProtectedRoute><AIResearch /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
