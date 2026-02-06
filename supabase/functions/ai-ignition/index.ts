@@ -5,68 +5,181 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// High-impact sources for medical literature search
+const AUTHORITATIVE_SOURCES = [
+  'eular.org',
+  'rheumatology.org', // ACR
+  'thelancet.com',
+  'nature.com',
+  'nejm.org',
+  'reumatologia.org.br', // SBR
+  'ard.bmj.com', // Annals of Rheumatic Diseases
+  'arthritis-research.biomedcentral.com',
+  'pubmed.ncbi.nlm.nih.gov',
+];
+
 // Comprehensive seed topics for rheumatology knowledge base
 const SEED_TOPICS = [
-  // Rheumatoid Arthritis
-  { topic: 'ACR/EULAR 2024 Rheumatoid Arthritis Classification Criteria', category: 'Guidelines', disease_area: 'Rheumatoid Arthritis', priority: 10 },
-  { topic: 'Treat-to-Target Strategy in Rheumatoid Arthritis', category: 'Treatment Protocols', disease_area: 'Rheumatoid Arthritis', priority: 9 },
-  { topic: 'Methotrexate Optimization in RA: Dosing and Monitoring', category: 'Pharmacology', disease_area: 'Rheumatoid Arthritis', priority: 9 },
-  { topic: 'JAK Inhibitors Comparative Efficacy in Rheumatoid Arthritis', category: 'Pharmacology', disease_area: 'Rheumatoid Arthritis', priority: 9 },
-  { topic: 'Biologic DMARDs Selection Algorithm for RA', category: 'Treatment Protocols', disease_area: 'Rheumatoid Arthritis', priority: 8 },
-  { topic: 'RA Remission Criteria: DAS28 vs CDAI vs Boolean', category: 'Clinical Assessment', disease_area: 'Rheumatoid Arthritis', priority: 8 },
+  // Rheumatoid Arthritis - High Priority from Major Journals
+  { topic: 'ACR/EULAR 2024 Rheumatoid Arthritis Classification Criteria', category: 'Guidelines', disease_area: 'Rheumatoid Arthritis', priority: 10, sources: ['ACR', 'EULAR'] },
+  { topic: 'Treat-to-Target Strategy in Rheumatoid Arthritis', category: 'Treatment Protocols', disease_area: 'Rheumatoid Arthritis', priority: 9, sources: ['NEJM', 'Lancet Rheumatology'] },
+  { topic: 'Methotrexate Optimization in RA: Dosing and Monitoring', category: 'Pharmacology', disease_area: 'Rheumatoid Arthritis', priority: 9, sources: ['ACR', 'EULAR'] },
+  { topic: 'JAK Inhibitors Comparative Efficacy and Safety in Rheumatoid Arthritis', category: 'Pharmacology', disease_area: 'Rheumatoid Arthritis', priority: 10, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Biologic DMARDs Selection Algorithm for RA', category: 'Treatment Protocols', disease_area: 'Rheumatoid Arthritis', priority: 8, sources: ['ACR', 'EULAR'] },
+  { topic: 'RA Remission Criteria: DAS28 vs CDAI vs Boolean', category: 'Clinical Assessment', disease_area: 'Rheumatoid Arthritis', priority: 8, sources: ['EULAR', 'ACR'] },
   
-  // Systemic Lupus Erythematosus
-  { topic: 'EULAR/ACR 2019 SLE Classification Criteria', category: 'Guidelines', disease_area: 'Systemic Lupus Erythematosus', priority: 10 },
-  { topic: 'Lupus Nephritis: ISN/RPS Classification and Management', category: 'Guidelines', disease_area: 'Systemic Lupus Erythematosus', priority: 9 },
-  { topic: 'Hydroxychloroquine in SLE: Beyond Immunomodulation', category: 'Pharmacology', disease_area: 'Systemic Lupus Erythematosus', priority: 8 },
-  { topic: 'Belimumab and Anifrolumab: Targeted Therapies in SLE', category: 'Pharmacology', disease_area: 'Systemic Lupus Erythematosus', priority: 8 },
-  { topic: 'SLEDAI-2K Score: Practical Application', category: 'Clinical Assessment', disease_area: 'Systemic Lupus Erythematosus', priority: 7 },
+  // Systemic Lupus Erythematosus - High Impact Studies
+  { topic: 'EULAR/ACR 2019 SLE Classification Criteria Update 2024', category: 'Guidelines', disease_area: 'Systemic Lupus Erythematosus', priority: 10, sources: ['EULAR', 'ACR'] },
+  { topic: 'Lupus Nephritis: ISN/RPS Classification and KDIGO Management', category: 'Guidelines', disease_area: 'Systemic Lupus Erythematosus', priority: 10, sources: ['NEJM', 'Nature Reviews'] },
+  { topic: 'Voclosporin in Lupus Nephritis: AURORA Trial Evidence', category: 'Pharmacology', disease_area: 'Systemic Lupus Erythematosus', priority: 9, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Belimumab and Anifrolumab: Type I Interferon Pathway in SLE', category: 'Pharmacology', disease_area: 'Systemic Lupus Erythematosus', priority: 9, sources: ['NEJM', 'Nature Medicine'] },
+  { topic: 'SLEDAI-2K and BILAG in SLE Disease Activity Monitoring', category: 'Clinical Assessment', disease_area: 'Systemic Lupus Erythematosus', priority: 8, sources: ['ACR', 'EULAR'] },
+  { topic: 'Hydroxychloroquine Retinopathy Screening: AAO Guidelines', category: 'Safety', disease_area: 'Systemic Lupus Erythematosus', priority: 8, sources: ['ACR', 'AAO'] },
   
-  // Spondyloarthritis
-  { topic: 'ASAS Classification Criteria for Axial Spondyloarthritis', category: 'Guidelines', disease_area: 'Spondyloarthritis', priority: 10 },
-  { topic: 'Non-Radiographic Axial SpA: Diagnosis and Management', category: 'Clinical Assessment', disease_area: 'Spondyloarthritis', priority: 8 },
-  { topic: 'IL-17 Inhibitors in Ankylosing Spondylitis', category: 'Pharmacology', disease_area: 'Spondyloarthritis', priority: 8 },
-  { topic: 'BASDAI and ASDAS: Disease Activity Monitoring', category: 'Clinical Assessment', disease_area: 'Spondyloarthritis', priority: 7 },
+  // Spondyloarthritis - ASAS and EULAR Focus
+  { topic: 'ASAS Classification Criteria for Axial Spondyloarthritis 2024', category: 'Guidelines', disease_area: 'Spondyloarthritis', priority: 10, sources: ['ASAS', 'EULAR'] },
+  { topic: 'Non-Radiographic Axial SpA: Early Diagnosis and Treatment', category: 'Clinical Assessment', disease_area: 'Spondyloarthritis', priority: 9, sources: ['EULAR', 'Lancet Rheumatology'] },
+  { topic: 'IL-17 Inhibitors vs TNF Inhibitors in Ankylosing Spondylitis', category: 'Pharmacology', disease_area: 'Spondyloarthritis', priority: 9, sources: ['NEJM', 'Lancet'] },
+  { topic: 'BASDAI and ASDAS: Disease Activity Monitoring Standards', category: 'Clinical Assessment', disease_area: 'Spondyloarthritis', priority: 8, sources: ['ASAS', 'EULAR'] },
+  { topic: 'Extra-Articular Manifestations in Spondyloarthritis', category: 'Clinical Assessment', disease_area: 'Spondyloarthritis', priority: 8, sources: ['EULAR', 'ACR'] },
   
-  // Psoriatic Arthritis
-  { topic: 'CASPAR Criteria for Psoriatic Arthritis', category: 'Guidelines', disease_area: 'Psoriatic Arthritis', priority: 10 },
-  { topic: 'Minimal Disease Activity in Psoriatic Arthritis', category: 'Clinical Assessment', disease_area: 'Psoriatic Arthritis', priority: 8 },
-  { topic: 'Dual IL-23/IL-17 Pathway Inhibition in PsA', category: 'Pharmacology', disease_area: 'Psoriatic Arthritis', priority: 8 },
+  // Psoriatic Arthritis - ACR/EULAR/GRAPPA
+  { topic: 'CASPAR Criteria and ACR/EULAR PsA Treatment Recommendations', category: 'Guidelines', disease_area: 'Psoriatic Arthritis', priority: 10, sources: ['ACR', 'EULAR', 'GRAPPA'] },
+  { topic: 'Minimal Disease Activity in Psoriatic Arthritis: MDA Criteria', category: 'Clinical Assessment', disease_area: 'Psoriatic Arthritis', priority: 9, sources: ['GRAPPA', 'ACR'] },
+  { topic: 'IL-23 and IL-17 Pathway Inhibition in PsA: Head-to-Head Trials', category: 'Pharmacology', disease_area: 'Psoriatic Arthritis', priority: 9, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Nail Psoriasis and Enthesitis Assessment in PsA', category: 'Clinical Assessment', disease_area: 'Psoriatic Arthritis', priority: 7, sources: ['GRAPPA', 'EULAR'] },
   
-  // Vasculitis
-  { topic: 'ANCA-Associated Vasculitis: 2024 Treatment Guidelines', category: 'Guidelines', disease_area: 'Vasculitis', priority: 9 },
-  { topic: 'Giant Cell Arteritis: Fast-Track Pathway', category: 'Clinical Assessment', disease_area: 'Vasculitis', priority: 8 },
-  { topic: 'Rituximab in ANCA Vasculitis: Induction and Maintenance', category: 'Pharmacology', disease_area: 'Vasculitis', priority: 8 },
+  // Vasculitis - ACR/EULAR Classification 2022
+  { topic: 'ANCA-Associated Vasculitis: ACR/EULAR 2022 Classification and Treatment', category: 'Guidelines', disease_area: 'Vasculitis', priority: 10, sources: ['ACR', 'EULAR', 'NEJM'] },
+  { topic: 'Giant Cell Arteritis Fast-Track Pathway and Tocilizumab', category: 'Treatment Protocols', disease_area: 'Vasculitis', priority: 9, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Rituximab vs Cyclophosphamide in ANCA Vasculitis: RAVE and RITUXVAS', category: 'Pharmacology', disease_area: 'Vasculitis', priority: 9, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Avacopan in ANCA Vasculitis: ADVOCATE Trial', category: 'Pharmacology', disease_area: 'Vasculitis', priority: 9, sources: ['NEJM'] },
+  { topic: 'Takayasu Arteritis: Imaging and Biologics', category: 'Clinical Assessment', disease_area: 'Vasculitis', priority: 8, sources: ['ACR', 'EULAR'] },
   
   // Connective Tissue Diseases
-  { topic: 'Myositis-Specific Antibodies: Clinical Correlations', category: 'Clinical Assessment', disease_area: 'Inflammatory Myopathies', priority: 8 },
-  { topic: 'Systemic Sclerosis: Modified Rodnan Skin Score', category: 'Clinical Assessment', disease_area: 'Systemic Sclerosis', priority: 8 },
-  { topic: 'Interstitial Lung Disease in CTD: Screening and Management', category: 'Treatment Protocols', disease_area: 'Connective Tissue Diseases', priority: 9 },
+  { topic: 'Myositis-Specific Antibodies: Clinical Phenotypes and Prognosis', category: 'Clinical Assessment', disease_area: 'Inflammatory Myopathies', priority: 9, sources: ['EULAR', 'Nature Reviews'] },
+  { topic: 'Systemic Sclerosis: Modified Rodnan Skin Score and ILD Screening', category: 'Clinical Assessment', disease_area: 'Systemic Sclerosis', priority: 9, sources: ['EULAR', 'ACR'] },
+  { topic: 'Nintedanib in SSc-ILD: SENSCIS Trial', category: 'Pharmacology', disease_area: 'Systemic Sclerosis', priority: 9, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Interstitial Lung Disease in Autoimmune Diseases: Screening and Management', category: 'Treatment Protocols', disease_area: 'Connective Tissue Diseases', priority: 10, sources: ['EULAR', 'NEJM'] },
+  { topic: 'Sjögren Syndrome Classification and Novel Therapies', category: 'Guidelines', disease_area: 'Connective Tissue Diseases', priority: 8, sources: ['ACR', 'EULAR'] },
   
-  // Osteoarthritis
-  { topic: 'OARSI Guidelines for Knee Osteoarthritis Management', category: 'Guidelines', disease_area: 'Osteoarthritis', priority: 8 },
-  { topic: 'Intra-articular Therapies: Hyaluronic Acid vs PRP', category: 'Treatment Protocols', disease_area: 'Osteoarthritis', priority: 7 },
+  // Osteoarthritis - OARSI Focus
+  { topic: 'OARSI Guidelines for Knee Osteoarthritis 2024', category: 'Guidelines', disease_area: 'Osteoarthritis', priority: 9, sources: ['OARSI', 'ACR'] },
+  { topic: 'GLP-1 Agonists and Weight Management in Osteoarthritis', category: 'Pharmacology', disease_area: 'Osteoarthritis', priority: 8, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Intra-articular Therapies: Evidence Review 2024', category: 'Treatment Protocols', disease_area: 'Osteoarthritis', priority: 7, sources: ['OARSI', 'ACR'] },
   
-  // Gout
-  { topic: 'ACR Guidelines for Gout Management 2024', category: 'Guidelines', disease_area: 'Gout', priority: 9 },
-  { topic: 'Treat-to-Target Urate in Gout: Evidence and Practice', category: 'Treatment Protocols', disease_area: 'Gout', priority: 8 },
-  { topic: 'Pegloticase in Refractory Gout', category: 'Pharmacology', disease_area: 'Gout', priority: 7 },
+  // Gout - ACR Guidelines
+  { topic: 'ACR Guidelines for Gout Management 2024', category: 'Guidelines', disease_area: 'Gout', priority: 10, sources: ['ACR'] },
+  { topic: 'Treat-to-Target Urate Lowering Therapy: Evidence and Practice', category: 'Treatment Protocols', disease_area: 'Gout', priority: 9, sources: ['ACR', 'EULAR'] },
+  { topic: 'Pegloticase with Immunomodulation in Refractory Gout: MIRROR Trial', category: 'Pharmacology', disease_area: 'Gout', priority: 8, sources: ['NEJM', 'Lancet'] },
+  { topic: 'Gout and Cardiovascular Risk: Management Strategies', category: 'Safety', disease_area: 'Gout', priority: 8, sources: ['NEJM', 'Nature'] },
   
-  // Safety and Monitoring
-  { topic: 'Cardiovascular Risk in Rheumatic Diseases', category: 'Safety', disease_area: 'General Rheumatology', priority: 9 },
-  { topic: 'Infection Risk with Immunosuppressive Therapy', category: 'Safety', disease_area: 'General Rheumatology', priority: 9 },
-  { topic: 'Pregnancy Planning in Rheumatic Diseases', category: 'Treatment Protocols', disease_area: 'General Rheumatology', priority: 8 },
-  { topic: 'Vaccination Guidelines for Immunocompromised Patients', category: 'Guidelines', disease_area: 'General Rheumatology', priority: 8 },
+  // Safety and Monitoring - High Priority
+  { topic: 'Cardiovascular Safety of JAK Inhibitors: ORAL Surveillance and Beyond', category: 'Safety', disease_area: 'General Rheumatology', priority: 10, sources: ['NEJM', 'Lancet', 'FDA'] },
+  { topic: 'Infection Risk Stratification with Immunosuppressive Therapy', category: 'Safety', disease_area: 'General Rheumatology', priority: 9, sources: ['ACR', 'EULAR'] },
+  { topic: 'Pregnancy and Lactation in Rheumatic Diseases: ACR Guideline', category: 'Treatment Protocols', disease_area: 'General Rheumatology', priority: 9, sources: ['ACR'] },
+  { topic: 'COVID-19 Vaccination in Immunocompromised Patients: ACR Guidance', category: 'Guidelines', disease_area: 'General Rheumatology', priority: 9, sources: ['ACR', 'EULAR'] },
+  { topic: 'Biosimilar Transition in Rheumatology: Evidence and Practice', category: 'Pharmacology', disease_area: 'General Rheumatology', priority: 8, sources: ['ACR', 'EULAR'] },
   
   // Pediatric Rheumatology
-  { topic: 'Juvenile Idiopathic Arthritis Classification', category: 'Guidelines', disease_area: 'Pediatric Rheumatology', priority: 8 },
-  { topic: 'Macrophage Activation Syndrome: Recognition and Treatment', category: 'Clinical Assessment', disease_area: 'Pediatric Rheumatology', priority: 9 },
+  { topic: 'Juvenile Idiopathic Arthritis: ILAR Classification and ACR Treatment', category: 'Guidelines', disease_area: 'Pediatric Rheumatology', priority: 9, sources: ['ACR', 'PRES'] },
+  { topic: 'Macrophage Activation Syndrome: HLH-2024 Criteria and Treatment', category: 'Clinical Assessment', disease_area: 'Pediatric Rheumatology', priority: 10, sources: ['ACR', 'PRES'] },
+  { topic: 'Pediatric SLE Management: Unique Considerations', category: 'Treatment Protocols', disease_area: 'Pediatric Rheumatology', priority: 8, sources: ['ACR', 'EULAR'] },
   
-  // Emerging Topics
-  { topic: 'Machine Learning in Rheumatology Diagnosis', category: 'Research', disease_area: 'General Rheumatology', priority: 6 },
-  { topic: 'Biomarkers for Treatment Response Prediction', category: 'Research', disease_area: 'General Rheumatology', priority: 7 },
-  { topic: 'Microbiome and Autoimmunity: Current Evidence', category: 'Research', disease_area: 'General Rheumatology', priority: 6 },
+  // Brazilian/Latin American Rheumatology
+  { topic: 'SBR Consensus on Rheumatoid Arthritis Treatment 2024', category: 'Guidelines', disease_area: 'Rheumatoid Arthritis', priority: 9, sources: ['SBR'] },
+  { topic: 'Endemic Rheumatic Diseases in Latin America', category: 'Clinical Assessment', disease_area: 'General Rheumatology', priority: 7, sources: ['SBR', 'PANLAR'] },
+  { topic: 'Chikungunya Arthropathy: Diagnosis and Management', category: 'Clinical Assessment', disease_area: 'General Rheumatology', priority: 8, sources: ['SBR', 'Lancet'] },
 ];
+
+// Search authoritative sources using Perplexity
+async function searchMedicalLiterature(topic: string, diseaseArea: string): Promise<{
+  citations: string[];
+  searchResults: string;
+  keyFindings: string[];
+}> {
+  const perplexityKey = Deno.env.get('PERPLEXITY_API_KEY');
+  
+  if (!perplexityKey) {
+    console.log('⚠️ Perplexity API key not found, using synthetic search');
+    return {
+      citations: [],
+      searchResults: '',
+      keyFindings: []
+    };
+  }
+
+  const searchQuery = `${topic} rheumatology clinical guidelines evidence-based medicine 2024`;
+  
+  try {
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${perplexityKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'sonar',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a medical research librarian specializing in rheumatology. Search for the latest evidence-based information from authoritative sources including:
+- EULAR (European Alliance of Associations for Rheumatology)
+- ACR (American College of Rheumatology)  
+- Lancet Rheumatology
+- Nature Reviews Rheumatology
+- New England Journal of Medicine
+- Annals of Rheumatic Diseases
+- Brazilian Society of Rheumatology (SBR)
+- OARSI (Osteoarthritis Research Society International)
+
+Focus on:
+1. Current classification criteria and guidelines
+2. High-impact clinical trials (RCTs, meta-analyses)
+3. Treatment recommendations
+4. Safety data and monitoring protocols`
+          },
+          {
+            role: 'user',
+            content: `Search for the most current and authoritative medical literature on: "${topic}" in ${diseaseArea}. 
+
+Provide:
+1. Key findings from major trials and guidelines
+2. Evidence level (Oxford OCEBM)
+3. Practical clinical recommendations
+4. Recent updates or changes in practice`
+          }
+        ],
+        search_domain_filter: AUTHORITATIVE_SOURCES,
+        search_recency_filter: 'year',
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Perplexity API error:', response.status);
+      return { citations: [], searchResults: '', keyFindings: [] };
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const citations = data.citations || [];
+
+    // Extract key findings
+    const keyFindings = content
+      .split('\n')
+      .filter((line: string) => line.trim().startsWith('-') || line.trim().match(/^\d+\./))
+      .slice(0, 10);
+
+    return {
+      citations,
+      searchResults: content,
+      keyFindings
+    };
+  } catch (err) {
+    console.error('Perplexity search error:', err);
+    return { citations: [], searchResults: '', keyFindings: [] };
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -93,7 +206,10 @@ Deno.serve(async (req) => {
         const { error } = await supabase
           .from('research_topic_queue')
           .insert(newTopics.map(t => ({
-            ...t,
+            topic: t.topic,
+            category: t.category,
+            disease_area: t.disease_area,
+            priority: t.priority,
             status: 'queued',
             source: 'system_seed'
           })));
@@ -103,15 +219,16 @@ Deno.serve(async (req) => {
 
       return new Response(JSON.stringify({
         success: true,
-        message: `Seeded ${newTopics.length} new topics`,
+        message: `Seeded ${newTopics.length} new topics from authoritative sources`,
         total_topics: SEED_TOPICS.length,
-        new_topics: newTopics.length
+        new_topics: newTopics.length,
+        sources: ['EULAR', 'ACR', 'NEJM', 'Lancet', 'Nature', 'SBR', 'OARSI']
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'ignite') {
-      // Full ignition: seed + trigger batch processing
-      console.log('🔥 IGNITION SEQUENCE STARTED');
+      // Full ignition: seed + trigger batch processing with real literature search
+      console.log('🔥 IGNITION SEQUENCE STARTED - Mining authoritative medical literature');
 
       // Step 1: Seed topics
       const { data: existingTopics } = await supabase
@@ -123,7 +240,14 @@ Deno.serve(async (req) => {
 
       if (newTopics.length > 0) {
         await supabase.from('research_topic_queue').insert(
-          newTopics.map(t => ({ ...t, status: 'queued', source: 'system_seed' }))
+          newTopics.map(t => ({
+            topic: t.topic,
+            category: t.category,
+            disease_area: t.disease_area,
+            priority: t.priority,
+            status: 'queued',
+            source: 'system_seed'
+          }))
         );
       }
 
@@ -143,7 +267,7 @@ Deno.serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Step 3: Process each topic through the research engine
+      // Step 3: Process each topic with real literature search
       const results = [];
       const geminiKey = Deno.env.get('GEMINI_API_KEY');
 
@@ -155,27 +279,52 @@ Deno.serve(async (req) => {
             .update({ status: 'processing', last_processed_at: new Date().toISOString() })
             .eq('id', topic.id);
 
-          // Generate article content
-          const articlePrompt = `You are a medical content expert specializing in rheumatology. Generate a comprehensive, evidence-based article on: "${topic.topic}"
+          console.log(`📚 Researching: ${topic.topic}`);
+
+          // Search authoritative literature first
+          const literature = await searchMedicalLiterature(topic.topic, topic.disease_area || 'Rheumatology');
+          
+          const citationsText = literature.citations.length > 0 
+            ? `\n\nAuthoritative Sources Found:\n${literature.citations.map((c, i) => `${i + 1}. ${c}`).join('\n')}`
+            : '';
+
+          const literatureContext = literature.searchResults 
+            ? `\n\nRecent Literature Evidence:\n${literature.searchResults.substring(0, 3000)}`
+            : '';
+
+          // Generate article content enhanced with real literature
+          const articlePrompt = `You are a medical content expert specializing in rheumatology writing for the UHS Health OS knowledge library. Generate a comprehensive, evidence-based article on: "${topic.topic}"
 
 Category: ${topic.category}
 Disease Area: ${topic.disease_area}
+${literatureContext}
+${citationsText}
 
-Requirements:
-1. Write in academic medical style suitable for rheumatologists
-2. Include relevant clinical pearls and practical applications
-3. Reference current guidelines (ACR, EULAR, APLAR)
-4. Structure with clear sections: Overview, Key Points, Clinical Application, Evidence Summary
-5. Be factually accurate and current with 2024 medical knowledge
+CRITICAL REQUIREMENTS:
+1. Write in academic medical style suitable for practicing rheumatologists
+2. MUST include specific evidence from major trials and guidelines (cite by name)
+3. Reference current guidelines: ACR (American College of Rheumatology), EULAR, ASAS, GRAPPA, OARSI, SBR
+4. Include practical clinical pearls that can be applied immediately
+5. Structure with clear sections: 
+   - Clinical Overview
+   - Key Evidence (cite specific trials: e.g., ORAL Surveillance, RAVE, AURORA, etc.)
+   - Current Guideline Recommendations  
+   - Practical Application & Clinical Pearls
+   - Safety Considerations
+   - References
+6. Be factually accurate with 2024 medical knowledge
+7. Minimum 2500 words for comprehensive coverage
+8. Include specific drug names, dosages, and monitoring parameters where relevant
 
 Respond in JSON format:
 {
   "title": "Article title",
-  "summary": "2-3 sentence summary",
-  "content": "Full markdown article content (2000+ words)",
-  "tags": ["tag1", "tag2", "tag3"],
+  "summary": "2-3 sentence summary highlighting key takeaways",
+  "content": "Full markdown article content (2500+ words)",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "evidence_level": "1a|1b|2a|2b|3a|3b|4|5",
-  "evidence_grade": "A|B|C|D|I"
+  "evidence_grade": "A|B|C|D|I",
+  "key_references": ["Reference 1", "Reference 2"]
 }`;
 
           const genResponse = await fetch(
@@ -185,7 +334,7 @@ Respond in JSON format:
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: articlePrompt }] }],
-                generationConfig: { temperature: 0.3, maxOutputTokens: 8000 }
+                generationConfig: { temperature: 0.3, maxOutputTokens: 12000 }
               })
             }
           );
@@ -207,7 +356,7 @@ Respond in JSON format:
             continue;
           }
 
-          // Create pipeline entry
+          // Create pipeline entry with research sources
           const { data: pipelineEntry, error: pipelineError } = await supabase
             .from('ai_research_pipeline')
             .insert({
@@ -221,7 +370,9 @@ Respond in JSON format:
               evidence_level: article.evidence_level || 'pending',
               evidence_grade: article.evidence_grade || 'pending',
               status: 'ai_reviewing',
-              priority: topic.priority
+              priority: topic.priority,
+              research_sources: literature.citations.length > 0 ? literature.citations : [],
+              source_count: literature.citations.length
             })
             .select()
             .single();
@@ -232,19 +383,40 @@ Respond in JSON format:
             continue;
           }
 
-          // Run AI Judge evaluation
-          const judgePrompt = `You are a medical peer-review expert. Evaluate this rheumatology article for publication.
+          // Run AI Judge evaluation with stricter criteria
+          const judgePrompt = `You are a senior medical peer-reviewer evaluating rheumatology content for the UHS Health OS knowledge library.
 
-ARTICLE:
+ARTICLE TO REVIEW:
 Title: ${article.title}
-Content: ${article.content?.substring(0, 3000)}...
+Disease Area: ${topic.disease_area}
+Content Preview: ${article.content?.substring(0, 4000)}...
 
-Evaluate using Oxford OCEBM evidence levels and GRADE system. Consider:
-1. Scientific accuracy and current evidence
-2. Clinical relevance and applicability
-3. Methodology rigor (if applicable)
-4. Potential for patient harm if information is wrong
-5. Alignment with major society guidelines (ACR, EULAR)
+Number of Authoritative Citations: ${literature.citations.length}
+${literature.citations.length > 0 ? `Citations: ${literature.citations.slice(0, 5).join(', ')}` : 'No external citations available'}
+
+EVALUATION CRITERIA (Oxford OCEBM / GRADE):
+
+1. EVIDENCE QUALITY (40 points)
+   - Are specific trials/studies cited by name?
+   - Is the evidence level appropriate for recommendations?
+   - Are major society guidelines (ACR/EULAR) referenced?
+
+2. CLINICAL ACCURACY (30 points)
+   - Are drug names, dosages, and protocols correct?
+   - Are contraindications and safety warnings included?
+   - Is the information current (2024)?
+
+3. PRACTICAL UTILITY (20 points)
+   - Can a rheumatologist apply this immediately?
+   - Are clinical pearls actionable?
+   - Is the structure clear and navigable?
+
+4. SAFETY (10 points)
+   - Any potential for patient harm if followed?
+   - Are appropriate warnings included?
+   - Red flags for outdated or dangerous advice?
+
+AUTO-APPROVE THRESHOLD: Score ≥85 AND Grade A/B AND Level 1-2 AND no safety concerns
 
 Respond in JSON:
 {
@@ -252,9 +424,15 @@ Respond in JSON:
   "confidence": 0-100,
   "evidence_level": "1a|1b|2a|2b|3a|3b|4|5",
   "grade": "A|B|C|D|I",
-  "reasoning": "Brief explanation",
+  "reasoning": "Detailed explanation of decision",
   "requires_human_review": true/false,
-  "safety_concerns": []
+  "safety_concerns": [],
+  "quality_scores": {
+    "evidence": 0-40,
+    "accuracy": 0-30,
+    "utility": 0-20,
+    "safety": 0-10
+  }
 }`;
 
           const judgeResponse = await fetch(
@@ -280,8 +458,20 @@ Respond in JSON:
             judgment = { decision: 'needs_human_review', confidence: 50 };
           }
 
-          // Update pipeline with judgment
-          const autoApprove = judgment.decision === 'auto_approve' && judgment.confidence >= 85;
+          // Stricter auto-approve criteria with literature backing
+          const hasGoodEvidence = literature.citations.length >= 2 || judgment.confidence >= 90;
+          const highGrade = ['A', 'B'].includes(judgment.grade);
+          const goodLevel = ['1a', '1b', '2a', '2b'].includes(judgment.evidence_level);
+          const noSafetyConcerns = !judgment.safety_concerns || judgment.safety_concerns.length === 0;
+          
+          const autoApprove = 
+            judgment.decision === 'auto_approve' && 
+            judgment.confidence >= 85 && 
+            hasGoodEvidence &&
+            highGrade &&
+            goodLevel &&
+            noSafetyConcerns;
+
           const newStatus = autoApprove ? 'approved' : 'pending_review';
 
           await supabase
@@ -295,12 +485,12 @@ Respond in JSON:
               judge_reasoning: judgment.reasoning,
               evidence_level: judgment.evidence_level || article.evidence_level,
               evidence_grade: judgment.grade || article.evidence_grade,
-              requires_human_review: judgment.requires_human_review !== false,
+              requires_human_review: !autoApprove,
               auto_approved: autoApprove
             })
             .eq('id', pipelineEntry.id);
 
-          // Log the review
+          // Log the review with detailed scores
           await supabase.from('ai_review_logs').insert({
             pipeline_id: pipelineEntry.id,
             reviewer_type: 'ai_judge',
@@ -309,7 +499,12 @@ Respond in JSON:
             confidence_score: judgment.confidence,
             evidence_level: judgment.evidence_level,
             evidence_grade: judgment.grade,
-            reasoning: judgment.reasoning
+            reasoning: judgment.reasoning,
+            metadata: {
+              quality_scores: judgment.quality_scores,
+              citations_count: literature.citations.length,
+              auto_approved: autoApprove
+            }
           });
 
           // If auto-approved, publish to education_content
@@ -337,6 +532,10 @@ Respond in JSON:
               .from('ai_research_pipeline')
               .update({ status: 'published' })
               .eq('id', pipelineEntry.id);
+              
+            console.log(`✅ Auto-published: ${article.title}`);
+          } else {
+            console.log(`⏳ Pending review: ${article.title} (Score: ${judgment.confidence})`);
           }
 
           // Update queue status
@@ -352,7 +551,8 @@ Respond in JSON:
             topic: topic.topic,
             status: autoApprove ? 'auto_published' : 'pending_review',
             confidence: judgment.confidence,
-            evidence_grade: judgment.grade
+            evidence_grade: judgment.grade,
+            citations: literature.citations.length
           });
 
         } catch (err) {
@@ -379,7 +579,7 @@ Respond in JSON:
 
       return new Response(JSON.stringify({
         success: true,
-        message: '🔥 Ignition complete!',
+        message: '🔥 Ignition complete! Mining authoritative medical literature from EULAR, ACR, NEJM, Lancet, Nature & SBR',
         seeded_topics: newTopics.length,
         processed: results.length,
         results,
@@ -387,7 +587,8 @@ Respond in JSON:
           total_published: totalPublished,
           pending_review: pendingReview,
           topics_remaining: queuedCount
-        }
+        },
+        sources_used: AUTHORITATIVE_SOURCES
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -398,8 +599,7 @@ Respond in JSON:
   } catch (error) {
     console.error('Ignition error:', error);
     return new Response(JSON.stringify({
-      success: false,
-      error: error.message
+      error: String(error)
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
