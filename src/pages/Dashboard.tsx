@@ -1,23 +1,24 @@
- import { useEffect, useState, useCallback } from 'react';
- import { Link } from 'react-router-dom';
- import { AppLayout } from '@/components/layout/AppLayout';
- import { StatCard } from '@/components/ui/StatCard';
- import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
- import { Button } from '@/components/ui/button';
- import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
- import { supabase } from '@/integrations/supabase/client';
- import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { StatCard } from '@/components/ui/StatCard';
+import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
- import { usePersona } from '@/contexts/PersonaContext';
+import { usePersona } from '@/contexts/PersonaContext';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
- import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
- import { VerificationPrompt } from '@/components/dashboard/VerificationPrompt';
- import { QuickPatientSearch } from '@/components/clinical/QuickPatientSearch';
- import { VoiceNoteButton } from '@/components/clinical/VoiceNoteButton';
- import { ContributeKnowledge } from '@/components/dashboard/ContributeKnowledge';
+import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
+import { VerificationPrompt } from '@/components/dashboard/VerificationPrompt';
+import { QuickPatientSearch } from '@/components/clinical/QuickPatientSearch';
+import { VoiceNoteButton } from '@/components/clinical/VoiceNoteButton';
+import { ContributeKnowledge } from '@/components/dashboard/ContributeKnowledge';
 import { PatientStatistics } from '@/components/dashboard/PatientStatistics';
- import { usePullToRefresh } from '@/hooks/usePullToRefresh';
- import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
+import { useDailyCompliment } from '@/hooks/useDailyCompliment';
  import {
    DIAGNOSIS_OPTIONS,
  } from '@/config/clinical';
@@ -36,15 +37,18 @@ import { PatientStatistics } from '@/components/dashboard/PatientStatistics';
  import { format, addDays, isAfter, isBefore } from 'date-fns';
  import { useIsMobile } from '@/hooks/use-mobile';
  
- export default function Dashboard() {
-   const { user } = useAuth();
-   const { status, tier, contributorType, fullName } = useVerificationStatus();
-   const { persona } = usePersona();
-   const [patients, setPatients] = useState<PatientCard[]>([]);
-   const [monitoringAlerts, setMonitoringAlerts] = useState<MonitoringEvent[]>([]);
-   const [upcomingFollowups, setUpcomingFollowups] = useState<PatientCard[]>([]);
-   const [loading, setLoading] = useState(true);
-   const isMobile = useIsMobile();
+export default function Dashboard() {
+  const { user } = useAuth();
+  const { status, tier, contributorType, fullName } = useVerificationStatus();
+  const { persona } = usePersona();
+  const [patients, setPatients] = useState<PatientCard[]>([]);
+  const [monitoringAlerts, setMonitoringAlerts] = useState<MonitoringEvent[]>([]);
+  const [upcomingFollowups, setUpcomingFollowups] = useState<PatientCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+  
+  // Show daily compliment 💜
+  useDailyCompliment();
  
    const fetchData = useCallback(async () => {
      if (!user) return;
