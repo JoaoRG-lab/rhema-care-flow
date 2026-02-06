@@ -80,53 +80,68 @@ This project includes a privacy-preserving blockchain registry for healthcare da
 - Medical records, diagnoses, or treatment details
 - Any data that could identify an individual
 
-### Production Deployment
+## Anchor (Solana) — Deploy to Devnet and Frontend Integration
 
-#### Prerequisites
+### 1) Configure Solana for Devnet
 
 ```bash
-# Install Solana CLI
-sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
-
-# Install Anchor CLI  
-cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-avm install latest
-avm use latest
+solana config set --url https://api.devnet.solana.com
+solana-keygen new --outfile ~/.config/solana/id.json
+solana airdrop 2
+solana balance
 ```
 
-#### Deploy to Devnet
+### 2) Build and Deploy the Program (Anchor)
 
 ```bash
-# 1. Configure Solana for devnet
-solana config set --url devnet
-
-# 2. Create a new keypair (or use existing)
-solana-keygen new --outfile ~/.config/solana/id.json
-
-# 3. Airdrop SOL for deployment fees
-solana airdrop 2
-
-# 4. Navigate to anchor folder and build
 cd anchor
 anchor build
-
-# 5. Deploy to devnet
-anchor deploy --provider.cluster devnet
+anchor deploy
 ```
 
-#### Update Frontend After Deployment
+### 3) Copy the IDL to Frontend
+
+After `anchor build`, copy the generated IDL:
 
 ```bash
-# 1. Copy the generated IDL
 cp anchor/target/idl/urv_privacy.json src/idl/urv_privacy.json
-
-# 2. Get the program ID from deployment output or:
-solana address -k anchor/target/deploy/urv_privacy-keypair.json
-
-# 3. Update URV_PROGRAM_ID in src/lib/solana.ts with the program ID
 ```
 
-See `/anchor/README.md` for detailed instructions.
+### 4) Update ProgramId in Frontend
+
+After `anchor deploy`, get the ProgramId from the output and update:
+
+**File:** `src/components/blockchain/UrvDemo.tsx`
+
+```typescript
+const PROGRAM_ID = new PublicKey('YOUR_DEPLOYED_PROGRAM_ID_HERE');
+```
+
+### 5) Run the App
+
+```bash
+npm install
+npm run dev
+```
+
+### Privacy Design
+
+**Plaintext is never stored on-chain.** On-chain records only:
+
+- **Hashes (commitments)**: SHA-256 of canonical JSON
+- **Score & Confidence**: Numeric values
+- **Chain links**: `prev_hash → new_hash` for immutable audit trail
+- **Timestamps**: When records were created
+
+### Score Update Chaining
+
+The `postScoreUpdate()` function implements real chaining:
+
+1. Fetches `state.lastScoreHash` via `program.account.state.fetch(statePda)`
+2. Computes `features_hash` from canonical JSON features object
+3. Computes `new_score_hash = sha256(prev_hash + features_hash + score_u32_LE + conf_bps_LE)`
+4. Derives update PDA: `["upd", statePda, new_score_hash]`
+5. Posts the update with both prev and new hashes
 
 ## How can I deploy this project?
 
