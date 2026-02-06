@@ -399,6 +399,44 @@ export type Database = {
           },
         ]
       }
+      custody_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          custody_id: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          custody_id: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          custody_id?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custody_audit_log_custody_id_fkey"
+            columns: ["custody_id"]
+            isOneToOne: false
+            referencedRelation: "ultimate_user_custody"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       education_content: {
         Row: {
           author_id: string
@@ -1419,6 +1457,72 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ultimate_user_custody: {
+        Row: {
+          created_at: string | null
+          derivation_path: string
+          failed_auth_attempts: number
+          hardware_pubkey: string | null
+          hardware_serial_hash: string | null
+          hardware_type: string | null
+          id: string
+          installation_status: string
+          is_seed_permanently_hidden: boolean | null
+          last_auth_at: string | null
+          locked_until: string | null
+          seed_hash: string
+          seed_reveal_expires_at: string | null
+          seed_revealed_at: string | null
+          transfer_completed_at: string | null
+          transfer_requested_at: string | null
+          transfer_tx_signature: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          derivation_path?: string
+          failed_auth_attempts?: number
+          hardware_pubkey?: string | null
+          hardware_serial_hash?: string | null
+          hardware_type?: string | null
+          id?: string
+          installation_status?: string
+          is_seed_permanently_hidden?: boolean | null
+          last_auth_at?: string | null
+          locked_until?: string | null
+          seed_hash: string
+          seed_reveal_expires_at?: string | null
+          seed_revealed_at?: string | null
+          transfer_completed_at?: string | null
+          transfer_requested_at?: string | null
+          transfer_tx_signature?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          derivation_path?: string
+          failed_auth_attempts?: number
+          hardware_pubkey?: string | null
+          hardware_serial_hash?: string | null
+          hardware_type?: string | null
+          id?: string
+          installation_status?: string
+          is_seed_permanently_hidden?: boolean | null
+          last_auth_at?: string | null
+          locked_until?: string | null
+          seed_hash?: string
+          seed_reveal_expires_at?: string | null
+          seed_revealed_at?: string | null
+          transfer_completed_at?: string | null
+          transfer_requested_at?: string | null
+          transfer_tx_signature?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
