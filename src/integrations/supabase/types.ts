@@ -16,23 +16,35 @@ export type Database = {
     Tables: {
       ai_research_pipeline: {
         Row: {
+          academic_review_requested_at: string | null
+          academic_reviewer_email: string | null
           ai_factcheck_passed: boolean | null
           ai_verification_notes: string | null
           ai_verification_score: number | null
+          auto_approved: boolean | null
           content_type: string | null
           created_at: string
           disease_area: string | null
+          evidence_grade: string | null
+          evidence_level: string | null
           generated_content: string | null
           generated_summary: string | null
           generated_tags: string[] | null
           generated_title: string | null
           id: string
+          judge_confidence: number | null
+          judge_decision: string | null
+          judge_reasoning: string | null
           priority: number | null
+          requires_human_review: boolean | null
           research_sources: Json | null
           reviewed_at: string | null
           reviewed_by: string | null
           reviewer_notes: string | null
           search_query: string | null
+          sentinel_flagged: boolean | null
+          sentinel_flags: Json | null
+          sentinel_last_check: string | null
           source_count: number | null
           status: string
           topic: string
@@ -40,23 +52,35 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          academic_review_requested_at?: string | null
+          academic_reviewer_email?: string | null
           ai_factcheck_passed?: boolean | null
           ai_verification_notes?: string | null
           ai_verification_score?: number | null
+          auto_approved?: boolean | null
           content_type?: string | null
           created_at?: string
           disease_area?: string | null
+          evidence_grade?: string | null
+          evidence_level?: string | null
           generated_content?: string | null
           generated_summary?: string | null
           generated_tags?: string[] | null
           generated_title?: string | null
           id?: string
+          judge_confidence?: number | null
+          judge_decision?: string | null
+          judge_reasoning?: string | null
           priority?: number | null
+          requires_human_review?: boolean | null
           research_sources?: Json | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_notes?: string | null
           search_query?: string | null
+          sentinel_flagged?: boolean | null
+          sentinel_flags?: Json | null
+          sentinel_last_check?: string | null
           source_count?: number | null
           status?: string
           topic: string
@@ -64,23 +88,35 @@ export type Database = {
           user_id: string
         }
         Update: {
+          academic_review_requested_at?: string | null
+          academic_reviewer_email?: string | null
           ai_factcheck_passed?: boolean | null
           ai_verification_notes?: string | null
           ai_verification_score?: number | null
+          auto_approved?: boolean | null
           content_type?: string | null
           created_at?: string
           disease_area?: string | null
+          evidence_grade?: string | null
+          evidence_level?: string | null
           generated_content?: string | null
           generated_summary?: string | null
           generated_tags?: string[] | null
           generated_title?: string | null
           id?: string
+          judge_confidence?: number | null
+          judge_decision?: string | null
+          judge_reasoning?: string | null
           priority?: number | null
+          requires_human_review?: boolean | null
           research_sources?: Json | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_notes?: string | null
           search_query?: string | null
+          sentinel_flagged?: boolean | null
+          sentinel_flags?: Json | null
+          sentinel_last_check?: string | null
           source_count?: number | null
           status?: string
           topic?: string
@@ -88,6 +124,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      ai_review_logs: {
+        Row: {
+          action: string
+          confidence_score: number | null
+          created_at: string
+          decision: string | null
+          evidence_grade: string | null
+          evidence_level: string | null
+          id: string
+          metadata: Json | null
+          pipeline_id: string | null
+          reasoning: string | null
+          reviewer_type: string
+        }
+        Insert: {
+          action: string
+          confidence_score?: number | null
+          created_at?: string
+          decision?: string | null
+          evidence_grade?: string | null
+          evidence_level?: string | null
+          id?: string
+          metadata?: Json | null
+          pipeline_id?: string | null
+          reasoning?: string | null
+          reviewer_type: string
+        }
+        Update: {
+          action?: string
+          confidence_score?: number | null
+          created_at?: string
+          decision?: string | null
+          evidence_grade?: string | null
+          evidence_level?: string | null
+          id?: string
+          metadata?: Json | null
+          pipeline_id?: string | null
+          reasoning?: string | null
+          reviewer_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_review_logs_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "ai_research_pipeline"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
@@ -868,6 +954,63 @@ export type Database = {
             columns: ["visit_id"]
             isOneToOne: false
             referencedRelation: "visits_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sentinel_alerts: {
+        Row: {
+          alert_type: string
+          content_id: string | null
+          created_at: string
+          description: string
+          id: string
+          is_resolved: boolean | null
+          pipeline_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          suggested_action: string | null
+        }
+        Insert: {
+          alert_type: string
+          content_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          is_resolved?: boolean | null
+          pipeline_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          suggested_action?: string | null
+        }
+        Update: {
+          alert_type?: string
+          content_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_resolved?: boolean | null
+          pipeline_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          suggested_action?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sentinel_alerts_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "education_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sentinel_alerts_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "ai_research_pipeline"
             referencedColumns: ["id"]
           },
         ]

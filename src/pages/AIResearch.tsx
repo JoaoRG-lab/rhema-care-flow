@@ -2,6 +2,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AIResearchDashboard } from '@/components/knowledge/AIResearchDashboard';
+import { QualityAssurancePanel } from '@/components/knowledge/QualityAssurancePanel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Bot, Scale, Shield } from 'lucide-react';
 
 export default function AIResearch() {
   const { user, loading } = useAuth();
@@ -20,8 +23,37 @@ export default function AIResearch() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto py-6 px-4 max-w-7xl">
-        <AIResearchDashboard />
+      <div className="container mx-auto py-6 px-4 max-w-7xl space-y-6">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold gradient-text-organic mb-2">
+            AI Research & Quality System
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Dual AI architecture: Research Engine generates content, Judge evaluates evidence quality,
+            and Sentinel continuously monitors for inconsistencies
+          </p>
+        </div>
+
+        <Tabs defaultValue="research" className="space-y-6">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="research" className="gap-2">
+              <Bot className="h-4 w-4" />
+              Research Engine
+            </TabsTrigger>
+            <TabsTrigger value="quality" className="gap-2">
+              <Scale className="h-4 w-4" />
+              Quality Assurance
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="research">
+            <AIResearchDashboard />
+          </TabsContent>
+
+          <TabsContent value="quality">
+            <QualityAssurancePanel />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );

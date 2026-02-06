@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.ai-research-engine]
 verify_jwt = false
+
+[functions.ai-judge]
+verify_jwt = false
+
+[functions.ai-sentinel]
+verify_jwt = false
