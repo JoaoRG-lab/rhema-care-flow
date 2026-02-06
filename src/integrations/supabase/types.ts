@@ -50,6 +50,38 @@ export type Database = {
         }
         Relationships: []
       }
+      contribution_votes: {
+        Row: {
+          contribution_id: string
+          created_at: string
+          id: string
+          is_helpful: boolean
+          user_id: string
+        }
+        Insert: {
+          contribution_id: string
+          created_at?: string
+          id?: string
+          is_helpful?: boolean
+          user_id: string
+        }
+        Update: {
+          contribution_id?: string
+          created_at?: string
+          id?: string
+          is_helpful?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribution_votes_contribution_id_fkey"
+            columns: ["contribution_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_contributions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       education_content: {
         Row: {
           author_id: string
@@ -199,6 +231,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      knowledge_contributions: {
+        Row: {
+          category: Database["public"]["Enums"]["contribution_category"]
+          content: string
+          created_at: string
+          disease_area: string | null
+          helpful_count: number
+          id: string
+          is_featured: boolean
+          resource_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          status: Database["public"]["Enums"]["contribution_status"]
+          title: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["contribution_category"]
+          content: string
+          created_at?: string
+          disease_area?: string | null
+          helpful_count?: number
+          id?: string
+          is_featured?: boolean
+          resource_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: Database["public"]["Enums"]["contribution_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["contribution_category"]
+          content?: string
+          created_at?: string
+          disease_area?: string | null
+          helpful_count?: number
+          id?: string
+          is_featured?: boolean
+          resource_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: Database["public"]["Enums"]["contribution_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: []
       }
       monitoring_events: {
         Row: {
@@ -1270,6 +1359,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      contribution_category:
+        | "clinical_pearl"
+        | "guideline_summary"
+        | "case_insight"
+        | "resource"
+      contribution_status: "pending" | "approved" | "rejected"
       verification_status: "pending" | "under_review" | "approved" | "rejected"
       verification_tier:
         | "bronze"
@@ -1406,6 +1501,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      contribution_category: [
+        "clinical_pearl",
+        "guideline_summary",
+        "case_insight",
+        "resource",
+      ],
+      contribution_status: ["pending", "approved", "rejected"],
       verification_status: ["pending", "under_review", "approved", "rejected"],
       verification_tier: [
         "bronze",
