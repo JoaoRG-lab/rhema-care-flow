@@ -124,12 +124,14 @@ export function UrvDemo() {
   // Create program instance
   const program = useMemo(() => {
     if (!provider) return null;
-    if (!idl.instructions || idl.instructions.length === 0) {
+    // Check if IDL has real instructions (not placeholder)
+    const idlData = idl as any;
+    if (!idlData.instructions || idlData.instructions.length === 0) {
       console.warn('IDL is placeholder - replace with actual IDL after Anchor build');
       return null;
     }
     try {
-      return new Program(idl as any, provider);
+      return new Program(idlData, provider);
     } catch (e) {
       console.error('Failed to create program:', e);
       return null;
