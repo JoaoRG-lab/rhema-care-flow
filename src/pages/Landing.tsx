@@ -112,7 +112,7 @@ export default function Landing() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <Link to="/signup">
                 <Button size="lg" className="gap-2 px-8 h-12 text-base bg-gradient-to-r from-primary to-[hsl(165_60%_48%)] hover:opacity-90 shadow-lg">
                   <Sparkles className="h-5 w-5" />
@@ -123,6 +123,17 @@ export default function Landing() {
                 <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base">
                   <Blocks className="h-5 w-5" />
                   Explore URV Chain
+                </Button>
+              </Link>
+            </div>
+
+            {/* Rheumatology Tools Link */}
+            <div className="mb-12">
+              <Link to="/scores">
+                <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground hover:text-foreground">
+                  <Activity className="h-5 w-5" />
+                  Rheumatology Clinical Tools
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
