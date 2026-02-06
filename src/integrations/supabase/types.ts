@@ -873,6 +873,7 @@ export type Database = {
           license_number: string | null
           license_number_encrypted: string | null
           license_status: string | null
+          linkedin_url: string | null
           moc_status: string | null
           notable_publications: string[] | null
           orcid_id: string | null
@@ -922,6 +923,7 @@ export type Database = {
           license_number?: string | null
           license_number_encrypted?: string | null
           license_status?: string | null
+          linkedin_url?: string | null
           moc_status?: string | null
           notable_publications?: string[] | null
           orcid_id?: string | null
@@ -971,6 +973,7 @@ export type Database = {
           license_number?: string | null
           license_number_encrypted?: string | null
           license_status?: string | null
+          linkedin_url?: string | null
           moc_status?: string | null
           notable_publications?: string[] | null
           orcid_id?: string | null
