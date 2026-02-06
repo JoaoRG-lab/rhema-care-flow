@@ -3,8 +3,9 @@ import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AIResearchDashboard } from '@/components/knowledge/AIResearchDashboard';
 import { QualityAssurancePanel } from '@/components/knowledge/QualityAssurancePanel';
+import { IgnitionPanel } from '@/components/knowledge/IgnitionPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bot, Scale, Shield } from 'lucide-react';
+import { Bot, Scale, Flame } from 'lucide-react';
 
 export default function AIResearch() {
   const { user, loading } = useAuth();
@@ -34,17 +35,25 @@ export default function AIResearch() {
           </p>
         </div>
 
-        <Tabs defaultValue="research" className="space-y-6">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+        <Tabs defaultValue="ignition" className="space-y-6">
+          <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3">
+            <TabsTrigger value="ignition" className="gap-2">
+              <Flame className="h-4 w-4" />
+              Ignition
+            </TabsTrigger>
             <TabsTrigger value="research" className="gap-2">
               <Bot className="h-4 w-4" />
-              Research Engine
+              Research
             </TabsTrigger>
             <TabsTrigger value="quality" className="gap-2">
               <Scale className="h-4 w-4" />
-              Quality Assurance
+              Quality
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="ignition">
+            <IgnitionPanel />
+          </TabsContent>
 
           <TabsContent value="research">
             <AIResearchDashboard />

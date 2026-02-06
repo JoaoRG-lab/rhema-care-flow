@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.ai-sentinel]
 verify_jwt = false
+
+[functions.ai-ignition]
+verify_jwt = false
