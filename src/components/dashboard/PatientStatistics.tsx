@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { StatisticsExport } from './StatisticsExport';
 import { 
   Users, 
   Activity, 
@@ -186,17 +186,22 @@ interface StatsData {
      );
    }
  
-   return (
-     <Card className="col-span-full">
-       <CardHeader>
-         <CardTitle className="flex items-center gap-2">
-           <BarChart3 className="h-5 w-5 text-primary" />
-           Patient Statistics
-         </CardTitle>
-         <CardDescription>
-           Overview of your practice data for {format(new Date(), 'MMMM yyyy')}
-         </CardDescription>
-       </CardHeader>
+    return (
+      <Card className="col-span-full">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Patient Statistics
+              </CardTitle>
+              <CardDescription>
+                Overview of your practice data for {format(new Date(), 'MMMM yyyy')}
+              </CardDescription>
+            </div>
+            <StatisticsExport stats={stats} />
+          </div>
+        </CardHeader>
        <CardContent>
          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
            {/* Key Metrics */}
