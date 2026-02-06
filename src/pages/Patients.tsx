@@ -1,33 +1,54 @@
- import { useState } from 'react';
- import { AppLayout } from '@/components/layout/AppLayout';
- import { Button } from '@/components/ui/button';
- import { Input } from '@/components/ui/input';
- import { Label } from '@/components/ui/label';
- import { Textarea } from '@/components/ui/textarea';
- import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
- import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
- import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
- import { Plus, Search, Calendar, User } from 'lucide-react';
- import { useNavigate } from 'react-router-dom';
- import { format } from 'date-fns';
- import { usePatients, PatientCard } from '@/hooks/usePatients';
- import { DIAGNOSIS_OPTIONS, THERAPY_OPTIONS, RISK_OPTIONS } from '@/config/clinical';
- 
- export default function Patients() {
-   const navigate = useNavigate();
-   const { patients, loading, createPatient } = usePatients();
-   const [searchQuery, setSearchQuery] = useState('');
-   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-   const [isOpen, setIsOpen] = useState(false);
- 
-   // Form state
-   const [patientCode, setPatientCode] = useState('');
-   const [mrnLast4, setMrnLast4] = useState('');
-   const [diagnosisTags, setDiagnosisTags] = useState<string[]>([]);
-   const [therapyTags, setTherapyTags] = useState<string[]>([]);
-   const [riskFlags, setRiskFlags] = useState<string[]>([]);
-   const [notes, setNotes] = useState('');
-   const [nextFollowup, setNextFollowup] = useState('');
+import { useState, useCallback } from 'react';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
+import { Plus, Search, Calendar, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { usePatients, PatientCard } from '@/hooks/usePatients';
+import { DIAGNOSIS_OPTIONS, THERAPY_OPTIONS, RISK_OPTIONS } from '@/config/clinical';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
+import { SkeletonPatientList, RefreshSkeletonOverlay } from '@/components/ui/skeleton-loader';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+export default function Patients() {
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const { patients, loading, fetchPatients, createPatient } = usePatients();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Form state
+  const [patientCode, setPatientCode] = useState('');
+  const [mrnLast4, setMrnLast4] = useState('');
+  const [diagnosisTags, setDiagnosisTags] = useState<string[]>([]);
+  const [therapyTags, setTherapyTags] = useState<string[]>([]);
+  const [riskFlags, setRiskFlags] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
+  const [nextFollowup, setNextFollowup] = useState('');
+
+  // Pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    await fetchPatients();
+  }, [fetchPatients]);
+
+  const {
+    ref: pullRef,
+    pullDistance,
+    isRefreshing,
+    progress,
+    shouldTrigger,
+  } = usePullToRefresh<HTMLDivElement>({
+    onRefresh: handleRefresh,
+    enabled: isMobile,
+  });
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
@@ -77,9 +98,15 @@
      return matchesSearch && matchesFilters;
    });
  
-   return (
-     <AppLayout>
-       <div className="p-6 lg:p-8">
+  return (
+    <AppLayout>
+      <div ref={pullRef} className="p-6 lg:p-8 relative overflow-auto min-h-screen">
+        <PullToRefreshIndicator
+          pullDistance={pullDistance}
+          isRefreshing={isRefreshing}
+          progress={progress}
+          shouldTrigger={shouldTrigger}
+        />
          {/* Header */}
          <div className="flex items-center justify-between mb-6">
            <div>
@@ -221,17 +248,18 @@
            </div>
          </div>
  
-         {/* Patient Grid */}
-         {loading ? (
-           <div className="text-center py-12 text-muted-foreground">Loading...</div>
-         ) : filteredPatients.length === 0 ? (
-           <div className="text-center py-12">
-             <User className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-             <p className="text-muted-foreground">No patient cards found</p>
-             <p className="text-sm text-muted-foreground mt-1">Create your first patient card to get started</p>
-           </div>
-         ) : (
-           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Patient Grid */}
+        {loading && !isRefreshing ? (
+          <SkeletonPatientList count={6} className="grid md:grid-cols-2 lg:grid-cols-3 gap-4" />
+        ) : filteredPatients.length === 0 ? (
+          <div className="text-center py-12">
+            <User className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+            <p className="text-muted-foreground">No patient cards found</p>
+            <p className="text-sm text-muted-foreground mt-1">Create your first patient card to get started</p>
+          </div>
+        ) : (
+          <RefreshSkeletonOverlay isRefreshing={isRefreshing}>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
              {filteredPatients.map((patient) => (
                <Card 
                  key={patient.id} 
@@ -272,8 +300,9 @@
                  </CardContent>
                </Card>
              ))}
-           </div>
-         )}
+            </div>
+          </RefreshSkeletonOverlay>
+        )}
        </div>
      </AppLayout>
    );
