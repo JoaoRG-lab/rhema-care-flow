@@ -260,10 +260,20 @@ function FeaturedCard({ content, onClick }: { content: EducationContent; onClick
   
   return (
     <Card 
-      className="cursor-pointer hover:shadow-lg transition-all border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
+      className="cursor-pointer hover:shadow-lg transition-all border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden"
       onClick={onClick}
     >
-      <CardHeader className="pb-2">
+      {content.featured_image_url && (
+        <div className="relative h-32 bg-muted">
+          <img
+            src={content.featured_image_url}
+            alt={content.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
+        </div>
+      )}
+      <CardHeader className={cn('pb-2', content.featured_image_url && '-mt-6 relative')}>
         <div className="flex items-center gap-2 mb-2">
           <div className="p-1.5 rounded bg-primary/10">
             <Icon className="h-4 w-4 text-primary" />
@@ -293,9 +303,18 @@ function ContentCard({ content, onClick }: { content: EducationContent; onClick:
   
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-all"
+      className="cursor-pointer hover:shadow-md transition-all overflow-hidden"
       onClick={onClick}
     >
+      {content.featured_image_url && (
+        <div className="relative h-28 bg-muted">
+          <img
+            src={content.featured_image_url}
+            alt={content.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2 mb-2">
           <div className="p-1.5 rounded bg-muted">

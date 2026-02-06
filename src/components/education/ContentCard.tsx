@@ -41,13 +41,25 @@
  export function ContentCard({ content, onEdit, onDelete, onTogglePublish, onView }: ContentCardProps) {
    const Icon = CONTENT_TYPE_ICONS[content.content_type];
    
-   return (
-     <Card className={cn(
-       'transition-all hover:shadow-md',
-       !content.is_published && 'opacity-75 border-dashed'
-     )}>
-       <CardHeader className="pb-2">
-         <div className="flex items-start justify-between gap-2">
+  return (
+    <Card className={cn(
+      'transition-all hover:shadow-md overflow-hidden',
+      !content.is_published && 'opacity-75 border-dashed'
+    )}>
+      {/* Featured Image */}
+      {content.featured_image_url && (
+        <div className="relative h-32 bg-muted">
+          <img
+            src={content.featured_image_url}
+            alt={content.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+        </div>
+      )}
+      
+      <CardHeader className={cn('pb-2', content.featured_image_url && '-mt-6 relative')}>
+        <div className="flex items-start justify-between gap-2">
            <div className="flex items-center gap-2 min-w-0">
              <div className={cn(
                'p-1.5 rounded shrink-0',
