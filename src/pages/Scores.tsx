@@ -38,6 +38,7 @@ import { DAPSACalculator } from '@/components/scores/DAPSACalculator';
 import { MDACalculator } from '@/components/scores/MDACalculator';
 import { ACRResponseCalculator } from '@/components/scores/ACRResponseCalculator';
 import { EULARResponseCalculator } from '@/components/scores/EULARResponseCalculator';
+import { ASASResponseCalculator } from '@/components/scores/ASASResponseCalculator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
  
@@ -122,6 +123,8 @@ import { toast } from 'sonner';
         return <ACRResponseCalculator />;
       case 'eular-response':
         return <EULARResponseCalculator />;
+      case 'asas-response':
+        return <ASASResponseCalculator />;
       default:
         return null;
     }
