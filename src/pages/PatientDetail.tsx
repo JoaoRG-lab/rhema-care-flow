@@ -1,28 +1,29 @@
- import { useEffect, useState } from 'react';
- import { useParams, useNavigate } from 'react-router-dom';
- import { AppLayout } from '@/components/layout/AppLayout';
- import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
- import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
- import { supabase } from '@/integrations/supabase/client';
- import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight, ArrowLeftRight, MessageSquare } from 'lucide-react';
- import { format } from 'date-fns';
- import { toast } from 'sonner';
- import { VisitHistory } from '@/components/patients/VisitHistory';
- import { ScoreTrends } from '@/components/patients/ScoreTrends';
- import { AddVisitDialog } from '@/components/patients/AddVisitDialog';
- import { PatientMonitoring } from '@/components/patients/PatientMonitoring';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { VisitHistory } from '@/components/patients/VisitHistory';
+import { ScoreTrends } from '@/components/patients/ScoreTrends';
+import { AddVisitDialog } from '@/components/patients/AddVisitDialog';
+import { PatientMonitoring } from '@/components/patients/PatientMonitoring';
 import { TreatmentResponseTimeline } from '@/components/patients/TreatmentResponseTimeline';
 import { PatientSmsHistory } from '@/components/patients/PatientSmsHistory';
- import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
- import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
+import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
+import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
 import { QuickScoreEntry } from '@/components/patients/QuickScoreEntry';
+import { PatientReportExport } from '@/components/patients/PatientReportExport';
 import { useAuditLog } from '@/hooks/useAuditLog';
- import { useSwipeGesture } from '@/hooks/useSwipeGesture';
- import { useIsMobile } from '@/hooks/use-mobile';
- import type { PatientCard } from '@/types/clinical';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
+import { useIsMobile } from '@/hooks/use-mobile';
+import type { PatientCard } from '@/types/clinical';
  
  export default function PatientDetail() {
    const { id } = useParams<{ id: string }>();
@@ -214,13 +215,14 @@ import { useAuditLog } from '@/hooks/useAuditLog';
                  ))}
                </div>
              </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <QuickScoreEntry
                   patientId={patient.id}
                   patientCode={patient.patient_code}
                   diagnosisTags={patient.diagnosis_tags}
                   onScoreSaved={() => setRefreshKey(prev => prev + 1)}
                 />
+                <PatientReportExport patient={patient} />
                 <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
