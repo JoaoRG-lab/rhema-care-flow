@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import {
   ChevronDown,
   X,
   MessageCircle,
+  Bot,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useKnowledgeContributions, ContributionCategory, KnowledgeContribution } from '@/hooks/useKnowledgeContributions';
@@ -353,14 +355,22 @@ export default function KnowledgeLibrary() {
         />
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            <BookOpen className="h-7 w-7 text-primary" />
-            Knowledge Library
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Clinical insights shared by the rheumatology community
-          </p>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+              <BookOpen className="h-7 w-7 text-primary" />
+              Knowledge Library
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Clinical insights shared by the rheumatology community
+            </p>
+          </div>
+          <Link to="/ai-research">
+            <Button className="gap-2 bg-gradient-to-r from-primary to-[hsl(165_60%_48%)] hover:opacity-90">
+              <Bot className="h-4 w-4" />
+              AI Research Engine
+            </Button>
+          </Link>
         </div>
 
         {/* Search Bar */}

@@ -58,6 +58,11 @@ const features = [
     icon: BookOpen,
     title: 'Knowledge Repository',
     description: 'Curated guidelines, protocols, and clinical pearls from rheumatology societies worldwide.',
+  },
+  {
+    icon: Sparkles,
+    title: 'AI Research Engine',
+    description: 'Exponentially grow knowledge with AI-powered research, generation, and multi-step verification.',
     badge: 'New',
   },
 ];
@@ -130,7 +135,6 @@ export default function Landing() {
               <KnowledgeSearch size="large" />
             </div>
 
-            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <Link to="/signup">
                 <Button size="lg" className="gap-2 px-8 h-12 text-base bg-gradient-to-r from-primary to-[hsl(165_60%_48%)] hover:opacity-90 shadow-lg">
@@ -138,8 +142,14 @@ export default function Landing() {
                   Start Building
                 </Button>
               </Link>
+              <Link to="/ai-research">
+                <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base border-primary/50 hover:bg-primary/5">
+                  <Brain className="h-5 w-5" />
+                  AI Research Engine
+                </Button>
+              </Link>
               <Link to="/knowledge">
-                <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base">
+                <Button size="lg" variant="ghost" className="gap-2 px-8 h-12 text-base">
                   <BookOpen className="h-5 w-5" />
                   Explore Knowledge
                 </Button>

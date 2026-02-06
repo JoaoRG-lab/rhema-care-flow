@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_research_pipeline: {
+        Row: {
+          ai_factcheck_passed: boolean | null
+          ai_verification_notes: string | null
+          ai_verification_score: number | null
+          content_type: string | null
+          created_at: string
+          disease_area: string | null
+          generated_content: string | null
+          generated_summary: string | null
+          generated_tags: string[] | null
+          generated_title: string | null
+          id: string
+          priority: number | null
+          research_sources: Json | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          search_query: string | null
+          source_count: number | null
+          status: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_factcheck_passed?: boolean | null
+          ai_verification_notes?: string | null
+          ai_verification_score?: number | null
+          content_type?: string | null
+          created_at?: string
+          disease_area?: string | null
+          generated_content?: string | null
+          generated_summary?: string | null
+          generated_tags?: string[] | null
+          generated_title?: string | null
+          id?: string
+          priority?: number | null
+          research_sources?: Json | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          search_query?: string | null
+          source_count?: number | null
+          status?: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_factcheck_passed?: boolean | null
+          ai_verification_notes?: string | null
+          ai_verification_score?: number | null
+          content_type?: string | null
+          created_at?: string
+          disease_area?: string | null
+          generated_content?: string | null
+          generated_summary?: string | null
+          generated_tags?: string[] | null
+          generated_title?: string | null
+          id?: string
+          priority?: number | null
+          research_sources?: Json | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          search_query?: string | null
+          source_count?: number | null
+          status?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -612,6 +687,56 @@ export type Database = {
           window_start?: string
         }
         Relationships: []
+      }
+      research_topic_queue: {
+        Row: {
+          articles_generated: number | null
+          category: string
+          created_at: string
+          disease_area: string | null
+          id: string
+          last_processed_at: string | null
+          parent_topic_id: string | null
+          priority: number | null
+          source: string | null
+          status: string
+          topic: string
+        }
+        Insert: {
+          articles_generated?: number | null
+          category: string
+          created_at?: string
+          disease_area?: string | null
+          id?: string
+          last_processed_at?: string | null
+          parent_topic_id?: string | null
+          priority?: number | null
+          source?: string | null
+          status?: string
+          topic: string
+        }
+        Update: {
+          articles_generated?: number | null
+          category?: string
+          created_at?: string
+          disease_area?: string | null
+          id?: string
+          last_processed_at?: string | null
+          parent_topic_id?: string | null
+          priority?: number | null
+          source?: string | null
+          status?: string
+          topic?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_topic_queue_parent_topic_id_fkey"
+            columns: ["parent_topic_id"]
+            isOneToOne: false
+            referencedRelation: "research_topic_queue"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_sms: {
         Row: {
