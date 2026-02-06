@@ -55,11 +55,14 @@ import {
   Loader2,
   Search,
   Filter,
+  Bot,
+  Sparkles,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { AIOutreachResearchPanel, EPIC_CTA_TEMPLATE } from '@/components/outreach/AIOutreachResearchPanel';
 
 interface OutreachContact {
   id: string;
@@ -360,10 +363,62 @@ export default function OutreachCRM() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
+            <TabsTrigger value="ai-research" className="gap-2">
+              <Bot className="h-4 w-4" />
+              AI Research
+            </TabsTrigger>
             <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
             <TabsTrigger value="contacts">Contacts</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
           </TabsList>
+
+          {/* AI Research Tab */}
+          <TabsContent value="ai-research">
+            <AIOutreachResearchPanel onComplete={fetchData} />
+            
+            {/* Quick Create Campaign with Epic Template */}
+            {contacts.length > 0 && (
+              <Card className="mt-6 border-primary/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Ready to Launch Epic Campaign
+                  </CardTitle>
+                  <CardDescription>
+                    You have {contacts.length} contacts ready. Create a campaign with the epic call-to-action template.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const { error } = await supabase.from('outreach_campaigns').insert({
+                          user_id: user?.id,
+                          name: `Global Healthcare Outreach - ${new Date().toLocaleDateString()}`,
+                          campaign_type: 'general',
+                          email_subject: EPIC_CTA_TEMPLATE.subject,
+                          email_body: EPIC_CTA_TEMPLATE.body,
+                          sender_name: 'Novus Oriens',
+                          sender_email: 'orienta@novusoriens.org',
+                          target_audience: ['investor', 'university', 'association'],
+                        });
+                        if (error) throw error;
+                        toast.success('Epic campaign created! Go to Campaigns tab to send.');
+                        setActiveTab('campaigns');
+                        fetchData();
+                      } catch (err: any) {
+                        toast.error(err.message || 'Failed to create campaign');
+                      }
+                    }}
+                    className="gap-2 bg-gradient-to-r from-primary to-[hsl(165_60%_48%)]"
+                  >
+                    <Rocket className="h-4 w-4" />
+                    Create Epic Campaign with Template
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
           {/* Campaigns Tab */}
           <TabsContent value="campaigns" className="space-y-4">
