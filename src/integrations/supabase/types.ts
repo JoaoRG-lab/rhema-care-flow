@@ -50,6 +50,54 @@ export type Database = {
         }
         Relationships: []
       }
+      contribution_comments: {
+        Row: {
+          content: string
+          contribution_id: string
+          created_at: string
+          id: string
+          is_edited: boolean
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          contribution_id: string
+          created_at?: string
+          id?: string
+          is_edited?: boolean
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          contribution_id?: string
+          created_at?: string
+          id?: string
+          is_edited?: boolean
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribution_comments_contribution_id_fkey"
+            columns: ["contribution_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_contributions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contribution_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "contribution_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contribution_votes: {
         Row: {
           contribution_id: string
@@ -235,6 +283,7 @@ export type Database = {
       knowledge_contributions: {
         Row: {
           category: Database["public"]["Enums"]["contribution_category"]
+          comment_count: number
           content: string
           created_at: string
           disease_area: string | null
@@ -253,6 +302,7 @@ export type Database = {
         }
         Insert: {
           category: Database["public"]["Enums"]["contribution_category"]
+          comment_count?: number
           content: string
           created_at?: string
           disease_area?: string | null
@@ -271,6 +321,7 @@ export type Database = {
         }
         Update: {
           category?: Database["public"]["Enums"]["contribution_category"]
+          comment_count?: number
           content?: string
           created_at?: string
           disease_area?: string | null
