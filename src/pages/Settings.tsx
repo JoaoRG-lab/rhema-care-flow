@@ -1,33 +1,52 @@
 import { Link } from 'react-router-dom';
- import { AppLayout } from '@/components/layout/AppLayout';
- import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
- import { Settings as SettingsIcon, Shield, BadgeCheck, ExternalLink, FileText } from 'lucide-react';
- import { VerifiedBadge, VerificationStatusBadge } from '@/components/ui/VerifiedBadge';
- 
- export default function Settings() {
-   const { user } = useAuth();
+import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe } from 'lucide-react';
+import { VerifiedBadge, VerificationStatusBadge } from '@/components/ui/VerifiedBadge';
+import { LanguageSelector } from '@/components/ui/language-selector';
+
+export default function Settings() {
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const { status: verificationStatusValue, tier, loading } = useVerificationStatus();
- 
-   return (
-     <AppLayout>
-       <div className="p-6 lg:p-8">
-         <h1 className="text-2xl font-bold flex items-center gap-2 mb-6">
-           <SettingsIcon className="h-6 w-6 text-primary" />
-           Settings
-         </h1>
-         <div className="max-w-2xl space-y-6">
-           <Card>
-             <CardHeader><CardTitle className="text-base">Account</CardTitle></CardHeader>
-             <CardContent>
-                <div className="flex items-center gap-3">
-                  <p className="text-sm text-muted-foreground">Email: {user?.email}</p>
-                  {tier && <VerifiedBadge tier={tier} size="sm" />}
-                </div>
-             </CardContent>
-           </Card>
+
+  return (
+    <AppLayout>
+      <div className="p-6 lg:p-8">
+        <h1 className="text-2xl font-bold flex items-center gap-2 mb-6">
+          <SettingsIcon className="h-6 w-6 text-primary" />
+          {t('settings.title')}
+        </h1>
+        <div className="max-w-2xl space-y-6">
+          <Card>
+            <CardHeader><CardTitle className="text-base">{t('settings.profile')}</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-muted-foreground">Email: {user?.email}</p>
+                {tier && <VerifiedBadge tier={tier} size="sm" />}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Language Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                {t('settings.language')}
+              </CardTitle>
+              <CardDescription>
+                Select your preferred language for the interface
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LanguageSelector variant="full" />
+            </CardContent>
+          </Card>
 
           {/* Verification Status Card */}
           <Card>
@@ -87,16 +106,21 @@ import { useVerificationStatus } from '@/hooks/useVerificationStatus';
             </CardContent>
           </Card>
 
-           <Card>
-             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4" />Privacy Notice</CardTitle></CardHeader>
-             <CardContent>
-               <p className="text-sm text-muted-foreground">
-                 RheumaFlow is an organizational tool, not a medical record system. Do not store patient identifiers such as names, CPF, phone numbers, or addresses.
-               </p>
-             </CardContent>
-           </Card>
-         </div>
-       </div>
-     </AppLayout>
-   );
- }
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                {t('settings.security')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                RheumaFlow is an organizational tool, not a medical record system. Do not store patient identifiers such as names, CPF, phone numbers, or addresses.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </AppLayout>
+  );
+}

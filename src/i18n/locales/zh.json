@@ -1,0 +1,235 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "search": "搜索",
+    "filter": "筛选",
+    "export": "导出",
+    "import": "导入",
+    "settings": "设置",
+    "logout": "退出登录",
+    "login": "登录",
+    "signup": "注册",
+    "submit": "提交",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "close": "关闭",
+    "confirm": "确认",
+    "yes": "是",
+    "no": "否",
+    "all": "全部",
+    "none": "无",
+    "more": "更多",
+    "less": "收起",
+    "viewAll": "查看全部",
+    "learnMore": "了解更多",
+    "getStarted": "开始使用",
+    "tryFree": "免费试用",
+    "contactUs": "联系我们"
+  },
+  "nav": {
+    "home": "首页",
+    "dashboard": "仪表盘",
+    "patients": "患者",
+    "scores": "临床评分",
+    "monitoring": "监测",
+    "infusions": "输液",
+    "calendar": "日历",
+    "tasks": "任务",
+    "focus": "专注",
+    "knowledge": "知识库",
+    "education": "教育",
+    "analytics": "分析",
+    "aiAssistant": "AI助手",
+    "blockchain": "区块链",
+    "settings": "设置"
+  },
+  "landing": {
+    "hero": {
+      "title": "通用健康系统",
+      "subtitle": "医疗智能的未来",
+      "description": "AI驱动的临床决策支持、区块链验证的质量指标，以及为现代医疗保健无缝集成的工作流程。",
+      "cta": "开始您的旅程",
+      "ctaSecondary": "观看演示"
+    },
+    "features": {
+      "title": "变革医疗服务交付",
+      "clinical": {
+        "title": "临床卓越",
+        "description": "基于证据的评分、验证的协议和实时决策支持。"
+      },
+      "ai": {
+        "title": "AI驱动洞察",
+        "description": "具有预测建模的智能患者数据分析。"
+      },
+      "blockchain": {
+        "title": "区块链验证",
+        "description": "不可变的质量指标和透明的价值链。"
+      },
+      "integration": {
+        "title": "无缝集成",
+        "description": "轻松连接现有系统和工作流程。"
+      }
+    },
+    "specialties": {
+      "title": "多专科平台",
+      "description": "内科亚专科的综合支持"
+    },
+    "cta": {
+      "title": "准备好转变您的实践了吗？",
+      "description": "加入全球医疗保健领导者，采用临床智能的未来。",
+      "button": "获取早期访问权限"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "欢迎回来",
+      "subtitle": "登录您的账户",
+      "email": "电子邮件",
+      "password": "密码",
+      "forgotPassword": "忘记密码？",
+      "noAccount": "没有账户？",
+      "signUp": "注册"
+    },
+    "signup": {
+      "title": "创建账户",
+      "subtitle": "开始您的健康之旅",
+      "fullName": "全名",
+      "email": "电子邮件",
+      "password": "密码",
+      "confirmPassword": "确认密码",
+      "hasAccount": "已有账户？",
+      "signIn": "登录",
+      "terms": "注册即表示您同意我们的服务条款和隐私政策。"
+    }
+  },
+  "dashboard": {
+    "welcome": "欢迎",
+    "overview": "概览",
+    "recentPatients": "最近患者",
+    "upcomingTasks": "即将到来的任务",
+    "quickActions": "快速操作",
+    "stats": {
+      "patients": "患者总数",
+      "appointments": "今日预约",
+      "pendingTasks": "待处理任务",
+      "infusions": "计划输液"
+    }
+  },
+  "patients": {
+    "title": "患者管理",
+    "addPatient": "添加患者",
+    "searchPlaceholder": "搜索患者...",
+    "noPatients": "未找到患者",
+    "details": {
+      "overview": "概览",
+      "visits": "就诊记录",
+      "scores": "评分",
+      "medications": "用药",
+      "notes": "备注"
+    },
+    "fields": {
+      "patientCode": "患者编码",
+      "diagnosis": "诊断",
+      "lastVisit": "上次就诊",
+      "nextFollowup": "下次随访",
+      "riskFlags": "风险警示"
+    }
+  },
+  "scores": {
+    "title": "临床评分",
+    "calculate": "计算评分",
+    "history": "评分历史",
+    "types": {
+      "das28": "DAS28 - 疾病活动度评分",
+      "cdai": "CDAI - 临床疾病活动指数",
+      "sdai": "SDAI - 简化疾病活动指数",
+      "haq": "HAQ-DI - 健康评估问卷",
+      "basdai": "BASDAI - 强直性脊柱炎指数",
+      "sledai": "SLEDAI - 系统性红斑狼疮活动指数"
+    },
+    "results": {
+      "remission": "缓解",
+      "low": "低活动度",
+      "moderate": "中等活动度",
+      "high": "高活动度"
+    }
+  },
+  "knowledge": {
+    "title": "知识库",
+    "search": "搜索文章、指南...",
+    "categories": {
+      "guidelines": "临床指南",
+      "articles": "文章",
+      "protocols": "协议",
+      "education": "患者教育"
+    },
+    "ai": {
+      "title": "AI研究引擎",
+      "description": "使用AI生成和验证医学内容",
+      "generate": "生成文章",
+      "verify": "验证内容"
+    }
+  },
+  "ai": {
+    "assistant": {
+      "title": "AI临床助手",
+      "placeholder": "向我询问关于风湿病学的任何问题...",
+      "thinking": "思考中...",
+      "sources": "来源"
+    },
+    "agent": {
+      "title": "AI网站代理",
+      "description": "持续改进UHS健康操作系统",
+      "running": "正在分析...",
+      "runNow": "立即运行",
+      "lastRun": "上次运行"
+    }
+  },
+  "blockchain": {
+    "title": "区块链注册",
+    "urv": {
+      "title": "URV健康链",
+      "description": "链上证明注册与链式评分更新",
+      "score": "URV评分",
+      "confidence": "置信度"
+    },
+    "wallet": {
+      "connect": "连接钱包",
+      "connected": "钱包已连接",
+      "notConnected": "钱包未连接"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "profile": "个人资料",
+    "preferences": "偏好设置",
+    "notifications": "通知",
+    "security": "安全",
+    "language": "语言",
+    "theme": "主题",
+    "themes": {
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    }
+  },
+  "errors": {
+    "generic": "出现问题。请重试。",
+    "network": "网络错误。请检查您的连接。",
+    "unauthorized": "您无权执行此操作。",
+    "notFound": "未找到请求的资源。",
+    "validation": "请检查您的输入并重试。"
+  },
+  "success": {
+    "saved": "更改已成功保存。",
+    "created": "创建成功。",
+    "deleted": "删除成功。",
+    "updated": "更新成功。"
+  }
+}

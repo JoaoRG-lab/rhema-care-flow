@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { LanguageSelector } from '@/components/ui/language-selector';
 import { UHSLogo, UHSLogoMark } from '@/components/brand/UHSLogo';
 import { TrustBadge, TrustBadgeGroup, PrivacyPromise } from '@/components/brand/TrustBadges';
 import { FeatureCard, FeatureGrid, StatHighlight } from '@/components/brand/FeatureCard';
@@ -75,6 +77,7 @@ const stats = [
 ];
 
 export default function Landing() {
+  const { t } = useTranslation();
   const [showAlphaInvite, setShowAlphaInvite] = useState(false);
 
   return (
@@ -84,6 +87,7 @@ export default function Landing() {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <UHSLogo size="sm" />
           <div className="flex items-center gap-4">
+            <LanguageSelector variant="minimal" />
             <Link to="/reumato">
               <Button variant="ghost" size="sm" className="gap-1 text-primary">
                 <Activity className="h-4 w-4" />
@@ -91,11 +95,11 @@ export default function Landing() {
               </Button>
             </Link>
             <Link to="/login">
-              <Button variant="ghost" size="sm">Sign In</Button>
+              <Button variant="ghost" size="sm">{t('common.login')}</Button>
             </Link>
             <Link to="/signup">
               <Button size="sm" className="gap-2 bg-gradient-to-r from-primary to-[hsl(165_60%_48%)] hover:opacity-90">
-                Get Started <ArrowRight className="h-4 w-4" />
+                {t('common.getStarted')} <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -119,15 +123,20 @@ export default function Landing() {
 
             {/* Main headline */}
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6 leading-tight">
-              The{' '}
-              <span className="gradient-text-organic">Universal Health</span>
-              <br />
-              Operating System
+              {t('landing.hero.title').includes('Universal') ? (
+                <>
+                  The{' '}
+                  <span className="gradient-text-organic">Universal Health</span>
+                  <br />
+                  Operating System
+                </>
+              ) : (
+                <span className="gradient-text-organic">{t('landing.hero.title')}</span>
+              )}
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
-              Privacy-preserving clinical workflows with blockchain-verified audit trails. 
-              Your patients' data sovereignty, protected by cryptographic proofs on Solana.
+              {t('landing.hero.description')}
             </p>
 
             {/* Big Knowledge Search */}
