@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,8 @@ import {
   X,
   MessageCircle,
   Bot,
+  Globe,
+  ArrowLeft,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useKnowledgeContributions, ContributionCategory, KnowledgeContribution } from '@/hooks/useKnowledgeContributions';
@@ -53,6 +55,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { SPECIALTIES, getSpecialtyById, type SpecialtyConfig } from '@/config/specialties';
 
 const CATEGORY_CONFIG: Record<ContributionCategory, { label: string; icon: typeof Lightbulb; color: string }> = {
   clinical_pearl: { label: 'Clinical Pearl', icon: Lightbulb, color: 'text-warning' },
@@ -68,6 +71,10 @@ type SortOption = 'popular' | 'recent' | 'oldest';
 export default function KnowledgeLibrary() {
   const isMobile = useIsMobile();
   const { tier } = useVerificationStatus();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const specialtyParam = searchParams.get('specialty');
+  const currentSpecialty = specialtyParam ? getSpecialtyById(specialtyParam) : null;
+  
   const { 
     contributions, 
     loading, 
@@ -81,6 +88,18 @@ export default function KnowledgeLibrary() {
   const [sortBy, setSortBy] = useState<SortOption>('popular');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  
+  // Get disease areas based on specialty or default
+  const diseaseAreas = useMemo(() => {
+    if (currentSpecialty) {
+      return ['All', ...currentSpecialty.conditions.slice(0, 10)];
+    }
+    return DISEASE_AREAS;
+  }, [currentSpecialty]);
+  
+  const clearSpecialtyFilter = () => {
+    setSearchParams({});
+  };
 
   // Pull-to-refresh
   const handleRefresh = useCallback(async () => {
@@ -187,9 +206,12 @@ export default function KnowledgeLibrary() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {DISEASE_AREAS.map(area => (
-              <SelectItem key={area} value={area}>{area}</SelectItem>
-            ))}
+            {diseaseAreas.map(area => {
+              const areaName = typeof area === 'string' ? area : area.name;
+              return (
+                <SelectItem key={areaName} value={areaName}>{areaName}</SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -354,15 +376,49 @@ export default function KnowledgeLibrary() {
           shouldTrigger={shouldTrigger}
         />
 
+        {/* Specialty Banner */}
+        {currentSpecialty && (
+          <div 
+            className="mb-6 p-4 rounded-xl border"
+            style={{ 
+              background: `linear-gradient(135deg, ${currentSpecialty.color}10, ${currentSpecialty.color}05)`,
+              borderColor: `${currentSpecialty.color}30`,
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="h-10 w-10 rounded-lg flex items-center justify-center"
+                  style={{ background: `${currentSpecialty.color}20` }}
+                >
+                  <currentSpecialty.icon className="h-5 w-5" style={{ color: currentSpecialty.color }} />
+                </div>
+                <div>
+                  <h2 className="font-semibold" style={{ color: currentSpecialty.color }}>
+                    {currentSpecialty.namePt}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">{currentSpecialty.society}</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={clearSpecialtyFilter} className="gap-1">
+                <Globe className="h-4 w-4" />
+                Ver Todas Especialidades
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
               <BookOpen className="h-7 w-7 text-primary" />
-              Knowledge Library
+              {currentSpecialty ? `Biblioteca ${currentSpecialty.namePt}` : 'Knowledge Library'}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Clinical insights shared by the rheumatology community
+              {currentSpecialty 
+                ? `Insights clínicos compartilhados pela comunidade de ${currentSpecialty.namePt.toLowerCase()}`
+                : 'Clinical insights shared by the medical community'}
             </p>
           </div>
           <Link to="/ai-research">
