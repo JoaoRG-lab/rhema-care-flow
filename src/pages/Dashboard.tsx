@@ -20,6 +20,7 @@ import { SessionList } from '@/components/consultations/SessionList';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
 import { useDailyCompliment } from '@/hooks/useDailyCompliment';
+import { AISiteAgentWidget } from '@/components/ai/AISiteAgentWidget';
  import {
    DIAGNOSIS_OPTIONS,
  } from '@/config/clinical';
@@ -399,6 +400,9 @@ export default function Dashboard() {
 
             {/* Contribute Knowledge */}
             <ContributeKnowledge />
+
+            {/* AI Site Agent */}
+            <AISiteAgentWidget />
 
             {/* Patient Consultation Sessions */}
             <SessionList compact />
