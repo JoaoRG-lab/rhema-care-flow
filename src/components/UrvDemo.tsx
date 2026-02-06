@@ -1,0 +1,531 @@
+// src/components/UrvDemo.tsx
+// IMPORTANTE: Depois do `anchor deploy`, troque o PROGRAM_ID abaixo pelo seu ProgramId real.
+
+import { useMemo, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { Program, AnchorProvider } from "@coral-xyz/anchor";
+import { PublicKey, SystemProgram, Connection } from "@solana/web3.js";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Slider } from "@/components/ui/slider";
+import {
+  Shield,
+  Settings,
+  FileCheck,
+  TrendingUp,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  ExternalLink,
+  Wallet,
+} from "lucide-react";
+import { toast } from "sonner";
+import { canonicalize, sha256 } from "@/lib/crypto";
+import { CLUSTER_URL, getExplorerUrl, formatSignature } from "@/lib/solana";
+
+import idl from "@/idl/urv_privacy.json";
+
+// TODO: Troque pelo seu ProgramId real após `anchor deploy`
+const PROGRAM_ID = new PublicKey("11111111111111111111111111111111");
+const SCHEMA_VERSION = 1;
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+function u8ToArr32(u8: Uint8Array): number[] {
+  if (u8.length !== 32) throw new Error("Hash must be 32 bytes.");
+  return Array.from(u8);
+}
+
+function u32ToLeBytes(n: number): Uint8Array {
+  const out = new Uint8Array(4);
+  out[0] = n & 0xff;
+  out[1] = (n >> 8) & 0xff;
+  out[2] = (n >> 16) & 0xff;
+  out[3] = (n >> 24) & 0xff;
+  return out;
+}
+
+function u16ToLeBytes(n: number): Uint8Array {
+  const out = new Uint8Array(2);
+  out[0] = n & 0xff;
+  out[1] = (n >> 8) & 0xff;
+  return out;
+}
+
+function deriveStatePda(adminPk: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("state"), adminPk.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+function deriveRecordPda(ownerPk: PublicKey, dataHash: Uint8Array): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("rec"), ownerPk.toBuffer(), Buffer.from(dataHash)],
+    PROGRAM_ID
+  );
+}
+
+function deriveUpdatePda(statePda: PublicKey, newScoreHash: Uint8Array): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("upd"), statePda.toBuffer(), Buffer.from(newScoreHash)],
+    PROGRAM_ID
+  );
+}
+
+interface TransactionStatus {
+  type: "success" | "error" | "pending";
+  message: string;
+  signature?: string;
+}
+
+export default function UrvDemo() {
+  const wallet = useWallet();
+  const { publicKey, signTransaction, signAllTransactions, connected } = wallet;
+
+  // Form state
+  const [uri, setUri] = useState("ipfs://example-ciphertext-uri");
+  const [score, setScore] = useState<number[]>([72]);
+  const [conf, setConf] = useState<number[]>([0.91]);
+
+  // Transaction state
+  const [status, setStatus] = useState<TransactionStatus | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Create provider and program
+  const program = useMemo(() => {
+    if (!publicKey || !signTransaction || !signAllTransactions) return null;
+    
+    // Check if IDL is placeholder
+    if (!idl || Object.keys(idl).length <= 1) {
+      console.warn("IDL is placeholder - paste real IDL after anchor build");
+      return null;
+    }
+
+    try {
+      const connection = new Connection(CLUSTER_URL, "confirmed");
+      const provider = new AnchorProvider(
+        connection,
+        { publicKey, signTransaction, signAllTransactions } as any,
+        { commitment: "confirmed" }
+      );
+      return new Program(idl as any, provider);
+    } catch (e) {
+      console.error("Failed to create program:", e);
+      return null;
+    }
+  }, [publicKey, signTransaction, signAllTransactions]);
+
+  // ============================================================================
+  // Init State
+  // ============================================================================
+  async function initState() {
+    if (!program || !publicKey) {
+      toast.error("Conecte a wallet primeiro");
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatus({ type: "pending", message: "Inicializando state (init_state)..." });
+
+    try {
+      const oraclePk = publicKey; // MVP: wallet é oracle
+      const [statePda] = deriveStatePda(publicKey);
+
+      console.log("Initializing state:");
+      console.log("  Admin:", publicKey.toBase58());
+      console.log("  Oracle:", oraclePk.toBase58());
+      console.log("  State PDA:", statePda.toBase58());
+
+      const tx = await program.methods
+        .initState()
+        .accounts({
+          admin: publicKey,
+          oracle: oraclePk,
+          state: statePda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      setStatus({
+        type: "success",
+        message: `State inicializado ✅ PDA: ${statePda.toBase58().slice(0, 16)}...`,
+        signature: tx,
+      });
+      toast.success("State inicializado on-chain");
+    } catch (e: any) {
+      console.error("init_state error:", e);
+      setStatus({
+        type: "error",
+        message: `Erro init_state: ${e?.message ?? String(e)}`,
+      });
+      toast.error("Falha ao inicializar state");
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  // ============================================================================
+  // Create Record
+  // ============================================================================
+  async function createRecord() {
+    if (!program || !publicKey) {
+      toast.error("Conecte a wallet primeiro");
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatus({ type: "pending", message: "Criando record (create_record)..." });
+
+    try {
+      // Exemplo de payload - substitua por dados reais estruturados
+      const visitPayload = {
+        provider: { provider_id: "UUID", type: "clinic", location: "BR-SP" },
+        service: { service_id: "UUID", service_type: "consult", timestamp: new Date().toISOString() },
+        results: { anchors: { ra_acr: "ACR50", das28: 3.1, cdai: 7 } },
+        process: { protocol_adherence: 0.9, continuity: 0.85, safety_events: 0, documentation_quality: 0.9 },
+        infrastructure: { equipment_score: 0.8, digitalization_score: 0.9, ambience_score: 0.85, accessibility_score: 0.8 },
+        evolution: { education_score: 0.9, innovation_score: 0.7, teaching_score: 0.6, research_score: 0.5 },
+        experience: { crm_score: 0.88, consistency_score: 0.9 },
+      };
+
+      const canon = canonicalize(visitPayload);
+      const bytes = new TextEncoder().encode(canon);
+      const dataHash = await sha256(bytes);
+
+      const [statePda] = deriveStatePda(publicKey);
+      const [recordPda] = deriveRecordPda(publicKey, dataHash);
+
+      console.log("Creating record:");
+      console.log("  Data hash:", Array.from(dataHash).map(b => b.toString(16).padStart(2, "0")).join(""));
+      console.log("  Record PDA:", recordPda.toBase58());
+
+      const tx = await program.methods
+        .createRecord(u8ToArr32(dataHash), uri, SCHEMA_VERSION)
+        .accounts({
+          owner: publicKey,
+          state: statePda,
+          record: recordPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      setStatus({
+        type: "success",
+        message: `Record criado ✅ PDA: ${recordPda.toBase58().slice(0, 16)}...`,
+        signature: tx,
+      });
+      toast.success("Record criado on-chain");
+    } catch (e: any) {
+      console.error("create_record error:", e);
+      setStatus({
+        type: "error",
+        message: `Erro create_record: ${e?.message ?? String(e)}`,
+      });
+      toast.error("Falha ao criar record");
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  // ============================================================================
+  // Post Score Update (REAL CHAINING)
+  // ============================================================================
+  async function postScoreUpdate() {
+    if (!program || !publicKey) {
+      toast.error("Conecte a wallet primeiro");
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatus({ type: "pending", message: "Lendo state e postando score update (encadeado)..." });
+
+    try {
+      const [statePda] = deriveStatePda(publicKey);
+
+      // 1) Fetch state on-chain para pegar lastScoreHash
+      let prevHashBytes: Uint8Array;
+      try {
+        const stateAcc: any = await (program.account as any).state.fetch(statePda);
+        prevHashBytes = stateAcc.lastScoreHash
+          ? Uint8Array.from(stateAcc.lastScoreHash)
+          : new Uint8Array(32);
+        console.log("Fetched state, lastScoreHash:",
+          prevHashBytes.every(b => b === 0) ? "(zero - first update)" :
+          Array.from(prevHashBytes).map(b => b.toString(16).padStart(2, "0")).join(""));
+      } catch {
+        prevHashBytes = new Uint8Array(32);
+        console.log("State not found, using zero hash");
+      }
+
+      // 2) Build features object and hash it
+      const features = {
+        results: { R: 70 },
+        process: { P: 80, protocol: 0.9, safety: 1.0, continuity: 0.85 },
+        infrastructure: { I: 75, equipment: 0.8, ambience: 0.85, digital: 0.9 },
+        evolution: { E: 65, education: 0.9, innovation: 0.7 },
+        experience: { X: 78, crm: 0.88, consistency: 0.9 },
+      };
+      const featCanon = canonicalize(features);
+      const featBytes = new TextEncoder().encode(featCanon);
+      const featuresHash = await sha256(featBytes);
+
+      // 3) Record data hash (MVP: zero, produção: use o hash real do record)
+      const recordDataHash = new Uint8Array(32);
+
+      // 4) Score e confidence
+      const scoreU32 = Math.round(score[0] * 100); // 0-10000
+      const confBps = Math.round(conf[0] * 10000); // 0-10000
+
+      // 5) new_score_hash = sha256(prevHash + featuresHash + scoreU32LE + confBpsLE)
+      const toHash = new Uint8Array([
+        ...prevHashBytes,
+        ...featuresHash,
+        ...u32ToLeBytes(scoreU32),
+        ...u16ToLeBytes(confBps),
+      ]);
+      const newHash = await sha256(toHash);
+
+      // 6) Derive update PDA: ["upd", statePda, newHash]
+      const [updatePda] = deriveUpdatePda(statePda, newHash);
+
+      console.log("Posting score update:");
+      console.log("  Score:", score[0], "-> u32:", scoreU32);
+      console.log("  Confidence:", conf[0], "-> bps:", confBps);
+      console.log("  Features hash:", Array.from(featuresHash).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16) + "...");
+      console.log("  Prev hash:", Array.from(prevHashBytes).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16) + "...");
+      console.log("  New hash:", Array.from(newHash).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16) + "...");
+      console.log("  Update PDA:", updatePda.toBase58());
+
+      // 7) RPC call
+      const tx = await program.methods
+        .postScoreUpdate(
+          u8ToArr32(recordDataHash),
+          u8ToArr32(featuresHash),
+          scoreU32,
+          confBps,
+          u8ToArr32(prevHashBytes),
+          u8ToArr32(newHash)
+        )
+        .accounts({
+          oracle: publicKey, // MVP: wallet é oracle
+          state: statePda,
+          update: updatePda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      setStatus({
+        type: "success",
+        message: `Score update ✅ URV=${score[0].toFixed(2)} conf=${conf[0].toFixed(2)}`,
+        signature: tx,
+      });
+      toast.success("Score update gravado on-chain");
+    } catch (e: any) {
+      console.error("post_score_update error:", e);
+      setStatus({
+        type: "error",
+        message: `Erro post_score_update: ${e?.message ?? String(e)}`,
+      });
+      toast.error("Falha ao postar score update");
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  const isProgramReady = !!program;
+
+  return (
+    <div className="space-y-6 p-6 max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            URV Health Chain (Devnet MVP)
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Registro on-chain com score updates encadeados
+          </p>
+        </div>
+        <WalletMultiButton className="!bg-primary hover:!bg-primary/90 !h-9 !text-sm !rounded-md" />
+      </div>
+
+      {/* Connection Status */}
+      <Alert variant={connected ? "default" : "destructive"}>
+        <Wallet className="h-4 w-4" />
+        <AlertTitle>{connected ? "Wallet Conectada" : "Wallet Não Conectada"}</AlertTitle>
+        <AlertDescription>
+          {connected ? (
+            <span className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono text-xs">
+                {publicKey?.toBase58().slice(0, 8)}...{publicKey?.toBase58().slice(-8)}
+              </Badge>
+              <Badge variant="secondary">Devnet</Badge>
+              {!isProgramReady && (
+                <Badge variant="destructive">IDL não carregado</Badge>
+              )}
+            </span>
+          ) : (
+            "Conecte sua wallet Phantom para interagir com a blockchain"
+          )}
+        </AlertDescription>
+      </Alert>
+
+      {/* URI Input */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">URI do Ciphertext (off-chain)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Input
+            value={uri}
+            onChange={(e) => setUri(e.target.value)}
+            placeholder="ipfs://... ou https://..."
+            className="font-mono text-sm"
+            disabled={!connected || isProcessing}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <div className="grid grid-cols-3 gap-4">
+        <Button
+          onClick={initState}
+          disabled={!connected || isProcessing || !isProgramReady}
+          variant="outline"
+          className="w-full"
+        >
+          {isProcessing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Settings className="h-4 w-4 mr-2" />
+          )}
+          Init State
+        </Button>
+
+        <Button
+          onClick={createRecord}
+          disabled={!connected || isProcessing || !isProgramReady}
+          variant="outline"
+          className="w-full"
+        >
+          {isProcessing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileCheck className="h-4 w-4 mr-2" />
+          )}
+          Create Record
+        </Button>
+
+        <Button
+          onClick={postScoreUpdate}
+          disabled={!connected || isProcessing || !isProgramReady}
+          className="w-full"
+        >
+          {isProcessing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <TrendingUp className="h-4 w-4 mr-2" />
+          )}
+          Post Score Update
+        </Button>
+      </div>
+
+      {/* Score and Confidence Sliders */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">URV Score (0-100)</CardTitle>
+              <Badge variant="outline" className="font-mono">{score[0]}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Slider
+              value={score}
+              onValueChange={setScore}
+              min={0}
+              max={100}
+              step={0.1}
+              disabled={!connected || isProcessing}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Confidence (0-1)</CardTitle>
+              <Badge variant="outline" className="font-mono">{conf[0].toFixed(2)}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Slider
+              value={conf}
+              onValueChange={setConf}
+              min={0}
+              max={1}
+              step={0.01}
+              disabled={!connected || isProcessing}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Transaction Status */}
+      {status && (
+        <Card className={
+          status.type === "success" ? "border-success" :
+          status.type === "error" ? "border-destructive" :
+          "border-warning"
+        }>
+          <CardContent className="pt-4">
+            <div className="flex items-start gap-3">
+              {status.type === "success" && <CheckCircle className="h-5 w-5 text-success shrink-0" />}
+              {status.type === "error" && <AlertCircle className="h-5 w-5 text-destructive shrink-0" />}
+              {status.type === "pending" && <Loader2 className="h-5 w-5 animate-spin shrink-0" />}
+
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{status.message}</p>
+                {status.signature && (
+                  <a
+                    href={getExplorerUrl(status.signature)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-1 mt-1"
+                  >
+                    <span className="font-mono">{formatSignature(status.signature)}</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* MVP Notice */}
+      <Alert>
+        <Shield className="h-4 w-4" />
+        <AlertTitle>Design Privacy-Preserving</AlertTitle>
+        <AlertDescription className="text-sm">
+          <p className="mb-2">
+            <strong>MVP:</strong> Wallet atua como oracle. <strong>Produção:</strong> Oracle = backend signer + engine probabilístico + política de emissão.
+          </p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Plaintext nunca é gravado on-chain</li>
+            <li>Apenas hashes (commitments), scores, confidence e chain links são gravados</li>
+            <li>new_score_hash = sha256(prev_hash + features_hash + score_u32_LE + conf_bps_LE)</li>
+          </ul>
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+}
