@@ -1,284 +1,60 @@
-import { Link } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { UHSLogo } from '@/components/brand/UHSLogo';
 import { TrustBadge } from '@/components/brand/TrustBadges';
 import {
-  Heart,
-  Brain,
-  Bone,
-  Stethoscope,
-  Droplets,
-  Activity,
-  Shield,
-  Pill,
-  Baby,
-  Microscope,
-  Wind,
-  Syringe,
-  Zap,
-  Moon,
-  Apple,
-  ArrowRight,
   Search,
+  ArrowRight,
   Sparkles,
-  Users,
+  GraduationCap,
+  ChevronRight,
 } from 'lucide-react';
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-
-// Especialidades que exigem pré-requisito de Clínica Médica no Brasil
-const SPECIALTIES = [
-  {
-    id: 'reumatologia',
-    name: 'Reumatologia',
-    nameEn: 'Rheumatology',
-    icon: Bone,
-    color: 'hsl(168 55% 42%)',
-    bgColor: 'bg-[hsl(168_55%_42%)]/10',
-    borderColor: 'border-[hsl(168_55%_42%)]/30',
-    description: 'Doenças autoimunes, artrites, lúpus, vasculites e osteoporose.',
-    societies: ['SBR', 'ACR', 'EULAR'],
-    conditions: ['Artrite Reumatoide', 'Lúpus', 'Espondiloartrites', 'Vasculites'],
-    href: '/reumato',
-    active: true,
-  },
-  {
-    id: 'cardiologia',
-    name: 'Cardiologia',
-    nameEn: 'Cardiology',
-    icon: Heart,
-    color: 'hsl(0 70% 50%)',
-    bgColor: 'bg-[hsl(0_70%_50%)]/10',
-    borderColor: 'border-[hsl(0_70%_50%)]/30',
-    description: 'Insuficiência cardíaca, arritmias, coronariopatias e hipertensão.',
-    societies: ['SBC', 'ACC', 'ESC'],
-    conditions: ['ICC', 'Fibrilação Atrial', 'DAC', 'Hipertensão'],
-    href: '/specialty/cardiologia',
-    active: false,
-  },
-  {
-    id: 'gastroenterologia',
-    name: 'Gastroenterologia',
-    nameEn: 'Gastroenterology',
-    icon: Activity,
-    color: 'hsl(35 85% 52%)',
-    bgColor: 'bg-[hsl(35_85%_52%)]/10',
-    borderColor: 'border-[hsl(35_85%_52%)]/30',
-    description: 'Doenças do aparelho digestivo, fígado, pâncreas e vias biliares.',
-    societies: ['FBG', 'AGA', 'ESGE'],
-    conditions: ['DII', 'DRGE', 'Hepatites', 'Cirrose'],
-    href: '/specialty/gastroenterologia',
-    active: false,
-  },
-  {
-    id: 'pneumologia',
-    name: 'Pneumologia',
-    nameEn: 'Pulmonology',
-    icon: Wind,
-    color: 'hsl(200 70% 50%)',
-    bgColor: 'bg-[hsl(200_70%_50%)]/10',
-    borderColor: 'border-[hsl(200_70%_50%)]/30',
-    description: 'Asma, DPOC, pneumonias, fibrose pulmonar e apneia do sono.',
-    societies: ['SBPT', 'ATS', 'ERS'],
-    conditions: ['Asma', 'DPOC', 'Fibrose Pulmonar', 'Tuberculose'],
-    href: '/specialty/pneumologia',
-    active: false,
-  },
-  {
-    id: 'nefrologia',
-    name: 'Nefrologia',
-    nameEn: 'Nephrology',
-    icon: Droplets,
-    color: 'hsl(280 55% 55%)',
-    bgColor: 'bg-[hsl(280_55%_55%)]/10',
-    borderColor: 'border-[hsl(280_55%_55%)]/30',
-    description: 'Doença renal crônica, diálise, transplante renal e glomerulonefrites.',
-    societies: ['SBN', 'ASN', 'ERA-EDTA'],
-    conditions: ['DRC', 'Glomerulonefrites', 'IRA', 'Transplante Renal'],
-    href: '/specialty/nefrologia',
-    active: false,
-  },
-  {
-    id: 'endocrinologia',
-    name: 'Endocrinologia',
-    nameEn: 'Endocrinology',
-    icon: Zap,
-    color: 'hsl(45 90% 48%)',
-    bgColor: 'bg-[hsl(45_90%_48%)]/10',
-    borderColor: 'border-[hsl(45_90%_48%)]/30',
-    description: 'Diabetes, tireoide, obesidade, osteoporose e distúrbios hormonais.',
-    societies: ['SBEM', 'Endocrine Society', 'ESE'],
-    conditions: ['Diabetes', 'Tireoide', 'Obesidade', 'Suprarrenal'],
-    href: '/specialty/endocrinologia',
-    active: false,
-  },
-  {
-    id: 'hematologia',
-    name: 'Hematologia',
-    nameEn: 'Hematology',
-    icon: Droplets,
-    color: 'hsl(350 70% 45%)',
-    bgColor: 'bg-[hsl(350_70%_45%)]/10',
-    borderColor: 'border-[hsl(350_70%_45%)]/30',
-    description: 'Anemias, leucemias, linfomas, coagulopatias e transplante de medula.',
-    societies: ['ABHH', 'ASH', 'EHA'],
-    conditions: ['Leucemias', 'Linfomas', 'Anemias', 'Coagulopatias'],
-    href: '/specialty/hematologia',
-    active: false,
-  },
-  {
-    id: 'oncologia',
-    name: 'Oncologia Clínica',
-    nameEn: 'Medical Oncology',
-    icon: Microscope,
-    color: 'hsl(270 60% 50%)',
-    bgColor: 'bg-[hsl(270_60%_50%)]/10',
-    borderColor: 'border-[hsl(270_60%_50%)]/30',
-    description: 'Tratamento sistêmico de tumores sólidos e neoplasias.',
-    societies: ['SBOC', 'ASCO', 'ESMO'],
-    conditions: ['Mama', 'Pulmão', 'Colorretal', 'Imunoterapia'],
-    href: '/specialty/oncologia',
-    active: false,
-  },
-  {
-    id: 'geriatria',
-    name: 'Geriatria',
-    nameEn: 'Geriatrics',
-    icon: Users,
-    color: 'hsl(180 50% 45%)',
-    bgColor: 'bg-[hsl(180_50%_45%)]/10',
-    borderColor: 'border-[hsl(180_50%_45%)]/30',
-    description: 'Saúde do idoso, fragilidade, demências e polifarmácia.',
-    societies: ['SBGG', 'AGS', 'EUGMS'],
-    conditions: ['Demências', 'Fragilidade', 'Quedas', 'Polifarmácia'],
-    href: '/specialty/geriatria',
-    active: false,
-  },
-  {
-    id: 'infectologia',
-    name: 'Infectologia',
-    nameEn: 'Infectious Diseases',
-    icon: Shield,
-    color: 'hsl(140 60% 40%)',
-    bgColor: 'bg-[hsl(140_60%_40%)]/10',
-    borderColor: 'border-[hsl(140_60%_40%)]/30',
-    description: 'HIV/AIDS, hepatites virais, infecções hospitalares e antibioticoterapia.',
-    societies: ['SBI', 'IDSA', 'ESCMID'],
-    conditions: ['HIV/AIDS', 'Hepatites', 'Sepse', 'Tuberculose'],
-    href: '/specialty/infectologia',
-    active: false,
-  },
-  {
-    id: 'neurologia',
-    name: 'Neurologia',
-    nameEn: 'Neurology',
-    icon: Brain,
-    color: 'hsl(220 70% 55%)',
-    bgColor: 'bg-[hsl(220_70%_55%)]/10',
-    borderColor: 'border-[hsl(220_70%_55%)]/30',
-    description: 'AVC, epilepsia, esclerose múltipla, Parkinson e cefaléias.',
-    societies: ['ABN', 'AAN', 'EAN'],
-    conditions: ['AVC', 'Epilepsia', 'Esclerose Múltipla', 'Parkinson'],
-    href: '/specialty/neurologia',
-    active: false,
-  },
-  {
-    id: 'dermatologia',
-    name: 'Dermatologia',
-    nameEn: 'Dermatology',
-    icon: Activity,
-    color: 'hsl(320 50% 55%)',
-    bgColor: 'bg-[hsl(320_50%_55%)]/10',
-    borderColor: 'border-[hsl(320_50%_55%)]/30',
-    description: 'Psoríase, dermatite atópica, melanoma e doenças autoimunes cutâneas.',
-    societies: ['SBD', 'AAD', 'EADV'],
-    conditions: ['Psoríase', 'Dermatite Atópica', 'Melanoma', 'Lupus Cutâneo'],
-    href: '/specialty/dermatologia',
-    active: false,
-  },
-  {
-    id: 'alergia',
-    name: 'Alergia e Imunologia',
-    nameEn: 'Allergy & Immunology',
-    icon: Shield,
-    color: 'hsl(30 80% 55%)',
-    bgColor: 'bg-[hsl(30_80%_55%)]/10',
-    borderColor: 'border-[hsl(30_80%_55%)]/30',
-    description: 'Rinite, asma alérgica, urticária, anafilaxia e imunodeficiências.',
-    societies: ['ASBAI', 'AAAAI', 'EAACI'],
-    conditions: ['Rinite', 'Urticária', 'Anafilaxia', 'Imunodeficiências'],
-    href: '/specialty/alergia',
-    active: false,
-  },
-  {
-    id: 'nutrologia',
-    name: 'Nutrologia',
-    nameEn: 'Nutrology',
-    icon: Apple,
-    color: 'hsl(120 50% 45%)',
-    bgColor: 'bg-[hsl(120_50%_45%)]/10',
-    borderColor: 'border-[hsl(120_50%_45%)]/30',
-    description: 'Terapia nutricional, desnutrição, obesidade e suporte nutricional.',
-    societies: ['ABRAN', 'ASPEN', 'ESPEN'],
-    conditions: ['Desnutrição', 'Obesidade', 'Suporte Enteral', 'Suporte Parenteral'],
-    href: '/specialty/nutrologia',
-    active: false,
-  },
-  {
-    id: 'intensiva',
-    name: 'Medicina Intensiva',
-    nameEn: 'Critical Care',
-    icon: Activity,
-    color: 'hsl(0 80% 45%)',
-    bgColor: 'bg-[hsl(0_80%_45%)]/10',
-    borderColor: 'border-[hsl(0_80%_45%)]/30',
-    description: 'Sepse, SDRA, choque, ventilação mecânica e cuidados críticos.',
-    societies: ['AMIB', 'SCCM', 'ESICM'],
-    conditions: ['Sepse', 'SDRA', 'Choque', 'VM'],
-    href: '/specialty/intensiva',
-    active: false,
-  },
-  {
-    id: 'sono',
-    name: 'Medicina do Sono',
-    nameEn: 'Sleep Medicine',
-    icon: Moon,
-    color: 'hsl(250 50% 50%)',
-    bgColor: 'bg-[hsl(250_50%_50%)]/10',
-    borderColor: 'border-[hsl(250_50%_50%)]/30',
-    description: 'Apneia obstrutiva, insônia, narcolepsia e distúrbios do sono.',
-    societies: ['ABS', 'AASM', 'ESRS'],
-    conditions: ['SAOS', 'Insônia', 'Narcolepsia', 'SPI'],
-    href: '/specialty/sono',
-    active: false,
-  },
-  {
-    id: 'clinica-medica',
-    name: 'Clínica Médica',
-    nameEn: 'Internal Medicine',
-    icon: Stethoscope,
-    color: 'hsl(210 60% 50%)',
-    bgColor: 'bg-[hsl(210_60%_50%)]/10',
-    borderColor: 'border-[hsl(210_60%_50%)]/30',
-    description: 'Base da medicina interna, diagnóstico diferencial e manejo clínico.',
-    societies: ['SBCM', 'ACP', 'EFIM'],
-    conditions: ['Diagnóstico', 'Manejo Clínico', 'Medicina Hospitalar', 'Ambulatório'],
-    href: '/specialty/clinica-medica',
-    active: false,
-  },
-];
+import { 
+  SPECIALTIES, 
+  getSpecialtyById, 
+  getActiveSpecialties, 
+  getInactiveSpecialties,
+  ACTIVE_SPECIALTIES,
+} from '@/config/specialties';
+import { SpecialtyPortalTemplate } from '@/components/specialty/SpecialtyPortalTemplate';
 
 export default function SpecialtyPortal() {
+  const { specialtyId } = useParams<{ specialtyId?: string }>();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredSpecialties = SPECIALTIES.filter(
-    (s) =>
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.conditions.some((c) => c.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Filter specialties based on search
+  const filteredSpecialties = useMemo(() => {
+    if (!searchQuery.trim()) return SPECIALTIES;
+    
+    const query = searchQuery.toLowerCase();
+    return SPECIALTIES.filter(s => 
+      s.name.toLowerCase().includes(query) ||
+      s.namePt.toLowerCase().includes(query) ||
+      s.description.toLowerCase().includes(query) ||
+      s.descriptionPt.toLowerCase().includes(query) ||
+      s.conditions.some(c => c.name.toLowerCase().includes(query)) ||
+      s.diseaseAreas.some(d => d.toLowerCase().includes(query))
+    );
+  }, [searchQuery]);
+
+  const activeSpecialties = filteredSpecialties.filter(s => s.isActive);
+  const inactiveSpecialties = filteredSpecialties.filter(s => !s.isActive);
+
+  // If we have a specialty ID, show that specialty's portal
+  if (specialtyId) {
+    const specialty = getSpecialtyById(specialtyId);
+    
+    // If specialty not found or not active, redirect to main portal
+    if (!specialty || !specialty.isActive) {
+      return <Navigate to="/especialidades" replace />;
+    }
+    
+    return <SpecialtyPortalTemplate specialty={specialty} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -341,100 +117,158 @@ export default function SpecialtyPortal() {
         </div>
       </section>
 
-      {/* Specialties Grid */}
-      <section className="py-12 px-6">
-        <div className="container mx-auto max-w-7xl">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredSpecialties.map((specialty) => {
-              const Icon = specialty.icon;
-              return (
-                <Link key={specialty.id} to={specialty.href}>
-                  <Card className={cn(
-                    "h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer group",
-                    specialty.borderColor,
-                    specialty.active && "ring-2 ring-primary ring-offset-2"
-                  )}>
+      {/* Active Specialties */}
+      {activeSpecialties.length > 0 && (
+        <section className="py-12 px-6">
+          <div className="container mx-auto max-w-7xl">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-xl font-semibold">Especialidades Ativas</h2>
+              <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                {activeSpecialties.length}
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {activeSpecialties.map((specialty) => {
+                const Icon = specialty.icon;
+                const href = specialty.id === 'rheumatology' 
+                  ? '/reumato' 
+                  : `/specialty/${specialty.id}`;
+                
+                return (
+                  <Link key={specialty.id} to={href}>
+                    <Card className={cn(
+                      "h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer group",
+                      "ring-2 ring-offset-2"
+                    )} style={{ borderColor: specialty.color, boxShadow: `0 0 0 2px ${specialty.color}40` }}>
+                      <CardContent className="p-5">
+                        <div className="flex items-start gap-4">
+                          <div 
+                            className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
+                            style={{ backgroundColor: `${specialty.color}20` }}
+                          >
+                            <Icon className="h-6 w-6" style={{ color: specialty.color }} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-foreground truncate">
+                                {specialty.namePt}
+                              </h3>
+                              <span 
+                                className="px-2 py-0.5 text-[10px] font-medium rounded-full shrink-0"
+                                style={{ backgroundColor: `${specialty.color}20`, color: specialty.color }}
+                              >
+                                ATIVO
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                              {specialty.descriptionPt}
+                            </p>
+                            
+                            {/* Society */}
+                            <div className="text-[10px] text-muted-foreground mb-2 truncate">
+                              {specialty.society.split(' - ')[0]}
+                            </div>
+
+                            {/* Conditions preview */}
+                            {specialty.conditions.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {specialty.conditions.slice(0, 2).map((cond) => (
+                                  <span
+                                    key={cond.name}
+                                    className="px-2 py-0.5 text-[10px] rounded-full"
+                                    style={{ 
+                                      backgroundColor: `${specialty.color}15`,
+                                      color: specialty.color 
+                                    }}
+                                  >
+                                    {cond.name}
+                                  </span>
+                                ))}
+                                {specialty.conditions.length > 2 && (
+                                  <span className="px-2 py-0.5 text-[10px] rounded-full bg-muted text-muted-foreground">
+                                    +{specialty.conditions.length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+                          <span className="text-xs text-primary flex items-center gap-1">
+                            Acessar Portal
+                            <ChevronRight className="h-3 w-3" />
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Coming Soon Specialties */}
+      {inactiveSpecialties.length > 0 && (
+        <section className="py-12 px-6 bg-muted/30">
+          <div className="container mx-auto max-w-7xl">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-xl font-semibold text-muted-foreground">Em Breve</h2>
+              <span className="px-2 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground">
+                {inactiveSpecialties.length}
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {inactiveSpecialties.map((specialty) => {
+                const Icon = specialty.icon;
+                
+                return (
+                  <Card 
+                    key={specialty.id}
+                    className="h-full opacity-60 cursor-not-allowed"
+                  >
                     <CardContent className="p-5">
                       <div className="flex items-start gap-4">
                         <div 
-                          className={cn(
-                            "h-12 w-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
-                            specialty.bgColor
-                          )}
+                          className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: `${specialty.color}10` }}
                         >
                           <Icon className="h-6 w-6" style={{ color: specialty.color }} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-foreground truncate">
-                              {specialty.name}
-                            </h3>
-                            {specialty.active && (
-                              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary shrink-0">
-                                ATIVO
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                            {specialty.description}
+                          <h3 className="font-semibold text-foreground truncate mb-1">
+                            {specialty.namePt}
+                          </h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {specialty.descriptionPt}
                           </p>
-                          
-                          {/* Societies */}
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {specialty.societies.map((soc) => (
-                              <span
-                                key={soc}
-                                className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground"
-                              >
-                                {soc}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Conditions preview */}
-                          <div className="flex flex-wrap gap-1">
-                            {specialty.conditions.slice(0, 2).map((cond) => (
-                              <span
-                                key={cond}
-                                className={cn(
-                                  "px-2 py-0.5 text-[10px] rounded-full",
-                                  specialty.bgColor
-                                )}
-                                style={{ color: specialty.color }}
-                              >
-                                {cond}
-                              </span>
-                            ))}
-                            {specialty.conditions.length > 2 && (
-                              <span className="px-2 py-0.5 text-[10px] rounded-full bg-muted text-muted-foreground">
-                                +{specialty.conditions.length - 2}
-                              </span>
-                            )}
-                          </div>
                         </div>
                       </div>
-
-                      {/* Coming Soon overlay for inactive */}
-                      {!specialty.active && (
-                        <div className="mt-4 pt-3 border-t border-border">
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Sparkles className="h-3 w-3" />
-                            Em breve
-                          </span>
-                        </div>
-                      )}
+                      
+                      <div className="mt-4 pt-3 border-t border-border">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" />
+                          Em breve
+                        </span>
+                      </div>
                     </CardContent>
                   </Card>
-                </Link>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Info Section */}
-      <section className="py-16 px-6 bg-muted/30">
+      <section className="py-16 px-6">
         <div className="container mx-auto max-w-4xl text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm mb-4">
+            <GraduationCap className="h-4 w-4" />
+            Formação Médica
+          </div>
           <h2 className="text-2xl font-bold mb-4">
             Pré-requisito: <span className="gradient-text">Clínica Médica</span>
           </h2>
@@ -468,7 +302,7 @@ export default function SpecialtyPortal() {
           </div>
           <div className="mt-6 pt-4 border-t border-border text-center">
             <p className="text-xs text-muted-foreground">
-              Ferramenta organizacional para profissionais de saúde. Não é um sistema de prontuário.
+              Esta é uma ferramenta organizacional para profissionais de saúde. Não é um sistema de prontuário eletrônico.
             </p>
           </div>
         </div>
