@@ -174,31 +174,98 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Knowledge Section */}
-      <section className="py-20 px-6 bg-muted/30">
-        <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-12">
+      {/* Revolutionary Knowledge Section */}
+      <section className="py-24 px-6 bg-muted/30 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[hsl(42_85%_55%)]/5 rounded-full blur-3xl" />
+        
+        <div className="container mx-auto max-w-6xl relative">
+          <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
-              <BookOpen className="h-4 w-4" />
-              Knowledge Repository
+              <Sparkles className="h-4 w-4" />
+              A New Era in Medical Knowledge
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              All Rheumatology Knowledge,{' '}
-              <span className="gradient-text">One Platform</span>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+              The World's First{' '}
+              <span className="gradient-text-organic">Living Knowledge</span>
+              <br />
+              <span className="text-2xl md:text-4xl">Ecosystem for Rheumatology</span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Guidelines, protocols, clinical pearls, and evidence-based resources 
-              from societies worldwide—searchable, organized, and always up-to-date.
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              For decades, clinical knowledge has been fragmented across PDFs, journals, society websites, 
+              and institutional silos. <strong className="text-foreground">We're changing that forever.</strong>
             </p>
           </div>
 
+          {/* The Problem */}
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
+            <div className="uhs-card-elevated p-8">
+              <div className="text-destructive/80 font-semibold text-sm uppercase tracking-wide mb-4">The Problem Today</div>
+              <h3 className="text-xl font-bold mb-4">Knowledge is Scattered & Static</h3>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <span className="text-destructive mt-1">✗</span>
+                  <span>Guidelines buried in 200-page PDFs across dozens of society websites</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-destructive mt-1">✗</span>
+                  <span>Updates take years; clinicians work with outdated recommendations</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-destructive mt-1">✗</span>
+                  <span>No way to compare ACR vs EULAR vs APLAR approaches side-by-side</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-destructive mt-1">✗</span>
+                  <span>Clinical pearls lost in individual practice, never shared globally</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="uhs-card-elevated p-8 border-primary/30">
+              <div className="text-primary font-semibold text-sm uppercase tracking-wide mb-4">Our Revolution</div>
+              <h3 className="text-xl font-bold mb-4">Living, Unified, Evolving</h3>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">One Platform:</strong> All societies, all guidelines, all protocols—searchable instantly</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">Always Current:</strong> Real-time updates as new evidence emerges</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">Expert Curated:</strong> Society-endorsed with transparent provenance</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">AI-Enhanced:</strong> Instant answers, comparisons, and clinical decision support</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Vision Statement */}
+          <div className="text-center mb-12 p-8 rounded-2xl bg-gradient-to-r from-primary/5 via-transparent to-[hsl(42_85%_55%)]/5 border border-border">
+            <blockquote className="text-xl md:text-2xl font-medium text-foreground italic mb-4">
+              "Imagine asking any clinical question and getting the synthesized wisdom of 
+              ACR, EULAR, APLAR, and 50+ rheumatology societies—in seconds, with citations."
+            </blockquote>
+            <p className="text-muted-foreground">
+              This is not a database. It's a <strong className="text-foreground">living knowledge organism</strong> that grows smarter every day.
+            </p>
+          </div>
+
+          {/* Stats */}
           <div className="uhs-card-elevated p-8">
             <KnowledgeStats />
             <div className="mt-8 text-center">
               <Link to="/knowledge">
-                <Button className="gap-2">
-                  <Search className="h-4 w-4" />
-                  Browse Knowledge Library
+                <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-[hsl(165_60%_48%)] hover:opacity-90">
+                  <Search className="h-5 w-5" />
+                  Explore the Knowledge Revolution
                 </Button>
               </Link>
             </div>
