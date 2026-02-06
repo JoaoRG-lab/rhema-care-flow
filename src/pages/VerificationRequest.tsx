@@ -103,6 +103,7 @@ const baseSchema = z.object({
    full_name: z.string().min(2, "Full name is required").max(100),
    email: z.string().email("Valid email is required"),
   contributor_type: z.enum(["clinical", "developer", "partner"]),
+  linkedin_url: z.string().url("Please enter a valid LinkedIn URL").optional().or(z.literal("")),
   expertise_statement: z.string().max(1000).optional(),
   accuracy_agreement: z.boolean().refine(val => val === true, "You must confirm accuracy"),
   ethics_agreement: z.boolean().refine(val => val === true, "You must agree to ethical standards"),
@@ -222,6 +223,7 @@ type VerificationFormData = z.infer<typeof clinicalSchema> | z.infer<typeof deve
          full_name: data.full_name,
          email: data.email,
         contributor_type: contributorType,
+        linkedin_url: data.linkedin_url || null,
          expertise_statement: data.expertise_statement || null,
       };
 
@@ -556,10 +558,30 @@ type VerificationFormData = z.infer<typeof clinicalSchema> | z.infer<typeof deve
                             "partnerships@company.com"
                           } {...field} />
                        </FormControl>
-                       <FormMessage />
-                     </FormItem>
-                   )}
-                 />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="linkedin_url"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>LinkedIn Profile URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="url" 
+                          placeholder="https://linkedin.com/in/yourprofile" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Optional: Share your professional profile to help verify your credentials
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                   {contributorType === "clinical" && (
                     <FormField
                       control={form.control}
