@@ -1,7 +1,7 @@
  import { cn } from "@/lib/utils";
  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
  import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Shield, Award, Star, Code, Handshake } from "lucide-react";
+import { CheckCircle, Shield, Award, Star, Code, Handshake, Crown } from "lucide-react";
  import type { VerificationTier, ContributorType } from '@/types/verification';
  
  // Re-export types for convenience
@@ -70,7 +70,15 @@ import { CheckCircle, Shield, Award, Star, Code, Handshake } from "lucide-react"
     className: "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-700",
     iconClassName: "text-emerald-600 dark:text-emerald-400",
   },
- };
+  ultimate: {
+    icon: Crown,
+    label: "Ultimate",
+    emoji: "👑",
+    description: "Full platform access - Universal Health System Ambassador",
+    className: "bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-100 text-amber-900 border-amber-400 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-amber-900/40 dark:text-amber-100 dark:border-amber-500",
+    iconClassName: "text-amber-500 dark:text-amber-300",
+  },
+};
  
  const sizeConfig = {
   xs: {

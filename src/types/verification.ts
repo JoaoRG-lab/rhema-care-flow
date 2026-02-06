@@ -6,14 +6,15 @@
  // VERIFICATION TIER TYPES
  // ============================================
  
- export type VerificationTier = 
-   | 'bronze' 
-   | 'silver' 
-   | 'gold' 
-   | 'expert' 
-   | 'developer' 
-   | 'partner' 
-   | null;
+export type VerificationTier = 
+  | 'bronze' 
+  | 'silver' 
+  | 'gold' 
+  | 'expert' 
+  | 'developer' 
+  | 'partner' 
+  | 'ultimate'
+  | null;
  
  export type ContributorType = 'clinical' | 'developer' | 'partner';
  
