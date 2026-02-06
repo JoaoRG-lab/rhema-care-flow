@@ -1,22 +1,23 @@
- import { useState } from 'react';
- import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
- import { Button } from '@/components/ui/button';
- import { Input } from '@/components/ui/input';
- import { Label } from '@/components/ui/label';
- import { Textarea } from '@/components/ui/textarea';
- import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
- import { Switch } from '@/components/ui/switch';
- import { Badge } from '@/components/ui/badge';
- import { ScrollArea } from '@/components/ui/scroll-area';
- import { Save, X, Plus } from 'lucide-react';
- import { DIAGNOSIS_OPTIONS } from '@/config/clinical';
- import { 
-   CONTENT_TYPES, 
-   EDUCATION_CATEGORIES,
-   type EducationContent,
-   type CreateEducationContentInput,
-   type ContentType,
- } from '@/types/education';
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Save, X, Plus } from 'lucide-react';
+import { DIAGNOSIS_OPTIONS } from '@/config/clinical';
+import { FeaturedImageUpload } from './FeaturedImageUpload';
+import { 
+  CONTENT_TYPES, 
+  EDUCATION_CATEGORIES,
+  type EducationContent,
+  type CreateEducationContentInput,
+  type ContentType,
+} from '@/types/education';
  
  interface ContentEditorProps {
    open: boolean;
@@ -35,17 +36,18 @@
  }: ContentEditorProps) {
    const isEditing = !!content;
    
-   const [title, setTitle] = useState(content?.title || '');
-   const [summary, setSummary] = useState(content?.summary || '');
-   const [contentText, setContentText] = useState(content?.content || '');
-   const [contentType, setContentType] = useState<ContentType>(content?.content_type || 'article');
-   const [category, setCategory] = useState(content?.category || '');
-   const [diagnosisTags, setDiagnosisTags] = useState<string[]>(content?.diagnosis_tags || []);
-   const [readingTime, setReadingTime] = useState(content?.reading_time_minutes?.toString() || '');
-   const [externalUrl, setExternalUrl] = useState(content?.external_url || '');
-   const [isPublished, setIsPublished] = useState(content?.is_published || false);
-   const [isFeatured, setIsFeatured] = useState(content?.is_featured || false);
-   const [isSaving, setIsSaving] = useState(false);
+  const [title, setTitle] = useState(content?.title || '');
+  const [summary, setSummary] = useState(content?.summary || '');
+  const [contentText, setContentText] = useState(content?.content || '');
+  const [contentType, setContentType] = useState<ContentType>(content?.content_type || 'article');
+  const [category, setCategory] = useState(content?.category || '');
+  const [diagnosisTags, setDiagnosisTags] = useState<string[]>(content?.diagnosis_tags || []);
+  const [readingTime, setReadingTime] = useState(content?.reading_time_minutes?.toString() || '');
+  const [externalUrl, setExternalUrl] = useState(content?.external_url || '');
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(content?.featured_image_url || null);
+  const [isPublished, setIsPublished] = useState(content?.is_published || false);
+  const [isFeatured, setIsFeatured] = useState(content?.is_featured || false);
+  const [isSaving, setIsSaving] = useState(false);
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
@@ -56,18 +58,19 @@
      
      setIsSaving(true);
      
-     const data: CreateEducationContentInput = {
-       title: title.trim(),
-       summary: summary.trim() || undefined,
-       content: contentText.trim(),
-       content_type: contentType,
-       category,
-       diagnosis_tags: diagnosisTags,
-       reading_time_minutes: readingTime ? parseInt(readingTime) : undefined,
-       external_url: externalUrl.trim() || undefined,
-       is_published: isPublished,
-       is_featured: isFeatured,
-     };
+      const data: CreateEducationContentInput = {
+        title: title.trim(),
+        summary: summary.trim() || undefined,
+        content: contentText.trim(),
+        content_type: contentType,
+        category,
+        diagnosis_tags: diagnosisTags,
+        reading_time_minutes: readingTime ? parseInt(readingTime) : undefined,
+        featured_image_url: featuredImageUrl || undefined,
+        external_url: externalUrl.trim() || undefined,
+        is_published: isPublished,
+        is_featured: isFeatured,
+      };
      
      try {
        if (isEditing && onUpdate && content) {
@@ -111,9 +114,15 @@
                  placeholder="Enter article title..."
                  required
                />
-             </div>
-             
-             {/* Summary */}
+              </div>
+
+              {/* Featured Image */}
+              <FeaturedImageUpload
+                value={featuredImageUrl}
+                onChange={setFeaturedImageUrl}
+              />
+              
+              {/* Summary */}
              <div className="space-y-2">
                <Label htmlFor="summary">Summary</Label>
                <Textarea
