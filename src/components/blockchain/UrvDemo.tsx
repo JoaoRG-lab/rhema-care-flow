@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
@@ -19,48 +19,81 @@ import {
   Loader2,
   ExternalLink,
   Shield,
-  Hash,
-  Wallet,
   Settings,
-  RefreshCw,
+  Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  hashObject,
-  toHex,
-  fromHex,
-  canonicalize,
-  createFeaturesHash,
-  computeScoreHashBytes,
-} from '@/lib/crypto';
-import {
-  URV_PROGRAM_ID,
-  deriveRecordPda,
-  deriveStatePda,
-  deriveUpdatePda,
-  getExplorerUrl,
-  formatSignature,
-  toBasisPoints,
-  validateScore,
-  validateConfidence,
-} from '@/lib/solana';
+import { canonicalize } from '@/lib/crypto';
+import { getExplorerUrl, formatSignature } from '@/lib/solana';
 
-// Placeholder IDL - replace with actual after Anchor build
 import idl from '@/idl/urv_privacy.json';
+
+// TODO: Replace with your deployed ProgramId after `anchor deploy`
+const PROGRAM_ID = new PublicKey('11111111111111111111111111111111');
+const SCHEMA_VERSION = 1;
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/** Convert Uint8Array(32) to number[] for Anchor */
+function u8ToArr32(u8: Uint8Array): number[] {
+  if (u8.length !== 32) throw new Error('Hash must be 32 bytes.');
+  return Array.from(u8);
+}
+
+/** Convert u32 to little-endian bytes */
+function u32ToLeBytes(n: number): Uint8Array {
+  const out = new Uint8Array(4);
+  out[0] = n & 0xff;
+  out[1] = (n >> 8) & 0xff;
+  out[2] = (n >> 16) & 0xff;
+  out[3] = (n >> 24) & 0xff;
+  return out;
+}
+
+/** Convert u16 to little-endian bytes */
+function u16ToLeBytes(n: number): Uint8Array {
+  const out = new Uint8Array(2);
+  out[0] = n & 0xff;
+  out[1] = (n >> 8) & 0xff;
+  return out;
+}
+
+/** SHA-256 hash of bytes, returns Uint8Array(32) */
+async function sha256Bytes(data: Uint8Array): Promise<Uint8Array> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data.buffer as ArrayBuffer);
+  return new Uint8Array(hashBuffer);
+}
+
+/** Derive State PDA: ["state", admin] */
+function deriveStatePda(adminPk: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('state'), adminPk.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+/** Derive Record PDA: ["rec", owner, dataHash] */
+function deriveRecordPda(ownerPk: PublicKey, dataHash: Uint8Array): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('rec'), ownerPk.toBuffer(), Buffer.from(dataHash)],
+    PROGRAM_ID
+  );
+}
+
+/** Derive Update PDA: ["upd", statePda, newScoreHash] */
+function deriveUpdatePda(statePda: PublicKey, newScoreHash: Uint8Array): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('upd'), statePda.toBuffer(), Buffer.from(newScoreHash)],
+    PROGRAM_ID
+  );
+}
 
 interface TransactionStatus {
   type: 'success' | 'error' | 'pending';
   message: string;
   signature?: string;
-}
-
-interface StateAccount {
-  admin: PublicKey;
-  oracle: PublicKey;
-  recordCount: bigint;
-  updateCount: bigint;
-  lastScoreHash?: Uint8Array;
-  bump: number;
 }
 
 export function UrvDemo() {
@@ -69,23 +102,16 @@ export function UrvDemo() {
   const { publicKey, signTransaction, signAllTransactions, connected } = wallet;
 
   // Form state
-  const [ciphertextUri, setCiphertextUri] = useState('');
-  const [schemaVersion, setSchemaVersion] = useState('1');
-  const [urvScore, setUrvScore] = useState<number[]>([50]);
-  const [confidence, setConfidence] = useState<number[]>([0.8]);
-  const [recordDataHash, setRecordDataHash] = useState('');
-  const [oraclePubkey, setOraclePubkey] = useState('');
-  
-  // State account data
-  const [stateAccount, setStateAccount] = useState<StateAccount | null>(null);
-  const [stateInitialized, setStateInitialized] = useState(false);
-  const [isLoadingState, setIsLoadingState] = useState(false);
-  
+  const [uri, setUri] = useState('ipfs://example-ciphertext-uri');
+  const [score, setScore] = useState<number[]>([72]);
+  const [conf, setConf] = useState<number[]>([0.91]);
+
   // Transaction state
   const [status, setStatus] = useState<TransactionStatus | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [stateInitialized, setStateInitialized] = useState(false);
 
-  // Create provider when wallet is connected
+  // Create provider
   const provider = useMemo(() => {
     if (!publicKey || !signTransaction || !signAllTransactions) return null;
     return new AnchorProvider(
@@ -111,162 +137,95 @@ export function UrvDemo() {
   }, [provider]);
 
   /**
-   * Fetch the state account to get lastScoreHash for chaining.
-   */
-  const fetchStateAccount = useCallback(async () => {
-    if (!publicKey || !program) return;
-
-    setIsLoadingState(true);
-    try {
-      const [statePda] = await deriveStatePda(publicKey);
-      
-      // Try to fetch the state account
-      const state = await (program.account as any).state.fetch(statePda);
-      
-      setStateAccount({
-        admin: state.admin,
-        oracle: state.oracle,
-        recordCount: state.recordCount,
-        updateCount: state.updateCount,
-        lastScoreHash: state.lastScoreHash ? new Uint8Array(state.lastScoreHash) : undefined,
-        bump: state.bump,
-      });
-      setStateInitialized(true);
-      
-      console.log('State account fetched:', {
-        admin: state.admin.toBase58(),
-        oracle: state.oracle.toBase58(),
-        recordCount: state.recordCount.toString(),
-        updateCount: state.updateCount.toString(),
-      });
-    } catch (error: any) {
-      if (error.message?.includes('Account does not exist')) {
-        setStateInitialized(false);
-        setStateAccount(null);
-        console.log('State account not initialized');
-      } else {
-        console.error('Error fetching state:', error);
-      }
-    } finally {
-      setIsLoadingState(false);
-    }
-  }, [publicKey, program]);
-
-  // Fetch state when program is ready
-  useEffect(() => {
-    if (program && publicKey) {
-      fetchStateAccount();
-    }
-  }, [program, publicKey, fetchStateAccount]);
-
-  /**
-   * Initialize the global state account.
+   * Initialize global state account.
+   * MVP: wallet acts as both admin and oracle.
+   * Production: oracle should be a backend signer.
    */
   const initState = useCallback(async () => {
-    if (!publicKey || !program) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
-
-    const oracle = oraclePubkey.trim() || publicKey.toBase58();
-    
-    try {
-      new PublicKey(oracle);
-    } catch {
-      toast.error('Invalid oracle public key');
+    if (!program || !publicKey) {
+      toast.error('Connect your wallet first');
       return;
     }
 
     setIsProcessing(true);
-    setStatus({ type: 'pending', message: 'Initializing state account...' });
+    setStatus({ type: 'pending', message: 'Initializing state (init_state)...' });
 
     try {
-      const [statePda] = await deriveStatePda(publicKey);
-      const oracleKey = new PublicKey(oracle);
+      const oraclePk = publicKey; // MVP: wallet is oracle
+      const [statePda] = deriveStatePda(publicKey);
 
-      console.log('Initializing state with:');
+      console.log('Initializing state:');
       console.log('  Admin:', publicKey.toBase58());
-      console.log('  Oracle:', oracleKey.toBase58());
+      console.log('  Oracle:', oraclePk.toBase58());
       console.log('  State PDA:', statePda.toBase58());
 
       const tx = await program.methods
         .initState()
         .accounts({
           admin: publicKey,
-          oracle: oracleKey,
+          oracle: oraclePk,
           state: statePda,
           systemProgram: SystemProgram.programId,
         })
         .rpc();
 
+      setStateInitialized(true);
       setStatus({
         type: 'success',
-        message: 'State initialized successfully!',
+        message: `State initialized ✅ PDA: ${statePda.toBase58().slice(0, 16)}...`,
         signature: tx,
       });
-      toast.success('State account created on-chain');
-      
-      // Refresh state
-      await fetchStateAccount();
-    } catch (error: any) {
-      console.error('Init state error:', error);
+      toast.success('State initialized on-chain');
+    } catch (e: any) {
+      console.error('init_state error:', e);
       setStatus({
         type: 'error',
-        message: error.message || 'Failed to initialize state',
+        message: `Error init_state: ${e?.message ?? String(e)}`,
       });
       toast.error('Failed to initialize state');
     } finally {
       setIsProcessing(false);
     }
-  }, [publicKey, program, oraclePubkey, fetchStateAccount]);
+  }, [program, publicKey]);
 
   /**
    * Create a new health record on-chain.
+   * Uses canonical JSON + SHA-256 to derive data_hash and record PDA.
    */
   const createRecord = useCallback(async () => {
-    if (!publicKey || !program) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
-
-    if (!ciphertextUri.trim()) {
-      toast.error('Please enter a ciphertext URI');
-      return;
-    }
-
-    if (!stateInitialized) {
-      toast.error('Initialize state first');
+    if (!program || !publicKey) {
+      toast.error('Connect your wallet first');
       return;
     }
 
     setIsProcessing(true);
-    setStatus({ type: 'pending', message: 'Creating health record...' });
+    setStatus({ type: 'pending', message: 'Creating record (create_record)...' });
 
     try {
-      const [statePda] = await deriveStatePda(stateAccount!.admin);
-      
-      // Create a deterministic hash of the record data
-      const recordData = {
-        resourceType: 'HealthRecord',
-        uri: ciphertextUri,
-        timestamp: Date.now(),
-        owner: publicKey.toBase58(),
+      // Example payload - replace with real structured data
+      const visitPayload = {
+        provider: { provider_id: 'UUID', type: 'clinic', location: 'BR-SP' },
+        service: { service_id: 'UUID', service_type: 'consult', timestamp: new Date().toISOString() },
+        results: { anchors: { ra_acr: 'ACR50', das28: 3.1, cdai: 7 } },
+        process: { protocol_adherence: 0.9, continuity: 0.85, safety_events: 0, documentation_quality: 0.9 },
+        infrastructure: { equipment_score: 0.8, digitalization_score: 0.9, ambience_score: 0.85, accessibility_score: 0.8 },
+        evolution: { education_score: 0.9, innovation_score: 0.7, teaching_score: 0.6, research_score: 0.5 },
+        experience: { crm_score: 0.88, consistency_score: 0.9 },
       };
-      const dataHash = await hashObject(recordData);
 
-      // Derive the record PDA
-      const [recordPda] = await deriveRecordPda(publicKey, dataHash);
+      const canon = canonicalize(visitPayload);
+      const bytes = new TextEncoder().encode(canon);
+      const dataHash = await sha256Bytes(bytes);
 
-      console.log('Creating record with:');
-      console.log('  Data hash:', toHex(dataHash));
+      const [statePda] = deriveStatePda(publicKey);
+      const [recordPda] = deriveRecordPda(publicKey, dataHash);
+
+      console.log('Creating record:');
+      console.log('  Data hash:', Array.from(dataHash).map(b => b.toString(16).padStart(2, '0')).join(''));
       console.log('  Record PDA:', recordPda.toBase58());
 
       const tx = await program.methods
-        .createRecord(
-          Array.from(dataHash),
-          ciphertextUri,
-          parseInt(schemaVersion)
-        )
+        .createRecord(u8ToArr32(dataHash), uri, SCHEMA_VERSION)
         .accounts({
           owner: publicKey,
           state: statePda,
@@ -275,132 +234,109 @@ export function UrvDemo() {
         })
         .rpc();
 
-      // Save the data hash for score updates
-      setRecordDataHash(toHex(dataHash));
-
       setStatus({
         type: 'success',
-        message: 'Health record created successfully!',
+        message: `Record created ✅ PDA: ${recordPda.toBase58().slice(0, 16)}...`,
         signature: tx,
       });
       toast.success('Record created on-chain');
-      
-      await fetchStateAccount();
-    } catch (error: any) {
-      console.error('Create record error:', error);
+    } catch (e: any) {
+      console.error('create_record error:', e);
       setStatus({
         type: 'error',
-        message: error.message || 'Failed to create record',
+        message: `Error create_record: ${e?.message ?? String(e)}`,
       });
       toast.error('Failed to create record');
     } finally {
       setIsProcessing(false);
     }
-  }, [publicKey, program, ciphertextUri, schemaVersion, stateInitialized, stateAccount, fetchStateAccount]);
+  }, [program, publicKey, uri]);
 
   /**
-   * Post a score update with proper chain validation.
-   * Fetches state PDA to get lastScoreHash as prev_score_hash.
+   * Post a score update with REAL chaining.
+   * 1. Fetches state via program.account.urvState.fetch(statePda) to read lastScoreHash
+   * 2. Computes features_hash from canonical JSON
+   * 3. Computes new_score_hash = sha256(prevHash + featuresHash + scoreU32LE + confBpsLE)
+   * 4. Derives update PDA: ["upd", statePda, new_score_hash]
    */
   const postScoreUpdate = useCallback(async () => {
-    if (!publicKey || !program) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
-
-    if (!stateInitialized || !stateAccount) {
-      toast.error('Initialize state first');
-      return;
-    }
-
-    const score = urvScore[0];
-    const conf = confidence[0];
-
-    if (!validateScore(score)) {
-      toast.error('Score must be between 0 and 100');
-      return;
-    }
-
-    if (!validateConfidence(conf)) {
-      toast.error('Confidence must be between 0 and 1');
+    if (!program || !publicKey) {
+      toast.error('Connect your wallet first');
       return;
     }
 
     setIsProcessing(true);
-    setStatus({ type: 'pending', message: 'Fetching state and posting score update...' });
+    setStatus({ type: 'pending', message: 'Reading state and posting score update (chained)...' });
 
     try {
-      const [statePda] = await deriveStatePda(stateAccount.admin);
-      
-      // Fetch fresh state to get latest lastScoreHash
-      let prevHash: Uint8Array;
+      const [statePda] = deriveStatePda(publicKey);
+
+      // 1) Fetch state on-chain to get lastScoreHash
+      let prevHashBytes: Uint8Array;
       try {
-        const freshState = await (program.account as any).state.fetch(statePda);
-        prevHash = freshState.lastScoreHash 
-          ? new Uint8Array(freshState.lastScoreHash) 
-          : new Uint8Array(32); // Zero hash for first update
-        
+        const stateAcc: any = await (program.account as any).state.fetch(statePda);
+        prevHashBytes = stateAcc.lastScoreHash 
+          ? Uint8Array.from(stateAcc.lastScoreHash) 
+          : new Uint8Array(32);
         console.log('Fetched state, lastScoreHash:', 
-          freshState.lastScoreHash ? toHex(new Uint8Array(freshState.lastScoreHash)) : 'none (first update)');
+          prevHashBytes.every(b => b === 0) ? '(zero - first update)' : 
+          Array.from(prevHashBytes).map(b => b.toString(16).padStart(2, '0')).join(''));
       } catch {
-        prevHash = new Uint8Array(32);
-        console.log('No previous hash, using zero hash');
+        prevHashBytes = new Uint8Array(32);
+        console.log('State not found, using zero hash');
       }
 
-      // Create canonical features object for hashing
+      // 2) Build features object and hash it
       const features = {
-        metrics: { 
-          painScore: Math.round(score), 
-          functionScore: Math.round(100 - score) 
-        },
-        weights: { 
-          painScore: 0.6, 
-          functionScore: 0.4 
-        },
-        timestamp: Date.now(),
+        results: { R: 70 },
+        process: { P: 80, protocol: 0.9, safety: 1.0, continuity: 0.85 },
+        infrastructure: { I: 75, equipment: 0.8, ambience: 0.85, digital: 0.9 },
+        evolution: { E: 65, education: 0.9, innovation: 0.7 },
+        experience: { X: 78, crm: 0.88, consistency: 0.9 },
       };
-      const featuresHash = await createFeaturesHash(features);
+      const featCanon = canonicalize(features);
+      const featBytes = new TextEncoder().encode(featCanon);
+      const featuresHash = await sha256Bytes(featBytes);
 
-      // Convert to on-chain format
-      const scoreU32 = Math.round(score * 100); // 0-10000
-      const confBps = toBasisPoints(conf); // 0-10000
+      // 3) Record data hash (MVP: zero, production: use real record hash)
+      const recordDataHash = new Uint8Array(32);
 
-      // Compute new score hash using production formula
-      // SHA256(prev_hash || features_hash || score_u32_LE || conf_bps_LE)
-      const newScoreHash = await computeScoreHashBytes(
-        prevHash,
-        featuresHash,
-        scoreU32,
-        confBps
-      );
+      // 4) Score and confidence
+      const scoreU32 = Math.round(score[0] * 100); // 0-10000
+      const confBps = Math.round(conf[0] * 10000); // 0-10000
 
-      // Derive update PDA
-      const [updatePda] = await deriveUpdatePda(statePda, newScoreHash);
+      // 5) new_score_hash = sha256(prevHash + featuresHash + scoreU32LE + confBpsLE)
+      const toHash = new Uint8Array([
+        ...prevHashBytes,
+        ...featuresHash,
+        ...u32ToLeBytes(scoreU32),
+        ...u16ToLeBytes(confBps),
+      ]);
+      const newHash = await sha256Bytes(toHash);
 
-      // Get record data hash (use provided or empty)
-      const recDataHash = recordDataHash 
-        ? fromHex(recordDataHash)
-        : new Uint8Array(32);
+      // 6) Derive update PDA: ["upd", statePda, newHash]
+      const [updatePda] = deriveUpdatePda(statePda, newHash);
 
       console.log('Posting score update:');
-      console.log('  Score:', score, '-> u32:', scoreU32);
-      console.log('  Confidence:', conf, '-> bps:', confBps);
-      console.log('  Features hash:', toHex(featuresHash));
-      console.log('  Prev score hash:', toHex(prevHash));
-      console.log('  New score hash:', toHex(newScoreHash));
+      console.log('  Score:', score[0], '-> u32:', scoreU32);
+      console.log('  Confidence:', conf[0], '-> bps:', confBps);
+      console.log('  Features hash:', Array.from(featuresHash).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16) + '...');
+      console.log('  Prev hash:', Array.from(prevHashBytes).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16) + '...');
+      console.log('  New hash:', Array.from(newHash).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16) + '...');
       console.log('  Update PDA:', updatePda.toBase58());
 
+      // 7) RPC call
       const tx = await program.methods
         .postScoreUpdate(
-          Array.from(recDataHash),
-          Array.from(featuresHash),
+          u8ToArr32(recordDataHash),
+          u8ToArr32(featuresHash),
           scoreU32,
           confBps,
-          Array.from(prevHash),
-          Array.from(newScoreHash)
+          u8ToArr32(prevHashBytes),
+          u8ToArr32(newHash)
         )
         .accounts({
-          oracle: publicKey,
+          oracle: publicKey, // MVP: wallet is oracle
           state: statePda,
           update: updatePda,
           systemProgram: SystemProgram.programId,
@@ -409,32 +345,21 @@ export function UrvDemo() {
 
       setStatus({
         type: 'success',
-        message: 'Score update posted successfully!',
+        message: `Score update ✅ URV=${score[0].toFixed(2)} conf=${conf[0].toFixed(2)}`,
         signature: tx,
       });
       toast.success('Score update recorded on-chain');
-      
-      // Refresh state to show updated lastScoreHash
-      await fetchStateAccount();
-    } catch (error: any) {
-      console.error('Post score update error:', error);
-      
-      if (error.message?.includes('UnauthorizedOracle')) {
-        setStatus({
-          type: 'error',
-          message: 'Only the designated oracle can post score updates.',
-        });
-      } else {
-        setStatus({
-          type: 'error',
-          message: error.message || 'Failed to post score update',
-        });
-      }
+    } catch (e: any) {
+      console.error('post_score_update error:', e);
+      setStatus({
+        type: 'error',
+        message: `Error post_score_update: ${e?.message ?? String(e)}`,
+      });
       toast.error('Failed to post score update');
     } finally {
       setIsProcessing(false);
     }
-  }, [publicKey, program, urvScore, confidence, stateInitialized, stateAccount, recordDataHash, fetchStateAccount]);
+  }, [program, publicKey, score, conf]);
 
   const isProgramReady = !!program;
 
@@ -445,239 +370,136 @@ export function UrvDemo() {
         <div>
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            URV Health Value Chain
+            URV Health Chain (Devnet MVP)
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            On-chain proof registry with privacy-preserving score updates
+            On-chain proof registry with chained score updates
           </p>
         </div>
         <WalletMultiButton className="!bg-primary hover:!bg-primary/90 !h-9 !text-sm !rounded-md" />
       </div>
 
-      {/* Connection & Program Status */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <Alert variant={connected ? 'default' : 'destructive'}>
-          <Wallet className="h-4 w-4" />
-          <AlertTitle>{connected ? 'Wallet Connected' : 'Wallet Not Connected'}</AlertTitle>
-          <AlertDescription>
-            {connected ? (
-              <span className="flex items-center gap-2">
-                <Badge variant="outline" className="font-mono text-xs">
-                  {publicKey?.toBase58().slice(0, 8)}...{publicKey?.toBase58().slice(-8)}
-                </Badge>
-                <Badge variant="secondary">Devnet</Badge>
-              </span>
-            ) : (
-              'Connect your Phantom wallet to interact with the blockchain'
-            )}
-          </AlertDescription>
-        </Alert>
+      {/* Connection Status */}
+      <Alert variant={connected ? 'default' : 'destructive'}>
+        <Wallet className="h-4 w-4" />
+        <AlertTitle>{connected ? 'Wallet Connected' : 'Wallet Not Connected'}</AlertTitle>
+        <AlertDescription>
+          {connected ? (
+            <span className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono text-xs">
+                {publicKey?.toBase58().slice(0, 8)}...{publicKey?.toBase58().slice(-8)}
+              </Badge>
+              <Badge variant="secondary">Devnet</Badge>
+              {!isProgramReady && (
+                <Badge variant="destructive">IDL not loaded</Badge>
+              )}
+            </span>
+          ) : (
+            'Connect your Phantom wallet to interact with the blockchain'
+          )}
+        </AlertDescription>
+      </Alert>
 
-        <Alert variant={stateInitialized ? 'default' : 'destructive'}>
-          <Settings className="h-4 w-4" />
-          <AlertTitle>
-            {!isProgramReady ? 'Program Not Ready' : stateInitialized ? 'State Initialized' : 'State Not Initialized'}
-          </AlertTitle>
-          <AlertDescription>
-            {!isProgramReady ? (
-              'Deploy the Anchor program and update the IDL first'
-            ) : stateInitialized && stateAccount ? (
-              <span className="text-xs">
-                Records: {stateAccount.recordCount.toString()} | Updates: {stateAccount.updateCount.toString()}
-              </span>
-            ) : (
-              'Initialize state to enable record creation and score updates'
-            )}
-          </AlertDescription>
-        </Alert>
+      {/* URI Input */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Link2 className="h-4 w-4" />
+            Ciphertext URI (off-chain)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Input
+            value={uri}
+            onChange={(e) => setUri(e.target.value)}
+            placeholder="ipfs://... or https://..."
+            className="font-mono text-sm"
+            disabled={!connected || isProcessing}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <div className="grid grid-cols-3 gap-4">
+        <Button
+          onClick={initState}
+          disabled={!connected || isProcessing || !isProgramReady}
+          variant="outline"
+          className="w-full"
+        >
+          {isProcessing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Settings className="h-4 w-4 mr-2" />
+          )}
+          Init State
+        </Button>
+
+        <Button
+          onClick={createRecord}
+          disabled={!connected || isProcessing || !isProgramReady}
+          variant="outline"
+          className="w-full"
+        >
+          {isProcessing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileCheck className="h-4 w-4 mr-2" />
+          )}
+          Create Record
+        </Button>
+
+        <Button
+          onClick={postScoreUpdate}
+          disabled={!connected || isProcessing || !isProgramReady}
+          className="w-full"
+        >
+          {isProcessing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <TrendingUp className="h-4 w-4 mr-2" />
+          )}
+          Post Score Update
+        </Button>
       </div>
 
-      {/* Init State Card */}
-      {connected && isProgramReady && !stateInitialized && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Initialize State
-            </CardTitle>
-            <CardDescription>
-              Create the global state account to enable the program
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="oracle">Oracle Public Key (optional)</Label>
-              <Input
-                id="oracle"
-                value={oraclePubkey}
-                onChange={(e) => setOraclePubkey(e.target.value)}
-                placeholder="Leave empty to use your wallet"
-                className="font-mono text-xs"
-                disabled={isProcessing}
-              />
-              <p className="text-xs text-muted-foreground">
-                The oracle is authorized to post score updates
-              </p>
-            </div>
-
-            <Button
-              onClick={initState}
-              disabled={isProcessing}
-              className="w-full"
-            >
-              {isProcessing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Settings className="h-4 w-4 mr-2" />
-              )}
-              Initialize State
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Score and Confidence Sliders */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Create Record Card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <FileCheck className="h-4 w-4" />
-              Create Health Record
-            </CardTitle>
-            <CardDescription>
-              Register a new health record proof on-chain
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">URV Score (0-100)</CardTitle>
+              <Badge variant="outline" className="font-mono">{score[0]}</Badge>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="uri">Ciphertext URI</Label>
-              <div className="relative">
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="uri"
-                  value={ciphertextUri}
-                  onChange={(e) => setCiphertextUri(e.target.value)}
-                  placeholder="ipfs://... or https://..."
-                  className="pl-10"
-                  disabled={!connected || isProcessing || !stateInitialized}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="schema">Schema Version</Label>
-              <Input
-                id="schema"
-                type="number"
-                min={1}
-                value={schemaVersion}
-                onChange={(e) => setSchemaVersion(e.target.value)}
-                disabled={!connected || isProcessing || !stateInitialized}
-              />
-            </div>
-
-            <Button
-              onClick={createRecord}
-              disabled={!connected || isProcessing || !ciphertextUri || !stateInitialized}
-              className="w-full"
-            >
-              {isProcessing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <FileCheck className="h-4 w-4 mr-2" />
-              )}
-              Create Record
-            </Button>
+          <CardContent>
+            <Slider
+              value={score}
+              onValueChange={setScore}
+              min={0}
+              max={100}
+              step={0.1}
+              disabled={!connected || isProcessing}
+            />
           </CardContent>
         </Card>
 
-        {/* Post Score Update Card */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  Post Score Update
-                </CardTitle>
-                <CardDescription>
-                  Record a URV score update with chained proofs
-                </CardDescription>
-              </div>
-              {stateInitialized && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={fetchStateAccount}
-                  disabled={isLoadingState}
-                >
-                  <RefreshCw className={`h-4 w-4 ${isLoadingState ? 'animate-spin' : ''}`} />
-                </Button>
-              )}
+              <CardTitle className="text-base">Confidence (0-1)</CardTitle>
+              <Badge variant="outline" className="font-mono">{conf[0].toFixed(2)}</Badge>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>URV Score</Label>
-                <Badge variant="outline" className="font-mono">
-                  {urvScore[0]}
-                </Badge>
-              </div>
-              <Slider
-                value={urvScore}
-                onValueChange={setUrvScore}
-                min={0}
-                max={100}
-                step={1}
-                disabled={!connected || isProcessing || !stateInitialized}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Confidence</Label>
-                <Badge variant="outline" className="font-mono">
-                  {confidence[0].toFixed(2)}
-                </Badge>
-              </div>
-              <Slider
-                value={confidence}
-                onValueChange={setConfidence}
-                min={0}
-                max={1}
-                step={0.01}
-                disabled={!connected || isProcessing || !stateInitialized}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="recHash">Record Data Hash (optional)</Label>
-              <div className="relative">
-                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="recHash"
-                  value={recordDataHash}
-                  onChange={(e) => setRecordDataHash(e.target.value)}
-                  placeholder="Auto-filled after creating record"
-                  className="pl-10 font-mono text-xs"
-                  disabled={!connected || isProcessing || !stateInitialized}
-                />
-              </div>
-            </div>
-
-            <Button
-              onClick={postScoreUpdate}
-              disabled={!connected || isProcessing || !stateInitialized}
-              className="w-full"
-            >
-              {isProcessing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <TrendingUp className="h-4 w-4 mr-2" />
-              )}
-              Post Score Update
-            </Button>
+          <CardContent>
+            <Slider
+              value={conf}
+              onValueChange={setConf}
+              min={0}
+              max={1}
+              step={0.01}
+              disabled={!connected || isProcessing}
+            />
           </CardContent>
         </Card>
       </div>
@@ -696,7 +518,7 @@ export function UrvDemo() {
               {status.type === 'pending' && <Loader2 className="h-5 w-5 animate-spin shrink-0" />}
               
               <div className="flex-1 min-w-0">
-                <p className="font-medium">{status.message}</p>
+                <p className="font-medium text-sm">{status.message}</p>
                 {status.signature && (
                   <a
                     href={getExplorerUrl(status.signature)}
@@ -714,16 +536,18 @@ export function UrvDemo() {
         </Card>
       )}
 
-      {/* Privacy Notice */}
+      {/* MVP Notice */}
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertTitle>Privacy-Preserving Design</AlertTitle>
         <AlertDescription className="text-sm">
-          <ul className="list-disc list-inside space-y-1 mt-2">
-            <li>No PHI/PII is ever stored on-chain</li>
-            <li>Only cryptographic hashes and URI pointers are recorded</li>
-            <li>Score updates use chained hashing for immutable audit trails</li>
-            <li>All sensitive data remains encrypted off-chain</li>
+          <p className="mb-2">
+            <strong>MVP:</strong> Wallet acts as oracle. <strong>Production:</strong> Oracle = backend signer + probabilistic engine + emission policy.
+          </p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Plaintext is never stored on-chain</li>
+            <li>Only hashes (commitments), scores, confidence, and chain links are recorded</li>
+            <li>new_score_hash = sha256(prev_hash + features_hash + score_u32_LE + conf_bps_LE)</li>
           </ul>
         </AlertDescription>
       </Alert>
