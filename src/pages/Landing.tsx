@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { UHSLogo, UHSLogoMark } from '@/components/brand/UHSLogo';
 import { TrustBadge, TrustBadgeGroup, PrivacyPromise } from '@/components/brand/TrustBadges';
 import { FeatureCard, FeatureGrid, StatHighlight } from '@/components/brand/FeatureCard';
+import { KnowledgeSearch, KnowledgeStats } from '@/components/landing/KnowledgeSearch';
+import { AlphaCTASection, AlphaInvite } from '@/components/landing/AlphaInvite';
 import { 
   Shield, 
   Activity, 
@@ -20,6 +23,8 @@ import {
   CheckCircle,
   Zap,
   Globe,
+  BookOpen,
+  Search,
 } from 'lucide-react';
 
 const features = [
@@ -50,9 +55,10 @@ const features = [
     description: 'Longitudinal analysis and decision support powered by privacy-preserving AI.',
   },
   {
-    icon: Calendar,
-    title: 'Workflow Coordination',
-    description: 'Infusions, follow-ups, safety monitoring, and team coordination in one place.',
+    icon: BookOpen,
+    title: 'Knowledge Repository',
+    description: 'Curated guidelines, protocols, and clinical pearls from rheumatology societies worldwide.',
+    badge: 'New',
   },
 ];
 
@@ -64,6 +70,8 @@ const stats = [
 ];
 
 export default function Landing() {
+  const [showAlphaInvite, setShowAlphaInvite] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -71,6 +79,12 @@ export default function Landing() {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <UHSLogo size="sm" />
           <div className="flex items-center gap-4">
+            <Link to="/reumato">
+              <Button variant="ghost" size="sm" className="gap-1 text-primary">
+                <Activity className="h-4 w-4" />
+                Reumato
+              </Button>
+            </Link>
             <Link to="/login">
               <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
@@ -84,7 +98,7 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-24 px-6 hero-pattern overflow-hidden">
+      <section className="relative pt-32 pb-20 px-6 hero-pattern overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-10 right-10 w-96 h-96 bg-[hsl(42_85%_55%)]/5 rounded-full blur-3xl" />
@@ -111,6 +125,11 @@ export default function Landing() {
               Your patients' data sovereignty, protected by cryptographic proofs on Solana.
             </p>
 
+            {/* Big Knowledge Search */}
+            <div className="max-w-2xl mx-auto mb-10">
+              <KnowledgeSearch size="large" />
+            </div>
+
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <Link to="/signup">
@@ -119,20 +138,27 @@ export default function Landing() {
                   Start Building
                 </Button>
               </Link>
-              <Link to="/urv">
+              <Link to="/knowledge">
                 <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base">
-                  <Blocks className="h-5 w-5" />
-                  Explore URV Chain
+                  <BookOpen className="h-5 w-5" />
+                  Explore Knowledge
                 </Button>
               </Link>
             </div>
 
             {/* Rheumatology Tools Link */}
-            <div className="mb-12">
-              <Link to="/scores">
+            <div className="mb-12 flex flex-wrap justify-center gap-4">
+              <Link to="/reumato">
                 <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground hover:text-foreground">
                   <Activity className="h-5 w-5" />
-                  Rheumatology Clinical Tools
+                  Rheumatology Portal
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/urv">
+                <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground hover:text-foreground">
+                  <Blocks className="h-5 w-5" />
+                  URV Blockchain
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -143,6 +169,38 @@ export default function Landing() {
               {stats.map((stat) => (
                 <StatHighlight key={stat.label} {...stat} />
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Knowledge Section */}
+      <section className="py-20 px-6 bg-muted/30">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
+              <BookOpen className="h-4 w-4" />
+              Knowledge Repository
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              All Rheumatology Knowledge,{' '}
+              <span className="gradient-text">One Platform</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Guidelines, protocols, clinical pearls, and evidence-based resources 
+              from societies worldwide—searchable, organized, and always up-to-date.
+            </p>
+          </div>
+
+          <div className="uhs-card-elevated p-8">
+            <KnowledgeStats />
+            <div className="mt-8 text-center">
+              <Link to="/knowledge">
+                <Button className="gap-2">
+                  <Search className="h-4 w-4" />
+                  Browse Knowledge Library
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -216,6 +274,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Alpha CTA Section for Leaders */}
+      <AlphaCTASection onOpenInvite={() => setShowAlphaInvite(true)} />
+
       {/* Privacy Promise Section */}
       <section className="py-20 px-6 bg-muted/30">
         <div className="container mx-auto max-w-5xl">
@@ -262,6 +323,15 @@ export default function Landing() {
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => setShowAlphaInvite(true)}
+              className="gap-2 px-10 h-14 text-lg"
+            >
+              <Users className="h-5 w-5" />
+              Join Alpha (Leaders)
+            </Button>
           </div>
         </div>
       </section>
@@ -278,14 +348,17 @@ export default function Landing() {
               </div>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <Link to="/reumato" className="hover:text-foreground transition-colors">
+                Reumato Portal
+              </Link>
+              <Link to="/knowledge" className="hover:text-foreground transition-colors">
+                Knowledge
+              </Link>
               <Link to="/learn" className="hover:text-foreground transition-colors">
                 Patient Education
               </Link>
               <Link to="/urv" className="hover:text-foreground transition-colors">
                 URV Chain
-              </Link>
-              <Link to="/blockchain" className="hover:text-foreground transition-colors">
-                Blockchain Registry
               </Link>
             </div>
             <TrustBadgeGroup badges={['privacy', 'blockchain']} size="sm" />
@@ -299,6 +372,9 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* Alpha Invite Dialog */}
+      <AlphaInvite open={showAlphaInvite} onOpenChange={setShowAlphaInvite} />
     </div>
   );
 }
