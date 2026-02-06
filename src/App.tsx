@@ -30,8 +30,9 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
  const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 const Education = lazy(() => import("./pages/Education"));
 const KnowledgeLibrary = lazy(() => import("./pages/KnowledgeLibrary"));
- 
- const queryClient = new QueryClient();
+const PatientEducationLibrary = lazy(() => import("./pages/PatientEducationLibrary"));
+
+const queryClient = new QueryClient();
 
  const PageLoader = () => (
    <div className="min-h-screen flex items-center justify-center">
@@ -83,7 +84,8 @@ const KnowledgeLibrary = lazy(() => import("./pages/KnowledgeLibrary"));
                 <Route path="/academic" element={<ProtectedRoute><AcademicWorkspace /></ProtectedRoute>} />
                 <Route path="/patient-portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
                <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
-               <Route path="/knowledge" element={<ProtectedRoute><KnowledgeLibrary /></ProtectedRoute>} />
+                <Route path="/knowledge" element={<ProtectedRoute><KnowledgeLibrary /></ProtectedRoute>} />
+                <Route path="/learn" element={<PatientEducationLibrary />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
