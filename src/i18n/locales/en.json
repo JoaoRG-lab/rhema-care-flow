@@ -1,0 +1,235 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "more": "More",
+    "less": "Less",
+    "viewAll": "View All",
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "tryFree": "Try Free",
+    "contactUs": "Contact Us"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "patients": "Patients",
+    "scores": "Clinical Scores",
+    "monitoring": "Monitoring",
+    "infusions": "Infusions",
+    "calendar": "Calendar",
+    "tasks": "Tasks",
+    "focus": "Focus",
+    "knowledge": "Knowledge",
+    "education": "Education",
+    "analytics": "Analytics",
+    "aiAssistant": "AI Assistant",
+    "blockchain": "Blockchain",
+    "settings": "Settings"
+  },
+  "landing": {
+    "hero": {
+      "title": "Universal Health System",
+      "subtitle": "The Future of Healthcare Intelligence",
+      "description": "AI-powered clinical decision support, blockchain-verified quality metrics, and seamless workflow integration for modern healthcare.",
+      "cta": "Start Your Journey",
+      "ctaSecondary": "Watch Demo"
+    },
+    "features": {
+      "title": "Transforming Healthcare Delivery",
+      "clinical": {
+        "title": "Clinical Excellence",
+        "description": "Evidence-based scores, validated protocols, and real-time decision support."
+      },
+      "ai": {
+        "title": "AI-Powered Insights",
+        "description": "Intelligent analysis of patient data with predictive modeling."
+      },
+      "blockchain": {
+        "title": "Blockchain Verified",
+        "description": "Immutable quality metrics and transparent value chains."
+      },
+      "integration": {
+        "title": "Seamless Integration",
+        "description": "Connect with existing systems and workflows effortlessly."
+      }
+    },
+    "specialties": {
+      "title": "Multi-Specialty Platform",
+      "description": "Comprehensive support for internal medicine subspecialties"
+    },
+    "cta": {
+      "title": "Ready to Transform Your Practice?",
+      "description": "Join healthcare leaders worldwide in adopting the future of clinical intelligence.",
+      "button": "Get Early Access"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up"
+    },
+    "signup": {
+      "title": "Create Account",
+      "subtitle": "Start your healthcare journey",
+      "fullName": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "terms": "By signing up, you agree to our Terms of Service and Privacy Policy."
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "overview": "Overview",
+    "recentPatients": "Recent Patients",
+    "upcomingTasks": "Upcoming Tasks",
+    "quickActions": "Quick Actions",
+    "stats": {
+      "patients": "Total Patients",
+      "appointments": "Appointments Today",
+      "pendingTasks": "Pending Tasks",
+      "infusions": "Scheduled Infusions"
+    }
+  },
+  "patients": {
+    "title": "Patient Management",
+    "addPatient": "Add Patient",
+    "searchPlaceholder": "Search patients...",
+    "noPatients": "No patients found",
+    "details": {
+      "overview": "Overview",
+      "visits": "Visits",
+      "scores": "Scores",
+      "medications": "Medications",
+      "notes": "Notes"
+    },
+    "fields": {
+      "patientCode": "Patient Code",
+      "diagnosis": "Diagnosis",
+      "lastVisit": "Last Visit",
+      "nextFollowup": "Next Follow-up",
+      "riskFlags": "Risk Flags"
+    }
+  },
+  "scores": {
+    "title": "Clinical Scores",
+    "calculate": "Calculate Score",
+    "history": "Score History",
+    "types": {
+      "das28": "DAS28 - Disease Activity Score",
+      "cdai": "CDAI - Clinical Disease Activity Index",
+      "sdai": "SDAI - Simplified Disease Activity Index",
+      "haq": "HAQ-DI - Health Assessment Questionnaire",
+      "basdai": "BASDAI - Bath Ankylosing Spondylitis",
+      "sledai": "SLEDAI - SLE Disease Activity Index"
+    },
+    "results": {
+      "remission": "Remission",
+      "low": "Low Activity",
+      "moderate": "Moderate Activity",
+      "high": "High Activity"
+    }
+  },
+  "knowledge": {
+    "title": "Knowledge Library",
+    "search": "Search articles, guidelines...",
+    "categories": {
+      "guidelines": "Clinical Guidelines",
+      "articles": "Articles",
+      "protocols": "Protocols",
+      "education": "Patient Education"
+    },
+    "ai": {
+      "title": "AI Research Engine",
+      "description": "Generate and verify medical content with AI",
+      "generate": "Generate Article",
+      "verify": "Verify Content"
+    }
+  },
+  "ai": {
+    "assistant": {
+      "title": "AI Clinical Assistant",
+      "placeholder": "Ask me anything about rheumatology...",
+      "thinking": "Thinking...",
+      "sources": "Sources"
+    },
+    "agent": {
+      "title": "AI Site Agent",
+      "description": "Continuously improving UHS Health OS",
+      "running": "Running analysis...",
+      "runNow": "Run Now",
+      "lastRun": "Last run"
+    }
+  },
+  "blockchain": {
+    "title": "Blockchain Registry",
+    "urv": {
+      "title": "URV Health Chain",
+      "description": "On-chain proof registry with chained score updates",
+      "score": "URV Score",
+      "confidence": "Confidence"
+    },
+    "wallet": {
+      "connect": "Connect Wallet",
+      "connected": "Wallet Connected",
+      "notConnected": "Wallet Not Connected"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "notifications": "Notifications",
+    "security": "Security",
+    "language": "Language",
+    "theme": "Theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "notFound": "The requested resource was not found.",
+    "validation": "Please check your input and try again."
+  },
+  "success": {
+    "saved": "Changes saved successfully.",
+    "created": "Created successfully.",
+    "deleted": "Deleted successfully.",
+    "updated": "Updated successfully."
+  }
+}

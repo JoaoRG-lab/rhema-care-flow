@@ -1,0 +1,235 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "settings": "Configurações",
+    "logout": "Sair",
+    "login": "Entrar",
+    "signup": "Cadastrar",
+    "submit": "Enviar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "yes": "Sim",
+    "no": "Não",
+    "all": "Todos",
+    "none": "Nenhum",
+    "more": "Mais",
+    "less": "Menos",
+    "viewAll": "Ver Todos",
+    "learnMore": "Saiba Mais",
+    "getStarted": "Começar",
+    "tryFree": "Experimente Grátis",
+    "contactUs": "Fale Conosco"
+  },
+  "nav": {
+    "home": "Início",
+    "dashboard": "Painel",
+    "patients": "Pacientes",
+    "scores": "Escores Clínicos",
+    "monitoring": "Monitoramento",
+    "infusions": "Infusões",
+    "calendar": "Agenda",
+    "tasks": "Tarefas",
+    "focus": "Foco",
+    "knowledge": "Conhecimento",
+    "education": "Educação",
+    "analytics": "Análises",
+    "aiAssistant": "Assistente IA",
+    "blockchain": "Blockchain",
+    "settings": "Configurações"
+  },
+  "landing": {
+    "hero": {
+      "title": "Sistema Universal de Saúde",
+      "subtitle": "O Futuro da Inteligência em Saúde",
+      "description": "Suporte à decisão clínica com IA, métricas de qualidade verificadas por blockchain e integração perfeita de fluxos de trabalho para a saúde moderna.",
+      "cta": "Comece Sua Jornada",
+      "ctaSecondary": "Ver Demonstração"
+    },
+    "features": {
+      "title": "Transformando a Prestação de Cuidados de Saúde",
+      "clinical": {
+        "title": "Excelência Clínica",
+        "description": "Escores baseados em evidências, protocolos validados e suporte à decisão em tempo real."
+      },
+      "ai": {
+        "title": "Insights com IA",
+        "description": "Análise inteligente de dados do paciente com modelagem preditiva."
+      },
+      "blockchain": {
+        "title": "Verificado por Blockchain",
+        "description": "Métricas de qualidade imutáveis e cadeias de valor transparentes."
+      },
+      "integration": {
+        "title": "Integração Perfeita",
+        "description": "Conecte-se com sistemas e fluxos de trabalho existentes sem esforço."
+      }
+    },
+    "specialties": {
+      "title": "Plataforma Multi-Especialidades",
+      "description": "Suporte abrangente para subespecialidades de medicina interna"
+    },
+    "cta": {
+      "title": "Pronto para Transformar Sua Prática?",
+      "description": "Junte-se a líderes de saúde em todo o mundo na adoção do futuro da inteligência clínica.",
+      "button": "Obter Acesso Antecipado"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bem-vindo de Volta",
+      "subtitle": "Entre na sua conta",
+      "email": "E-mail",
+      "password": "Senha",
+      "forgotPassword": "Esqueceu a senha?",
+      "noAccount": "Não tem uma conta?",
+      "signUp": "Cadastre-se"
+    },
+    "signup": {
+      "title": "Criar Conta",
+      "subtitle": "Comece sua jornada na saúde",
+      "fullName": "Nome Completo",
+      "email": "E-mail",
+      "password": "Senha",
+      "confirmPassword": "Confirmar Senha",
+      "hasAccount": "Já tem uma conta?",
+      "signIn": "Entrar",
+      "terms": "Ao se cadastrar, você concorda com nossos Termos de Serviço e Política de Privacidade."
+    }
+  },
+  "dashboard": {
+    "welcome": "Bem-vindo",
+    "overview": "Visão Geral",
+    "recentPatients": "Pacientes Recentes",
+    "upcomingTasks": "Tarefas Próximas",
+    "quickActions": "Ações Rápidas",
+    "stats": {
+      "patients": "Total de Pacientes",
+      "appointments": "Consultas Hoje",
+      "pendingTasks": "Tarefas Pendentes",
+      "infusions": "Infusões Agendadas"
+    }
+  },
+  "patients": {
+    "title": "Gestão de Pacientes",
+    "addPatient": "Adicionar Paciente",
+    "searchPlaceholder": "Buscar pacientes...",
+    "noPatients": "Nenhum paciente encontrado",
+    "details": {
+      "overview": "Visão Geral",
+      "visits": "Consultas",
+      "scores": "Escores",
+      "medications": "Medicamentos",
+      "notes": "Anotações"
+    },
+    "fields": {
+      "patientCode": "Código do Paciente",
+      "diagnosis": "Diagnóstico",
+      "lastVisit": "Última Consulta",
+      "nextFollowup": "Próximo Retorno",
+      "riskFlags": "Alertas de Risco"
+    }
+  },
+  "scores": {
+    "title": "Escores Clínicos",
+    "calculate": "Calcular Escore",
+    "history": "Histórico de Escores",
+    "types": {
+      "das28": "DAS28 - Índice de Atividade da Doença",
+      "cdai": "CDAI - Índice Clínico de Atividade",
+      "sdai": "SDAI - Índice Simplificado de Atividade",
+      "haq": "HAQ-DI - Questionário de Avaliação de Saúde",
+      "basdai": "BASDAI - Espondilite Anquilosante",
+      "sledai": "SLEDAI - Índice de Atividade do LES"
+    },
+    "results": {
+      "remission": "Remissão",
+      "low": "Baixa Atividade",
+      "moderate": "Atividade Moderada",
+      "high": "Alta Atividade"
+    }
+  },
+  "knowledge": {
+    "title": "Biblioteca de Conhecimento",
+    "search": "Buscar artigos, diretrizes...",
+    "categories": {
+      "guidelines": "Diretrizes Clínicas",
+      "articles": "Artigos",
+      "protocols": "Protocolos",
+      "education": "Educação do Paciente"
+    },
+    "ai": {
+      "title": "Motor de Pesquisa IA",
+      "description": "Gere e verifique conteúdo médico com IA",
+      "generate": "Gerar Artigo",
+      "verify": "Verificar Conteúdo"
+    }
+  },
+  "ai": {
+    "assistant": {
+      "title": "Assistente Clínico IA",
+      "placeholder": "Pergunte-me qualquer coisa sobre reumatologia...",
+      "thinking": "Pensando...",
+      "sources": "Fontes"
+    },
+    "agent": {
+      "title": "Agente IA do Site",
+      "description": "Melhorando continuamente o UHS Health OS",
+      "running": "Executando análise...",
+      "runNow": "Executar Agora",
+      "lastRun": "Última execução"
+    }
+  },
+  "blockchain": {
+    "title": "Registro Blockchain",
+    "urv": {
+      "title": "URV Health Chain",
+      "description": "Registro de provas on-chain com atualizações de score encadeadas",
+      "score": "Score URV",
+      "confidence": "Confiança"
+    },
+    "wallet": {
+      "connect": "Conectar Carteira",
+      "connected": "Carteira Conectada",
+      "notConnected": "Carteira Não Conectada"
+    }
+  },
+  "settings": {
+    "title": "Configurações",
+    "profile": "Perfil",
+    "preferences": "Preferências",
+    "notifications": "Notificações",
+    "security": "Segurança",
+    "language": "Idioma",
+    "theme": "Tema",
+    "themes": {
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Sistema"
+    }
+  },
+  "errors": {
+    "generic": "Algo deu errado. Por favor, tente novamente.",
+    "network": "Erro de rede. Verifique sua conexão.",
+    "unauthorized": "Você não está autorizado a realizar esta ação.",
+    "notFound": "O recurso solicitado não foi encontrado.",
+    "validation": "Por favor, verifique seus dados e tente novamente."
+  },
+  "success": {
+    "saved": "Alterações salvas com sucesso.",
+    "created": "Criado com sucesso.",
+    "deleted": "Excluído com sucesso.",
+    "updated": "Atualizado com sucesso."
+  }
+}
