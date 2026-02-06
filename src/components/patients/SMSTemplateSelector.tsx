@@ -1,101 +1,135 @@
- import { useState } from 'react';
- import { Card, CardContent } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import { Input } from '@/components/ui/input';
- import { Label } from '@/components/ui/label';
- import { Badge } from '@/components/ui/badge';
- import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
- import { ScrollArea } from '@/components/ui/scroll-area';
- import { Textarea } from '@/components/ui/textarea';
- import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
- import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
- import { Calendar, Pill, FlaskConical, MessageSquare, Check, Plus, Trash2, Save, Star } from 'lucide-react';
- import { SMS_TEMPLATES, SMSTemplate, fillTemplate, getUnfilledVariables } from '@/config/smsTemplates';
- import { useSmsTemplates, extractVariables, CustomSMSTemplate } from '@/hooks/useSmsTemplates';
- import { cn } from '@/lib/utils';
- 
- interface SMSTemplateSelectorProps {
-   onSelect: (message: string) => void;
-   defaultValues?: Record<string, string>;
- }
- 
- type TemplateCategory = 'appointment' | 'medication' | 'lab' | 'general';
- 
- const categoryIcons = {
-   appointment: Calendar,
-   medication: Pill,
-   lab: FlaskConical,
-   general: MessageSquare,
- };
- 
- const categoryLabels = {
-   appointment: 'Appointments',
-   medication: 'Medications',
-   lab: 'Lab Work',
-   general: 'General',
- };
- 
- export function SMSTemplateSelector({ onSelect, defaultValues = {} }: SMSTemplateSelectorProps) {
-   const { templates: customTemplates, createTemplate, deleteTemplate } = useSmsTemplates();
-   const [selectedTemplate, setSelectedTemplate] = useState<SMSTemplate | CustomSMSTemplate | null>(null);
-   const [isCustom, setIsCustom] = useState(false);
-   const [variableValues, setVariableValues] = useState<Record<string, string>>(defaultValues);
-   const [showCreateDialog, setShowCreateDialog] = useState(false);
-   const [newTemplate, setNewTemplate] = useState({
-     name: '',
-     category: 'general' as TemplateCategory,
-     message: '',
-   });
- 
-   const handleTemplateSelect = (template: SMSTemplate | CustomSMSTemplate, custom: boolean = false) => {
-     setSelectedTemplate(template);
-     setIsCustom(custom);
-     const newValues = { ...defaultValues };
-     template.variables.forEach((v) => {
-       if (!newValues[v]) newValues[v] = '';
-     });
-     setVariableValues(newValues);
-   };
- 
-   const handleVariableChange = (variable: string, value: string) => {
-     setVariableValues((prev) => ({ ...prev, [variable]: value }));
-   };
- 
-   const handleApply = () => {
-     if (!selectedTemplate) return;
-     const message = fillTemplate(selectedTemplate as SMSTemplate, variableValues);
-     onSelect(message);
-   };
- 
-   const handleSaveAsTemplate = async () => {
-     if (!selectedTemplate) return;
-     await createTemplate({
-       name: `${selectedTemplate.name} (Copy)`,
-       category: selectedTemplate.category as TemplateCategory,
-       message: selectedTemplate.message,
-       variables: selectedTemplate.variables,
-     });
-   };
- 
-   const handleCreateTemplate = async () => {
-     const variables = extractVariables(newTemplate.message);
-     await createTemplate({
-       name: newTemplate.name,
-       category: newTemplate.category,
-       message: newTemplate.message,
-       variables,
-     });
-     setNewTemplate({ name: '', category: 'general', message: '' });
-     setShowCreateDialog(false);
-   };
- 
-   const handleDeleteCustomTemplate = async (id: string, e: React.MouseEvent) => {
-     e.stopPropagation();
-     await deleteTemplate(id);
-     if (selectedTemplate && 'user_id' in selectedTemplate && selectedTemplate.id === id) {
-       setSelectedTemplate(null);
-     }
-   };
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar, Pill, FlaskConical, MessageSquare, Check, Plus, Trash2, Save, Star, Pencil } from 'lucide-react';
+import { SMS_TEMPLATES, SMSTemplate, fillTemplate, getUnfilledVariables } from '@/config/smsTemplates';
+import { useSmsTemplates, extractVariables, CustomSMSTemplate } from '@/hooks/useSmsTemplates';
+import { cn } from '@/lib/utils';
+
+interface SMSTemplateSelectorProps {
+  onSelect: (message: string) => void;
+  defaultValues?: Record<string, string>;
+}
+
+type TemplateCategory = 'appointment' | 'medication' | 'lab' | 'general';
+
+const categoryIcons = {
+  appointment: Calendar,
+  medication: Pill,
+  lab: FlaskConical,
+  general: MessageSquare,
+};
+
+const categoryLabels = {
+  appointment: 'Appointments',
+  medication: 'Medications',
+  lab: 'Lab Work',
+  general: 'General',
+};
+
+export function SMSTemplateSelector({ onSelect, defaultValues = {} }: SMSTemplateSelectorProps) {
+  const { templates: customTemplates, createTemplate, updateTemplate, deleteTemplate } = useSmsTemplates();
+  const [selectedTemplate, setSelectedTemplate] = useState<SMSTemplate | CustomSMSTemplate | null>(null);
+  const [isCustom, setIsCustom] = useState(false);
+  const [variableValues, setVariableValues] = useState<Record<string, string>>(defaultValues);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<CustomSMSTemplate | null>(null);
+  const [templateForm, setTemplateForm] = useState({
+    name: '',
+    category: 'general' as TemplateCategory,
+    message: '',
+  });
+
+  const handleTemplateSelect = (template: SMSTemplate | CustomSMSTemplate, custom: boolean = false) => {
+    setSelectedTemplate(template);
+    setIsCustom(custom);
+    const newValues = { ...defaultValues };
+    template.variables.forEach((v) => {
+      if (!newValues[v]) newValues[v] = '';
+    });
+    setVariableValues(newValues);
+  };
+
+  const handleVariableChange = (variable: string, value: string) => {
+    setVariableValues((prev) => ({ ...prev, [variable]: value }));
+  };
+
+  const handleApply = () => {
+    if (!selectedTemplate) return;
+    const message = fillTemplate(selectedTemplate as SMSTemplate, variableValues);
+    onSelect(message);
+  };
+
+  const handleSaveAsTemplate = async () => {
+    if (!selectedTemplate) return;
+    await createTemplate({
+      name: `${selectedTemplate.name} (Copy)`,
+      category: selectedTemplate.category as TemplateCategory,
+      message: selectedTemplate.message,
+      variables: selectedTemplate.variables,
+    });
+  };
+
+  const openCreateDialog = () => {
+    setEditingTemplate(null);
+    setTemplateForm({ name: '', category: 'general', message: '' });
+    setShowTemplateDialog(true);
+  };
+
+  const openEditDialog = (template: CustomSMSTemplate, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingTemplate(template);
+    setTemplateForm({
+      name: template.name,
+      category: template.category,
+      message: template.message,
+    });
+    setShowTemplateDialog(true);
+  };
+
+  const handleSaveTemplate = async () => {
+    const variables = extractVariables(templateForm.message);
+    
+    if (editingTemplate) {
+      // Update existing template
+      const success = await updateTemplate(editingTemplate.id, {
+        name: templateForm.name,
+        category: templateForm.category,
+        message: templateForm.message,
+        variables,
+      });
+      if (success) {
+        setShowTemplateDialog(false);
+        setEditingTemplate(null);
+      }
+    } else {
+      // Create new template
+      await createTemplate({
+        name: templateForm.name,
+        category: templateForm.category,
+        message: templateForm.message,
+        variables,
+      });
+      setShowTemplateDialog(false);
+    }
+    setTemplateForm({ name: '', category: 'general', message: '' });
+  };
+
+  const handleDeleteCustomTemplate = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await deleteTemplate(id);
+    if (selectedTemplate && 'user_id' in selectedTemplate && selectedTemplate.id === id) {
+      setSelectedTemplate(null);
+    }
+  };
  
    const unfilledVars = selectedTemplate ? getUnfilledVariables(selectedTemplate as SMSTemplate, variableValues) : [];
    const previewMessage = selectedTemplate ? fillTemplate(selectedTemplate as SMSTemplate, variableValues) : '';
@@ -110,71 +144,73 @@
  
    return (
      <div className="space-y-4">
-       <div className="flex justify-end">
-         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-           <DialogTrigger asChild>
-             <Button variant="outline" size="sm" className="gap-1">
-               <Plus className="h-3 w-3" />
-               Create Template
-             </Button>
-           </DialogTrigger>
-           <DialogContent>
-             <DialogHeader>
-               <DialogTitle>Create Custom Template</DialogTitle>
-             </DialogHeader>
-             <div className="space-y-4 mt-4">
-               <div>
-                 <Label htmlFor="templateName">Template Name</Label>
-                 <Input
-                   id="templateName"
-                   value={newTemplate.name}
-                   onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
-                   placeholder="e.g., My Custom Reminder"
-                   className="mt-1"
-                 />
-               </div>
-               <div>
-                 <Label htmlFor="templateCategory">Category</Label>
-                 <Select
-                   value={newTemplate.category}
-                   onValueChange={(v) => setNewTemplate(prev => ({ ...prev, category: v as TemplateCategory }))}
-                 >
-                   <SelectTrigger className="mt-1">
-                     <SelectValue />
-                   </SelectTrigger>
-                   <SelectContent>
-                     {categories.map(cat => (
-                       <SelectItem key={cat} value={cat}>{categoryLabels[cat]}</SelectItem>
-                     ))}
-                   </SelectContent>
-                 </Select>
-               </div>
-               <div>
-                 <Label htmlFor="templateMessage">Message</Label>
-                 <Textarea
-                   id="templateMessage"
-                   value={newTemplate.message}
-                   onChange={(e) => setNewTemplate(prev => ({ ...prev, message: e.target.value }))}
-                   placeholder="Use {{variableName}} for dynamic values"
-                   rows={4}
-                   className="mt-1"
-                 />
-                 <p className="text-xs text-muted-foreground mt-1">
-                   Variables detected: {extractVariables(newTemplate.message).join(', ') || 'None'}
-                 </p>
-               </div>
-               <Button 
-                 onClick={handleCreateTemplate} 
-                 disabled={!newTemplate.name || !newTemplate.message}
-                 className="w-full"
-               >
-                 <Save className="h-4 w-4 mr-2" />
-                 Save Template
-               </Button>
-             </div>
-           </DialogContent>
-         </Dialog>
-       </div>
+        <div className="flex justify-end">
+          <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1" onClick={openCreateDialog}>
+                <Plus className="h-3 w-3" />
+                Create Template
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingTemplate ? 'Edit Template' : 'Create Custom Template'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="templateName">Template Name</Label>
+                  <Input
+                    id="templateName"
+                    value={templateForm.name}
+                    onChange={(e) => setTemplateForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g., My Custom Reminder"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="templateCategory">Category</Label>
+                  <Select
+                    value={templateForm.category}
+                    onValueChange={(v) => setTemplateForm(prev => ({ ...prev, category: v as TemplateCategory }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat} value={cat}>{categoryLabels[cat]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="templateMessage">Message</Label>
+                  <Textarea
+                    id="templateMessage"
+                    value={templateForm.message}
+                    onChange={(e) => setTemplateForm(prev => ({ ...prev, message: e.target.value }))}
+                    placeholder="Use {{variableName}} for dynamic values"
+                    rows={4}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Variables detected: {extractVariables(templateForm.message).join(', ') || 'None'}
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleSaveTemplate} 
+                  disabled={!templateForm.name || !templateForm.message}
+                  className="w-full"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {editingTemplate ? 'Update Template' : 'Save Template'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
  
        <Tabs defaultValue="appointment" className="w-full">
          <TabsList className="grid w-full grid-cols-4">
@@ -221,19 +257,27 @@
                              <Star className="h-3 w-3 text-warning" />
                              <span className="font-medium text-sm">{template.name}</span>
                            </div>
-                           <div className="flex items-center gap-1">
-                             {selectedTemplate?.id === template.id && isCustom && (
-                               <Check className="h-4 w-4 text-primary" />
-                             )}
-                             <Button
-                               variant="ghost"
-                               size="icon"
-                               className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                               onClick={(e) => handleDeleteCustomTemplate(template.id, e)}
-                             >
-                               <Trash2 className="h-3 w-3 text-destructive" />
-                             </Button>
-                           </div>
+                            <div className="flex items-center gap-1">
+                              {selectedTemplate?.id === template.id && isCustom && (
+                                <Check className="h-4 w-4 text-primary" />
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => openEditDialog(template, e)}
+                              >
+                                <Pencil className="h-3 w-3 text-muted-foreground" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => handleDeleteCustomTemplate(template.id, e)}
+                              >
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
+                            </div>
                          </div>
                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                            {template.message}
