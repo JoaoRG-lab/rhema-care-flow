@@ -21,6 +21,7 @@
    GraduationCap,
   FileText,
   TrendingUp,
+  Bot,
 } from 'lucide-react';
  import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -51,6 +52,7 @@ const navItems = [
   { path: '/calendar', label: 'Calendar', icon: Calendar },
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
   { path: '/focus', label: 'Focus', icon: Timer },
+  { path: '/ai-assistant', label: 'AI Assistant', icon: Bot },
 ];
  
  const academicNavItems = [

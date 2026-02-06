@@ -32,6 +32,7 @@ const Education = lazy(() => import("./pages/Education"));
 const KnowledgeLibrary = lazy(() => import("./pages/KnowledgeLibrary"));
 const PatientEducationLibrary = lazy(() => import("./pages/PatientEducationLibrary"));
 const Analytics = lazy(() => import("./pages/Analytics"));
+const AIAssistant = lazy(() => import("./pages/AIAssistant"));
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const queryClient = new QueryClient();
                 <Route path="/knowledge" element={<ProtectedRoute><KnowledgeLibrary /></ProtectedRoute>} />
                 <Route path="/learn" element={<PatientEducationLibrary />} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
