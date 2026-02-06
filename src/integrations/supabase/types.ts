@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_run_log: {
+        Row: {
+          agent_name: string
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          results: Json | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          agent_name: string
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          results?: Json | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          agent_name?: string
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          results?: Json | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       ai_research_pipeline: {
         Row: {
           academic_review_requested_at: string | null
@@ -1255,6 +1285,30 @@ export type Database = {
           shift_type?: string
           start_time?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      site_activity_log: {
+        Row: {
+          activity_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
         }
         Relationships: []
       }

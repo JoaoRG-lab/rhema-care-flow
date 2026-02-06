@@ -1,12 +1,18 @@
- import { lazy, Suspense } from "react";
- import { Toaster } from "@/components/ui/toaster";
- import { Toaster as Sonner } from "@/components/ui/sonner";
- import { TooltipProvider } from "@/components/ui/tooltip";
- import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
- import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
- import { AuthProvider, useAuth } from "@/contexts/AuthContext";
- import { PersonaProvider } from "@/contexts/PersonaContext";
- 
+import { lazy, Suspense } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { PersonaProvider } from "@/contexts/PersonaContext";
+import { useActivityTracker } from "@/hooks/useActivityTracker";
+
+// Activity tracker wrapper component
+function ActivityTracker({ children }: { children: React.ReactNode }) {
+  useActivityTracker();
+  return <>{children}</>;
+}
  // Lazy load pages for code splitting
  const Landing = lazy(() => import("./pages/Landing"));
  const Login = lazy(() => import("./pages/Login"));
@@ -66,48 +72,50 @@ const queryClient = new QueryClient();
      <TooltipProvider>
        <Toaster />
        <Sonner />
-       <BrowserRouter>
-         <AuthProvider>
-           <PersonaProvider>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
-                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-                <Route path="/patients/:id" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
-                <Route path="/scores" element={<Scores />} />
-                <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
-                <Route path="/infusions" element={<ProtectedRoute><Infusions /></ProtectedRoute>} />
-                <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-                <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-                <Route path="/focus" element={<ProtectedRoute><Focus /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/style-guide" element={<StyleGuide />} />
-                <Route path="/verification-request" element={<ProtectedRoute><VerificationRequest /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-               <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/academic" element={<ProtectedRoute><AcademicWorkspace /></ProtectedRoute>} />
-                <Route path="/patient-portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
-               <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
-                <Route path="/knowledge" element={<ProtectedRoute><KnowledgeLibrary /></ProtectedRoute>} />
-                <Route path="/learn" element={<PatientEducationLibrary />} />
-                <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-                <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
-                <Route path="/blockchain" element={<ProtectedRoute><BlockchainRegistry /></ProtectedRoute>} />
-                <Route path="/urv" element={<UrvPage />} />
-                <Route path="/reumato" element={<ReumatoPortal />} />
-                <Route path="/especialidades" element={<SpecialtyPortal />} />
-                <Route path="/specialty/:specialtyId" element={<SpecialtyPortal />} />
-                <Route path="/ai-research" element={<ProtectedRoute><AIResearch /></ProtectedRoute>} />
-                <Route path="/outreach" element={<ProtectedRoute><OutreachCRM /></ProtectedRoute>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-           </PersonaProvider>
-         </AuthProvider>
-       </BrowserRouter>
+        <BrowserRouter>
+          <AuthProvider>
+            <PersonaProvider>
+              <ActivityTracker>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+                    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                    <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                    <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+                    <Route path="/patients/:id" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
+                    <Route path="/scores" element={<Scores />} />
+                    <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
+                    <Route path="/infusions" element={<ProtectedRoute><Infusions /></ProtectedRoute>} />
+                    <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+                    <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+                    <Route path="/focus" element={<ProtectedRoute><Focus /></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                    <Route path="/style-guide" element={<StyleGuide />} />
+                    <Route path="/verification-request" element={<ProtectedRoute><VerificationRequest /></ProtectedRoute>} />
+                    <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/academic" element={<ProtectedRoute><AcademicWorkspace /></ProtectedRoute>} />
+                    <Route path="/patient-portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
+                    <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
+                    <Route path="/knowledge" element={<ProtectedRoute><KnowledgeLibrary /></ProtectedRoute>} />
+                    <Route path="/learn" element={<PatientEducationLibrary />} />
+                    <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                    <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
+                    <Route path="/blockchain" element={<ProtectedRoute><BlockchainRegistry /></ProtectedRoute>} />
+                    <Route path="/urv" element={<UrvPage />} />
+                    <Route path="/reumato" element={<ReumatoPortal />} />
+                    <Route path="/especialidades" element={<SpecialtyPortal />} />
+                    <Route path="/specialty/:specialtyId" element={<SpecialtyPortal />} />
+                    <Route path="/ai-research" element={<ProtectedRoute><AIResearch /></ProtectedRoute>} />
+                    <Route path="/outreach" element={<ProtectedRoute><OutreachCRM /></ProtectedRoute>} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </ActivityTracker>
+            </PersonaProvider>
+          </AuthProvider>
+        </BrowserRouter>
      </TooltipProvider>
    </QueryClientProvider>
  );
