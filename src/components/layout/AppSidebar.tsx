@@ -1,37 +1,39 @@
- import { Link, useLocation } from 'react-router-dom';
- import {
-   LayoutDashboard,
-   Users,
-   Activity,
-   Shield,
-   Calendar,
-   CheckSquare,
-   Timer,
-   Settings,
-   LogOut,
-   Stethoscope,
-   Syringe,
-   Palette,
-   BadgeCheck,
-   ShieldCheck,
-   ChevronUp,
-   User,
-   BookOpen,
-   Heart,
-   GraduationCap,
+import { Link, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Users,
+  Activity,
+  Shield,
+  Calendar,
+  CheckSquare,
+  Timer,
+  Settings,
+  LogOut,
+  Syringe,
+  Palette,
+  BadgeCheck,
+  ShieldCheck,
+  ChevronUp,
+  User,
+  BookOpen,
+  Heart,
+  GraduationCap,
   FileText,
   TrendingUp,
   Bot,
   Blocks,
+  Link2,
 } from 'lucide-react';
- import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
- import { usePersona } from '@/contexts/PersonaContext';
- import { cn } from '@/lib/utils';
-import { VerifiedBadge, VerifiedIcon } from '@/components/ui/VerifiedBadge';
+import { usePersona } from '@/contexts/PersonaContext';
+import { cn } from '@/lib/utils';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
- import { PersonaSwitcher } from './PersonaSwitcher';
+import { PersonaSwitcher } from './PersonaSwitcher';
+import { UHSLogoMark } from '@/components/brand/UHSLogo';
+import { TrustBadge } from '@/components/brand/TrustBadges';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +42,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
- 
+
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/patients', label: 'Patients', icon: Users },
@@ -54,35 +56,36 @@ const navItems = [
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
   { path: '/focus', label: 'Focus', icon: Timer },
   { path: '/ai-assistant', label: 'AI Assistant', icon: Bot },
-  { path: '/blockchain', label: 'Blockchain', icon: Blocks },
+  { path: '/blockchain', label: 'URV Chain', icon: Blocks },
 ];
- 
- const academicNavItems = [
-   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-   { path: '/academic', label: 'Research', icon: GraduationCap },
-   { path: '/patients', label: 'Cohort Data', icon: Users },
-   { path: '/scores', label: 'Calculators', icon: Activity },
-   { path: '/calendar', label: 'Calendar', icon: Calendar },
- ];
- 
- const patientNavItems = [
-   { path: '/patient-portal', label: 'My Health', icon: Heart },
-   { path: '/calendar', label: 'Appointments', icon: Calendar },
- ];
- 
- export function AppSidebar() {
-   const location = useLocation();
-   const { signOut, user } = useAuth();
+
+const academicNavItems = [
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/academic', label: 'Research', icon: GraduationCap },
+  { path: '/patients', label: 'Cohort Data', icon: Users },
+  { path: '/scores', label: 'Calculators', icon: Activity },
+  { path: '/calendar', label: 'Calendar', icon: Calendar },
+];
+
+const patientNavItems = [
+  { path: '/patient-portal', label: 'My Health', icon: Heart },
+  { path: '/learn', label: 'Education', icon: BookOpen },
+  { path: '/calendar', label: 'Appointments', icon: Calendar },
+];
+
+export function AppSidebar() {
+  const location = useLocation();
+  const { signOut, user } = useAuth();
   const { isAdmin } = useUserRole();
   const { tier, fullName, contributorType } = useVerificationStatus();
-   const { persona } = usePersona();
- 
-   // Select nav items based on persona
-   const currentNavItems = persona === 'academic' 
-     ? academicNavItems 
-     : persona === 'patient' 
-       ? patientNavItems 
-       : navItems;
+  const { persona } = usePersona();
+
+  // Select nav items based on persona
+  const currentNavItems = persona === 'academic' 
+    ? academicNavItems 
+    : persona === 'patient' 
+      ? patientNavItems 
+      : navItems;
 
   // Get initials from name or email
   const getInitials = () => {
@@ -110,113 +113,119 @@ const navItems = [
     }
     return user?.email?.split('@')[0] || 'User';
   };
- 
-   return (
-     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground flex flex-col">
-       {/* Logo */}
-       <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
-           <Stethoscope className="h-5 w-5 text-sidebar-primary-foreground" />
-         </div>
-         <div>
-           <h1 className="font-semibold text-lg text-sidebar-foreground">RheumaFlow</h1>
-           <p className="text-xs text-sidebar-foreground/60">
-             {persona === 'academic' ? 'Academic Mode' : persona === 'patient' ? 'Patient Portal' : 'Clinical Workflow'}
-           </p>
-         </div>
-       </div>
- 
-       {/* Persona Switcher */}
-       <div className="border-b border-sidebar-border">
-         <PersonaSwitcher variant="sidebar" />
-       </div>
- 
-       {/* Navigation */}
-       <nav className="flex-1 overflow-y-auto py-4 px-3">
-         <ul className="space-y-1">
-           {currentNavItems.map((item) => {
-             const isActive = location.pathname === item.path;
-             return (
-               <li key={item.path}>
-                 <Link
-                   to={item.path}
-                   className={cn(
-                     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                     isActive
-                       ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                       : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-                   )}
-                 >
-                   <item.icon className="h-5 w-5" />
-                   {item.label}
-                 </Link>
-               </li>
-             );
-           })}
-         </ul>
-       </nav>
- 
-       {/* Footer */}
-       <div className="border-t border-sidebar-border p-3 space-y-1">
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                location.pathname === '/admin'
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-              )}
-            >
-              <ShieldCheck className="h-5 w-5" />
-              Admin Panel
-            </Link>
+
+  return (
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground flex flex-col">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
+        <UHSLogoMark className="h-10 w-10" />
+        <div>
+          <h1 className="font-semibold text-lg text-sidebar-foreground">UHS Health OS</h1>
+          <p className="text-xs text-sidebar-foreground/60">
+            {persona === 'academic' ? 'Research Mode' : persona === 'patient' ? 'Patient Portal' : 'Clinical'}
+          </p>
+        </div>
+      </div>
+
+      {/* Persona Switcher */}
+      <div className="border-b border-sidebar-border">
+        <PersonaSwitcher variant="sidebar" />
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3">
+        <ul className="space-y-1">
+          {currentNavItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
+                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                  {item.path === '/blockchain' && (
+                    <Link2 className="h-3 w-3 ml-auto text-sidebar-primary opacity-60" />
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* Footer */}
+      <div className="border-t border-sidebar-border p-3 space-y-1">
+        {/* Blockchain status badge */}
+        <div className="px-3 py-2 mb-2">
+          <TrustBadge variant="blockchain" size="sm" />
+        </div>
+
+        {isAdmin && (
+          <Link
+            to="/admin"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+              location.pathname === '/admin'
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+            )}
+          >
+            <ShieldCheck className="h-5 w-5" />
+            Admin Panel
+          </Link>
+        )}
+        <Link
+          to="/verification-request"
+          className={cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+            location.pathname === '/verification-request'
+              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
           )}
-          <Link
-            to="/verification-request"
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-              location.pathname === '/verification-request'
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-            )}
-          >
-            <BadgeCheck className="h-5 w-5" />
-            Get Verified
-          </Link>
-          <Link
-            to="/style-guide"
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-              location.pathname === '/style-guide'
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-            )}
-          >
-            <Palette className="h-5 w-5" />
-            Style Guide
-          </Link>
-         <Link
-           to="/settings"
-           className={cn(
-             'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-             location.pathname === '/settings'
-               ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-               : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-           )}
-         >
-           <Settings className="h-5 w-5" />
-           Settings
-         </Link>
+        >
+          <BadgeCheck className="h-5 w-5" />
+          Get Verified
+        </Link>
+        <Link
+          to="/style-guide"
+          className={cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+            location.pathname === '/style-guide'
+              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+          )}
+        >
+          <Palette className="h-5 w-5" />
+          Style Guide
+        </Link>
+        <Link
+          to="/settings"
+          className={cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+            location.pathname === '/settings'
+              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+          )}
+        >
+          <Settings className="h-5 w-5" />
+          Settings
+        </Link>
 
         {/* Profile Dropdown */}
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={undefined} />
-                  <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                  <AvatarFallback className="bg-gradient-to-br from-sidebar-primary to-[hsl(165_60%_48%)] text-sidebar-primary-foreground text-xs">
                     {getInitials()}
                   </AvatarFallback>
                 </Avatar>
@@ -241,7 +250,7 @@ const navItems = [
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(165_60%_48%)] text-primary-foreground">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
@@ -294,7 +303,7 @@ const navItems = [
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-       </div>
-     </aside>
-   );
- }
+      </div>
+    </aside>
+  );
+}
