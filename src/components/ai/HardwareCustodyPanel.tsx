@@ -385,6 +385,22 @@ export function HardwareCustodyPanel() {
                 <p>Public Key: {custodyStatus.hardware_pubkey}</p>
               </div>
             )}
+            
+            {/* Ledger-specific instructions */}
+            <Alert className="text-left bg-amber-500/10 border-amber-500/30">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertTitle className="text-amber-600">Ledger Users: Enable Blind Signing</AlertTitle>
+              <AlertDescription className="text-sm space-y-2">
+                <p>Before signing, ensure these settings on your Ledger:</p>
+                <ol className="list-decimal list-inside space-y-1 mt-2">
+                  <li>Open the <strong>Solana app</strong> on your Ledger</li>
+                  <li>Go to <strong>Settings → Blind Signing → Enabled</strong></li>
+                  <li>Return to the main Solana app screen</li>
+                  <li>Then click "Sign & Complete" below</li>
+                </ol>
+              </AlertDescription>
+            </Alert>
+
             <Alert variant="destructive" className="text-left">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>⚠️ Final Warning</AlertTitle>
