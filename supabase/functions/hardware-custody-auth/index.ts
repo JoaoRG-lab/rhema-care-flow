@@ -204,7 +204,7 @@ serve(async (req) => {
             hardware_type: hardware_type,
             hardware_serial_hash: hardware_serial_hash || null,
             installation_status: "hardware_connected",
-            seed_phrase_hash: pubkeyCommitment, // Use pubkey hash as the identity commitment
+            seed_hash: pubkeyCommitment, // Use pubkey hash as the identity commitment
             updated_at: new Date().toISOString(),
           })
           .eq("user_id", user.id);
