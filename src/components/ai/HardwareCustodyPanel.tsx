@@ -20,7 +20,14 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
+import { Buffer } from 'buffer';
+import {
+  Connection,
+  clusterApiUrl,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 
 interface CustodyStatus {
   installation_status: string;
@@ -145,15 +152,15 @@ export function HardwareCustodyPanel() {
 
     try {
       const solana = (window as any).solana;
-      
+
       if (!solana?.isConnected) {
         throw new Error('Wallet not connected. Please reconnect.');
       }
 
       let signatureHex: string;
-      const publicKey = solana.publicKey;
+      const publicKey: PublicKey = solana.publicKey;
 
-      // Try signMessage first (works for most wallets)
+      // Try signMessage first (works for most wallets, but not for Ledger)
       try {
         const message = new TextEncoder().encode(challenge);
         const { signature } = await solana.signMessage(message, 'utf8');
@@ -161,50 +168,50 @@ export function HardwareCustodyPanel() {
           .map((b: number) => b.toString(16).padStart(2, '0'))
           .join('');
       } catch (signMessageError: any) {
-        // If signMessage fails (Ledger), fall back to transaction signing
-        console.log('signMessage failed, trying transaction signing:', signMessageError.message);
-        
-        if (signMessageError.message?.includes('0x6a81') || signMessageError.message?.includes('UNKNOWN_ERROR')) {
-          toast.info('Using transaction signing for Ledger...');
-          
-          // Create a minimal self-transfer transaction as proof of ownership
-          // This is a zero-value transfer that Ledger can sign
-          const transaction = new Transaction();
-          transaction.add(
-            SystemProgram.transfer({
-              fromPubkey: publicKey,
-              toPubkey: publicKey,
-              lamports: 0,
-            })
-          );
-          
-          // Set a recent blockhash (we use a placeholder since we won't actually send this)
-          transaction.recentBlockhash = 'EkSnNWid2cvwEVnVx9aBqawnmiCNiDgp3gUdkDPTKN1N';
-          transaction.feePayer = publicKey;
-          
-          // Sign the transaction with Ledger
-          const signedTx = await solana.signTransaction(transaction);
-          
-          // Extract signature from the signed transaction
-          const txSignature = signedTx.signature;
-          if (!txSignature) {
-            throw new Error('Failed to get signature from Ledger transaction');
+        // Ledger typically fails signMessage; fall back to transaction signing
+        const isLedgerish =
+          solana.isLedger ||
+          signMessageError?.message?.includes('0x6a81') ||
+          signMessageError?.message?.includes('UNKNOWN_ERROR');
+
+        if (!isLedgerish) throw signMessageError;
+
+        toast.info('Ledger detected: using transaction signing...');
+
+        // Build a transaction that commits to the challenge via Memo.
+        // Ledger supports signing transactions (with Blind Signing enabled in Solana app).
+        const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
+        const { blockhash } = await connection.getLatestBlockhash('confirmed');
+
+        const memoProgramId = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+        const memoIx = new TransactionInstruction({
+          programId: memoProgramId,
+          keys: [],
+          data: Buffer.from(challenge, 'utf8'),
+        });
+
+        const tx = new Transaction().add(memoIx);
+        tx.feePayer = publicKey;
+        tx.recentBlockhash = blockhash;
+
+          const signedTx = await solana.signTransaction(tx);
+
+          // Phantom injects the signature on the transaction
+          const txSig = (signedTx.signatures?.[0]?.signature ?? null) as Uint8Array | null;
+          if (!txSig) {
+            throw new Error('Failed to get Ledger transaction signature');
           }
-          
-          signatureHex = Array.from(txSignature as Uint8Array)
+
+          signatureHex = Array.from(txSig)
             .map((b: number) => b.toString(16).padStart(2, '0'))
             .join('');
-        } else {
-          throw signMessageError;
-        }
       }
 
-      // Complete installation
-      const { data, error } = await supabase.functions.invoke('hardware-custody-auth', {
+      const { error } = await supabase.functions.invoke('hardware-custody-auth', {
         body: {
           action: 'complete_installation',
           signature: signatureHex,
-          challenge: challenge,
+          challenge,
         },
       });
 
@@ -215,15 +222,17 @@ export function HardwareCustodyPanel() {
       fetchCustodyStatus();
     } catch (err: any) {
       console.error('Installation error:', err);
-      
-      // Provide helpful error messages
+
       if (err.message?.includes('0x6a81')) {
-        setError('Ledger signing failed. Please ensure the Solana app is open and try again.');
-      } else if (err.message?.includes('User rejected')) {
+        setError(
+          'Ledger error 0x6a81. Open the Solana app on your Ledger and enable Settings → Blind Signing.'
+        );
+      } else if (err.message?.toLowerCase?.().includes('rejected')) {
         setError('Signing was cancelled. Please try again when ready.');
       } else {
         setError(err.message);
       }
+
       toast.error(err.message);
     }
   };
@@ -385,18 +394,17 @@ export function HardwareCustodyPanel() {
                 <p>Public Key: {custodyStatus.hardware_pubkey}</p>
               </div>
             )}
-            
-            {/* Ledger-specific instructions */}
-            <Alert className="text-left bg-amber-500/10 border-amber-500/30">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <AlertTitle className="text-amber-600">Ledger Users: Enable Blind Signing</AlertTitle>
+
+            <Alert className="text-left bg-accent/10 border-accent/30">
+              <AlertTriangle className="h-4 w-4 text-accent" />
+              <AlertTitle>Ledger: enable Blind Signing</AlertTitle>
               <AlertDescription className="text-sm space-y-2">
-                <p>Before signing, ensure these settings on your Ledger:</p>
+                <p>On your Ledger device:</p>
                 <ol className="list-decimal list-inside space-y-1 mt-2">
-                  <li>Open the <strong>Solana app</strong> on your Ledger</li>
-                  <li>Go to <strong>Settings → Blind Signing → Enabled</strong></li>
-                  <li>Return to the main Solana app screen</li>
-                  <li>Then click "Sign & Complete" below</li>
+                  <li>Open the <strong>Solana app</strong></li>
+                  <li>Settings → <strong>Blind Signing</strong> → <strong>Enabled</strong></li>
+                  <li>Return to the main Solana screen</li>
+                  <li>Then click “Sign & Complete” below</li>
                 </ol>
               </AlertDescription>
             </Alert>
@@ -409,7 +417,7 @@ export function HardwareCustodyPanel() {
                 Ultimate User privileges. There is NO recovery if you lose the device.
               </AlertDescription>
             </Alert>
-            <Button 
+            <Button
               onClick={completeInstallation}
               className="gap-2 bg-warning text-warning-foreground hover:bg-warning/90"
             >
