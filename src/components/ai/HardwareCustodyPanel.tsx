@@ -20,6 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
 interface CustodyStatus {
   installation_status: string;
@@ -149,14 +150,54 @@ export function HardwareCustodyPanel() {
         throw new Error('Wallet not connected. Please reconnect.');
       }
 
-      // Request signature from hardware wallet
-      const message = new TextEncoder().encode(challenge);
-      const { signature } = await solana.signMessage(message, 'utf8');
-      
-      // Convert signature to hex
-      const signatureHex = Array.from(signature as Uint8Array)
-        .map((b: number) => b.toString(16).padStart(2, '0'))
-        .join('');
+      let signatureHex: string;
+      const publicKey = solana.publicKey;
+
+      // Try signMessage first (works for most wallets)
+      try {
+        const message = new TextEncoder().encode(challenge);
+        const { signature } = await solana.signMessage(message, 'utf8');
+        signatureHex = Array.from(signature as Uint8Array)
+          .map((b: number) => b.toString(16).padStart(2, '0'))
+          .join('');
+      } catch (signMessageError: any) {
+        // If signMessage fails (Ledger), fall back to transaction signing
+        console.log('signMessage failed, trying transaction signing:', signMessageError.message);
+        
+        if (signMessageError.message?.includes('0x6a81') || signMessageError.message?.includes('UNKNOWN_ERROR')) {
+          toast.info('Using transaction signing for Ledger...');
+          
+          // Create a minimal self-transfer transaction as proof of ownership
+          // This is a zero-value transfer that Ledger can sign
+          const transaction = new Transaction();
+          transaction.add(
+            SystemProgram.transfer({
+              fromPubkey: publicKey,
+              toPubkey: publicKey,
+              lamports: 0,
+            })
+          );
+          
+          // Set a recent blockhash (we use a placeholder since we won't actually send this)
+          transaction.recentBlockhash = 'EkSnNWid2cvwEVnVx9aBqawnmiCNiDgp3gUdkDPTKN1N';
+          transaction.feePayer = publicKey;
+          
+          // Sign the transaction with Ledger
+          const signedTx = await solana.signTransaction(transaction);
+          
+          // Extract signature from the signed transaction
+          const txSignature = signedTx.signature;
+          if (!txSignature) {
+            throw new Error('Failed to get signature from Ledger transaction');
+          }
+          
+          signatureHex = Array.from(txSignature as Uint8Array)
+            .map((b: number) => b.toString(16).padStart(2, '0'))
+            .join('');
+        } else {
+          throw signMessageError;
+        }
+      }
 
       // Complete installation
       const { data, error } = await supabase.functions.invoke('hardware-custody-auth', {
@@ -173,7 +214,16 @@ export function HardwareCustodyPanel() {
       toast.success('🎉 Ultimate User token permanently installed on hardware wallet!');
       fetchCustodyStatus();
     } catch (err: any) {
-      setError(err.message);
+      console.error('Installation error:', err);
+      
+      // Provide helpful error messages
+      if (err.message?.includes('0x6a81')) {
+        setError('Ledger signing failed. Please ensure the Solana app is open and try again.');
+      } else if (err.message?.includes('User rejected')) {
+        setError('Signing was cancelled. Please try again when ready.');
+      } else {
+        setError(err.message);
+      }
       toast.error(err.message);
     }
   };
