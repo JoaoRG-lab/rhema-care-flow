@@ -17,6 +17,41 @@ async function sha256(message: string): Promise<string> {
 }
 
 // Verify Ed25519 signature (for hardware wallet authentication)
+// Notes:
+// - `publicKey` is expected to be a Solana base58-encoded public key (32 bytes).
+// - `signature` is expected to be hex-encoded signature bytes.
+function base58Decode(input: string): Uint8Array {
+  const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  const base = 58;
+
+  let bytes: number[] = [0];
+  for (const char of input) {
+    const value = alphabet.indexOf(char);
+    if (value < 0) throw new Error('Invalid base58 character');
+
+    let carry = value;
+    for (let j = 0; j < bytes.length; ++j) {
+      carry += bytes[j] * base;
+      bytes[j] = carry & 0xff;
+      carry >>= 8;
+    }
+    while (carry) {
+      bytes.push(carry & 0xff);
+      carry >>= 8;
+    }
+  }
+
+  // Deal with leading zeros
+  let leadingZeros = 0;
+  for (const char of input) {
+    if (char === '1') leadingZeros++;
+    else break;
+  }
+  while (leadingZeros--) bytes.push(0);
+
+  return new Uint8Array(bytes.reverse());
+}
+
 async function verifyEd25519Signature(
   message: string,
   signature: string,
@@ -27,26 +62,28 @@ async function verifyEd25519Signature(
     const signatureBytes = Uint8Array.from(
       signature.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
     );
-    const publicKeyBytes = Uint8Array.from(
-      publicKey.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
-    );
+
+    const publicKeyBytes = base58Decode(publicKey);
+    if (publicKeyBytes.length !== 32) {
+      throw new Error(`Invalid public key length: ${publicKeyBytes.length}`);
+    }
 
     const cryptoKey = await crypto.subtle.importKey(
-      "raw",
+      'raw',
       publicKeyBytes,
-      { name: "Ed25519" },
+      { name: 'Ed25519' },
       false,
-      ["verify"]
+      ['verify']
     );
 
     return await crypto.subtle.verify(
-      { name: "Ed25519" },
+      { name: 'Ed25519' },
       cryptoKey,
       signatureBytes,
       messageBytes
     );
   } catch (error) {
-    console.error("Signature verification error:", error);
+    console.error('Signature verification error:', error);
     return false;
   }
 }
