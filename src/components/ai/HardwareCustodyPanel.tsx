@@ -20,14 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Buffer } from 'buffer';
-import {
-  Connection,
-  clusterApiUrl,
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 
 interface CustodyStatus {
   installation_status: string;
@@ -157,61 +150,24 @@ export function HardwareCustodyPanel() {
         throw new Error('Wallet not connected. Please reconnect.');
       }
 
-      let signatureHex: string;
       const publicKey: PublicKey = solana.publicKey;
 
-      // Try signMessage first (works for most wallets, but not for Ledger)
-      try {
-        const message = new TextEncoder().encode(challenge);
-        const { signature } = await solana.signMessage(message, 'utf8');
-        signatureHex = Array.from(signature as Uint8Array)
-          .map((b: number) => b.toString(16).padStart(2, '0'))
-          .join('');
-      } catch (signMessageError: any) {
-        // Ledger typically fails signMessage; fall back to transaction signing
-        const isLedgerish =
-          solana.isLedger ||
-          signMessageError?.message?.includes('0x6a81') ||
-          signMessageError?.message?.includes('UNKNOWN_ERROR');
-
-        if (!isLedgerish) throw signMessageError;
-
-        toast.info('Ledger detected: using transaction signing...');
-
-        // Build a transaction that commits to the challenge via Memo.
-        // Ledger supports signing transactions (with Blind Signing enabled in Solana app).
-        const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
-        const { blockhash } = await connection.getLatestBlockhash('confirmed');
-
-        const memoProgramId = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
-        const memoIx = new TransactionInstruction({
-          programId: memoProgramId,
-          keys: [],
-          data: Buffer.from(challenge, 'utf8'),
-        });
-
-        const tx = new Transaction().add(memoIx);
-        tx.feePayer = publicKey;
-        tx.recentBlockhash = blockhash;
-
-          const signedTx = await solana.signTransaction(tx);
-
-          // Phantom injects the signature on the transaction
-          const txSig = (signedTx.signatures?.[0]?.signature ?? null) as Uint8Array | null;
-          if (!txSig) {
-            throw new Error('Failed to get Ledger transaction signature');
-          }
-
-          signatureHex = Array.from(txSig)
-            .map((b: number) => b.toString(16).padStart(2, '0'))
-            .join('');
-      }
+      // Use signMessage - requires Ledger Solana App v1.3+ with Blind Signing ON
+      toast.info('Please approve the message on your Ledger device...');
+      
+      const message = new TextEncoder().encode(challenge);
+      const { signature } = await solana.signMessage(message, 'utf8');
+      
+      const signatureHex = Array.from(signature as Uint8Array)
+        .map((b: number) => b.toString(16).padStart(2, '0'))
+        .join('');
 
       const { error } = await supabase.functions.invoke('hardware-custody-auth', {
         body: {
           action: 'complete_installation',
           signature: signatureHex,
           challenge,
+          publicKey: publicKey.toBase58(),
         },
       });
 
@@ -223,17 +179,20 @@ export function HardwareCustodyPanel() {
     } catch (err: any) {
       console.error('Installation error:', err);
 
-      if (err.message?.includes('0x6a81')) {
+      // Provide specific guidance for Ledger errors
+      if (err.message?.includes('0x6a81') || err.message?.includes('UNKNOWN_ERROR')) {
         setError(
-          'Ledger error 0x6a81. Open the Solana app on your Ledger and enable Settings → Blind Signing.'
+          'Ledger error: Blind Signing is OFF or your Solana App is outdated. ' +
+          'On your Ledger: Solana App → Settings (press right) → Allow blind sign → Yes. ' +
+          'If using App version < 1.3.0, update via Ledger Live first.'
         );
-      } else if (err.message?.toLowerCase?.().includes('rejected')) {
+      } else if (err.message?.toLowerCase?.().includes('rejected') || err.message?.toLowerCase?.().includes('cancelled')) {
         setError('Signing was cancelled. Please try again when ready.');
       } else {
         setError(err.message);
       }
 
-      toast.error(err.message);
+      toast.error('Signing failed - check the error message for details');
     }
   };
 
@@ -377,53 +336,95 @@ export function HardwareCustodyPanel() {
 
       {currentStep === 'signing' && (
         <Card>
-          <CardContent className="py-8 text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Fingerprint className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Sign to Install Token</h3>
+          <CardContent className="py-8 space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Fingerprint className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mt-4">Sign to Install Token</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Your hardware wallet is connected. Sign the installation message
-                to permanently bind the Ultimate User token to this device.
+                Your hardware wallet is connected. Follow the checklist below before signing.
               </p>
             </div>
+            
             {custodyStatus && (
-              <div className="text-xs text-muted-foreground space-y-1">
+              <div className="text-xs text-muted-foreground text-center space-y-1">
                 <p>Hardware: {custodyStatus.hardware_type}</p>
                 <p>Public Key: {custodyStatus.hardware_pubkey}</p>
               </div>
             )}
 
-            <Alert className="text-left bg-accent/10 border-accent/30">
-              <AlertTriangle className="h-4 w-4 text-accent" />
-              <AlertTitle>Ledger: enable Blind Signing</AlertTitle>
-              <AlertDescription className="text-sm space-y-2">
-                <p>On your Ledger device:</p>
-                <ol className="list-decimal list-inside space-y-1 mt-2">
-                  <li>Open the <strong>Solana app</strong></li>
-                  <li>Settings → <strong>Blind Signing</strong> → <strong>Enabled</strong></li>
-                  <li>Return to the main Solana screen</li>
-                  <li>Then click “Sign & Complete” below</li>
-                </ol>
-              </AlertDescription>
-            </Alert>
+            {/* Detailed Ledger Setup Guide */}
+            <Card className="bg-muted/50 border-2 border-dashed">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <HardDrive className="h-5 w-5" />
+                  Ledger Setup Checklist
+                </CardTitle>
+                <CardDescription>Complete these steps on your physical Ledger device</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
+                  <Badge variant="outline" className="mt-0.5">1</Badge>
+                  <div>
+                    <p className="font-medium text-sm">Open Solana App</p>
+                    <p className="text-xs text-muted-foreground">Screen should show "Application is ready"</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
+                  <Badge variant="outline" className="mt-0.5">2</Badge>
+                  <div>
+                    <p className="font-medium text-sm">Navigate to Settings</p>
+                    <p className="text-xs text-muted-foreground">Press the <strong>RIGHT button</strong> until you see "Settings"</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
+                  <Badge variant="outline" className="mt-0.5">3</Badge>
+                  <div>
+                    <p className="font-medium text-sm">Enable Blind Signing</p>
+                    <p className="text-xs text-muted-foreground">Press <strong>BOTH buttons</strong> on "Allow blind sign" → change to "Yes"</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-background">
+                  <Badge variant="outline" className="mt-0.5">4</Badge>
+                  <div>
+                    <p className="font-medium text-sm">Return to Main Screen</p>
+                    <p className="text-xs text-muted-foreground">Press RIGHT to "Back" → BOTH buttons → "Application is ready"</p>
+                  </div>
+                </div>
+                
+                <Alert className="mt-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle className="text-sm">App Version Required: v1.3.0+</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Update via Ledger Live if needed. Check version in Settings → About on your Ledger.
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
 
-            <Alert variant="destructive" className="text-left">
+            <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>⚠️ Final Warning</AlertTitle>
+              <AlertTitle>⚠️ IRREVERSIBLE ACTION</AlertTitle>
               <AlertDescription>
-                After signing, this hardware wallet will be the ONLY way to access
-                Ultimate User privileges. There is NO recovery if you lose the device.
+                After signing, this hardware wallet will be the <strong>ONLY</strong> way to access
+                Ultimate User privileges. There is <strong>NO recovery</strong> if you lose the device.
               </AlertDescription>
             </Alert>
-            <Button
-              onClick={completeInstallation}
-              className="gap-2 bg-warning text-warning-foreground hover:bg-warning/90"
-            >
-              <Lock className="h-4 w-4" />
-              Sign & Complete Installation
-            </Button>
+            
+            <div className="text-center">
+              <Button
+                onClick={completeInstallation}
+                size="lg"
+                className="gap-2 bg-warning text-warning-foreground hover:bg-warning/90"
+              >
+                <Lock className="h-4 w-4" />
+                Sign & Complete Installation
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Click above, then approve the message on your Ledger
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
