@@ -178,21 +178,35 @@ export function HardwareCustodyPanel() {
       fetchCustodyStatus();
     } catch (err: any) {
       console.error('Installation error:', err);
+      
+      const errorCode = err.message?.match(/0x[a-fA-F0-9]+/)?.[0] || null;
+      const isBlindSignError = err.message?.includes('0x6a81') || err.message?.includes('UNKNOWN_ERROR');
+      const isRejected = err.message?.toLowerCase?.().includes('rejected') || err.message?.toLowerCase?.().includes('cancelled');
+      const isDisconnected = err.message?.toLowerCase?.().includes('disconnected') || err.message?.toLowerCase?.().includes('not connected');
 
       // Provide specific guidance for Ledger errors
-      if (err.message?.includes('0x6a81') || err.message?.includes('UNKNOWN_ERROR')) {
+      if (isBlindSignError) {
         setError(
-          'Ledger error: Blind Signing is OFF or your Solana App is outdated. ' +
-          'On your Ledger: Solana App → Settings (press right) → Allow blind sign → Yes. ' +
-          'If using App version < 1.3.0, update via Ledger Live first.'
+          `Ledger Error (${errorCode || '0x6a81'}): Blind Signing is disabled or your Solana App is outdated.\n\n` +
+          '• On your Ledger device: Open Solana App → Settings → Allow blind sign → Yes\n' +
+          '• Ensure Solana App version is 1.3.0 or higher (update via Ledger Live)\n' +
+          '• Return to main screen before trying again'
         );
-      } else if (err.message?.toLowerCase?.().includes('rejected') || err.message?.toLowerCase?.().includes('cancelled')) {
-        setError('Signing was cancelled. Please try again when ready.');
+        toast.error('Ledger requires Blind Signing to be enabled', {
+          description: 'Check your device settings and try again',
+          duration: 8000,
+        });
+      } else if (isRejected) {
+        setError('Transaction was rejected or cancelled on the device. Please try again when ready.');
+        toast.warning('Signing cancelled', { description: 'You can try again when ready' });
+      } else if (isDisconnected) {
+        setError('Hardware wallet disconnected. Please reconnect your device and try again.');
+        setCurrentStep('awaiting_hardware');
+        toast.error('Device disconnected', { description: 'Please reconnect your hardware wallet' });
       } else {
-        setError(err.message);
+        setError(`Signing failed: ${err.message || 'Unknown error'}. Please ensure your device is unlocked and the Solana app is open.`);
+        toast.error('Signing failed', { description: err.message || 'Check device and try again' });
       }
-
-      toast.error('Signing failed - check the error message for details');
     }
   };
 
