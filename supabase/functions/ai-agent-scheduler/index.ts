@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Configuration
@@ -17,6 +17,7 @@ const INACTIVITY_THRESHOLD_HOURS = 3;
 interface SchedulerConfig {
   force_run?: boolean;
   task_type?: string;
+  agents?: string[]; // which agents to run: "site", "research", "verification", "all"
 }
 
 serve(async (req) => {
@@ -31,31 +32,25 @@ serve(async (req) => {
   try {
     const body: SchedulerConfig = await req.json().catch(() => ({}));
     const forceRun = body.force_run || false;
+    const agentsToRun = body.agents || ["all"];
 
-    // Current time in UTC
     const now = new Date();
     const currentHour = now.getUTCHours();
 
-    // Log this scheduler check
     console.log(`[Scheduler] Checking at ${now.toISOString()} (UTC hour: ${currentHour})`);
 
-    // 1. Check if we're in quiet hours (18:00-22:00 UTC)
+    // Check quiet hours
     const isQuietHours = currentHour >= QUIET_HOURS_START && currentHour < QUIET_HOURS_END;
     
     if (isQuietHours && !forceRun) {
-      console.log(`[Scheduler] Quiet hours (${QUIET_HOURS_START}:00-${QUIET_HOURS_END}:00 UTC). Skipping.`);
+      console.log(`[Scheduler] Quiet hours. Skipping.`);
       return new Response(
-        JSON.stringify({
-          success: true,
-          action: "skipped",
-          reason: "quiet_hours",
-          current_hour: currentHour,
-        }),
+        JSON.stringify({ success: true, action: "skipped", reason: "quiet_hours", current_hour: currentHour }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 2. Check recent site activity (last 3 hours)
+    // Check recent site activity
     const threeHoursAgo = new Date(now.getTime() - INACTIVITY_THRESHOLD_HOURS * 60 * 60 * 1000);
     const { count: activityCount } = await supabase
       .from("site_activity_log")
@@ -63,84 +58,102 @@ serve(async (req) => {
       .gte("created_at", threeHoursAgo.toISOString());
 
     const hasRecentActivity = (activityCount || 0) > 0;
-
-    // 3. Check if we're in peak hours (01:00-06:00 UTC) - run more aggressively
     const isPeakHours = currentHour >= PEAK_HOURS_START && currentHour < PEAK_HOURS_END;
 
-    // Decision logic
     let shouldRun = false;
     let runReason = "";
 
-    if (forceRun) {
-      shouldRun = true;
-      runReason = "force_run";
-    } else if (isPeakHours) {
-      shouldRun = true;
-      runReason = "peak_hours";
-    } else if (hasRecentActivity) {
-      shouldRun = true;
-      runReason = "recent_activity";
-    } else {
-      runReason = "no_activity";
-    }
+    if (forceRun) { shouldRun = true; runReason = "force_run"; }
+    else if (isPeakHours) { shouldRun = true; runReason = "peak_hours"; }
+    else if (hasRecentActivity) { shouldRun = true; runReason = "recent_activity"; }
+    else { runReason = "no_activity"; }
 
-    console.log(`[Scheduler] Decision: shouldRun=${shouldRun}, reason=${runReason}, activityCount=${activityCount}`);
+    console.log(`[Scheduler] Decision: shouldRun=${shouldRun}, reason=${runReason}`);
 
     if (!shouldRun) {
       return new Response(
-        JSON.stringify({
-          success: true,
-          action: "skipped",
-          reason: runReason,
-          activity_count: activityCount,
-          current_hour: currentHour,
-        }),
+        JSON.stringify({ success: true, action: "skipped", reason: runReason, activity_count: activityCount }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Log agent run start
-    const { data: runLog, error: logError } = await supabase
-      .from("agent_run_log")
-      .insert({
-        agent_name: "ai-site-agent",
-        status: "running",
-      })
-      .select()
-      .single();
+    const results: Record<string, any> = {};
+    const runAll = agentsToRun.includes("all");
 
-    if (logError) {
-      console.error("[Scheduler] Failed to create run log:", logError);
+    // ─── 1. AI Site Agent (trending topics, content gaps, quality) ───
+    if (runAll || agentsToRun.includes("site")) {
+      const runLog = await logAgentStart(supabase, "ai-site-agent");
+      try {
+        console.log("[Scheduler] Running AI Site Agent...");
+        const resp = await fetch(`${supabaseUrl}/functions/v1/ai-site-agent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseKey}` },
+          body: JSON.stringify({ task_type: body.task_type || "all" }),
+        });
+        const result = await resp.json();
+        results.site_agent = result;
+        await logAgentEnd(supabase, runLog?.id, result.success, result);
+      } catch (err) {
+        results.site_agent = { error: err instanceof Error ? err.message : "Unknown" };
+        await logAgentEnd(supabase, runLog?.id, false, null, results.site_agent.error);
+      }
     }
 
-    // Call the AI Site Agent
-    console.log("[Scheduler] Triggering AI Site Agent...");
-    
-    const agentResponse = await fetch(`${supabaseUrl}/functions/v1/ai-site-agent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseKey}`,
-      },
-      body: JSON.stringify({ task_type: body.task_type || "all" }),
-    });
+    // ─── 2. AI Research Engine (batch process: generate articles + verify) ───
+    if (runAll || agentsToRun.includes("research")) {
+      const runLog = await logAgentStart(supabase, "ai-research-engine");
+      try {
+        console.log("[Scheduler] Running AI Research Engine batch...");
+        
+        // Seed queue if empty
+        const { count: queueCount } = await supabase
+          .from("research_topic_queue")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "queued");
 
-    const agentResult = await agentResponse.json();
+        if ((queueCount || 0) === 0) {
+          console.log("[Scheduler] Queue empty, seeding trending topics...");
+          await seedResearchQueue(supabase, supabaseUrl, supabaseKey);
+        }
 
-    // Update run log with results
-    if (runLog) {
-      await supabase
-        .from("agent_run_log")
-        .update({
-          status: agentResult.success ? "completed" : "failed",
-          results: agentResult,
-          completed_at: new Date().toISOString(),
-          error_message: agentResult.error || null,
-        })
-        .eq("id", runLog.id);
+        // Process queued topics using service role (bypass auth)
+        const resp = await fetch(`${supabaseUrl}/functions/v1/ai-research-engine`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json", 
+            "Authorization": `Bearer ${supabaseKey}` 
+          },
+          body: JSON.stringify({ action: "batch_process" }),
+        });
+        const result = await resp.json();
+        results.research_engine = result;
+        await logAgentEnd(supabase, runLog?.id, result.success !== false, result);
+      } catch (err) {
+        results.research_engine = { error: err instanceof Error ? err.message : "Unknown" };
+        await logAgentEnd(supabase, runLog?.id, false, null, results.research_engine.error);
+      }
     }
 
-    console.log("[Scheduler] Agent completed:", agentResult.success);
+    // ─── 3. AI Sentinel (verify existing content for factual drift) ───
+    if (runAll || agentsToRun.includes("verification")) {
+      const runLog = await logAgentStart(supabase, "ai-sentinel");
+      try {
+        console.log("[Scheduler] Running AI Sentinel content check...");
+        const resp = await fetch(`${supabaseUrl}/functions/v1/ai-sentinel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseKey}` },
+          body: JSON.stringify({ action: "check_all" }),
+        });
+        const result = await resp.json();
+        results.sentinel = result;
+        await logAgentEnd(supabase, runLog?.id, result.success !== false, result);
+      } catch (err) {
+        results.sentinel = { error: err instanceof Error ? err.message : "Unknown" };
+        await logAgentEnd(supabase, runLog?.id, false, null, results.sentinel.error);
+      }
+    }
+
+    console.log("[Scheduler] All agents completed.");
 
     return new Response(
       JSON.stringify({
@@ -150,7 +163,7 @@ serve(async (req) => {
         is_peak_hours: isPeakHours,
         activity_count: activityCount,
         current_hour: currentHour,
-        agent_result: agentResult,
+        results,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -158,11 +171,64 @@ serve(async (req) => {
   } catch (error) {
     console.error("[Scheduler] Error:", error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
+
+// ─── Helper: Log agent run start ───
+async function logAgentStart(supabase: any, agentName: string) {
+  const { data, error } = await supabase
+    .from("agent_run_log")
+    .insert({ agent_name: agentName, status: "running" })
+    .select()
+    .single();
+  if (error) console.error(`[Scheduler] Failed to log start for ${agentName}:`, error);
+  return data;
+}
+
+// ─── Helper: Log agent run end ───
+async function logAgentEnd(supabase: any, runId: string | undefined, success: boolean, result: any, errorMsg?: string) {
+  if (!runId) return;
+  await supabase
+    .from("agent_run_log")
+    .update({
+      status: success ? "completed" : "failed",
+      results: result || {},
+      completed_at: new Date().toISOString(),
+      error_message: errorMsg || null,
+    })
+    .eq("id", runId);
+}
+
+// ─── Helper: Seed research queue with AI-discovered topics ───
+async function seedResearchQueue(supabase: any, supabaseUrl: string, supabaseKey: string) {
+  const seedTopics = [
+    { topic: "JAK Inhibitor Safety Updates 2026", category: "Treatment Safety", disease_area: "Rheumatoid Arthritis", priority: 9 },
+    { topic: "IL-17 vs IL-23 Inhibitors in Psoriatic Arthritis", category: "Treatment Comparison", disease_area: "Psoriatic Arthritis", priority: 8 },
+    { topic: "Treat-to-Target in Axial Spondyloarthritis", category: "Treatment Strategy", disease_area: "Axial SpA", priority: 8 },
+    { topic: "Lupus Nephritis Classification and Treatment 2026", category: "Classification", disease_area: "SLE", priority: 9 },
+    { topic: "Biologic Tapering Strategies in Rheumatoid Arthritis", category: "Treatment Management", disease_area: "Rheumatoid Arthritis", priority: 7 },
+    { topic: "Cardiovascular Risk in Inflammatory Arthritis", category: "Comorbidity", disease_area: "General Rheumatology", priority: 8 },
+    { topic: "Ultrasound-Guided Joint Injections Best Practices", category: "Procedures", disease_area: "General Rheumatology", priority: 6 },
+    { topic: "Pregnancy Management in Autoimmune Diseases", category: "Special Populations", disease_area: "General Rheumatology", priority: 9 },
+  ];
+
+  for (const t of seedTopics) {
+    const { data: existing } = await supabase
+      .from("research_topic_queue")
+      .select("id")
+      .eq("topic", t.topic)
+      .single();
+    
+    if (!existing) {
+      await supabase.from("research_topic_queue").insert({
+        ...t,
+        source: "ai_agent",
+        status: "queued",
+      });
+    }
+  }
+  console.log("[Scheduler] Seeded research queue with initial topics.");
+}
