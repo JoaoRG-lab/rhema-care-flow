@@ -205,7 +205,7 @@ export default function Dashboard() {
                <div className="flex flex-col sm:flex-row gap-3">
                  <QuickPatientSearch />
                  <div className="flex items-center gap-2">
-                   <VoiceNoteButton onTranscript={(text) => console.log('Voice note:', text)} />
+                   <VoiceNoteButton onTranscript={() => { /* Voice note captured */ }} />
                    <span className="text-xs text-muted-foreground hidden sm:inline">Voice note</span>
                  </div>
                </div>
