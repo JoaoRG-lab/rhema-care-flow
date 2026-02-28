@@ -4,9 +4,16 @@ import { Connection } from "@solana/web3.js";
 
 export const CLUSTER_URL = "https://api.devnet.solana.com";
 
-export function getProvider(wallet: any) {
+export interface WalletAdapter {
+  publicKey: import("@solana/web3.js").PublicKey;
+  signTransaction: <T extends import("@solana/web3.js").Transaction | import("@solana/web3.js").VersionedTransaction>(tx: T) => Promise<T>;
+  signAllTransactions: <T extends import("@solana/web3.js").Transaction | import("@solana/web3.js").VersionedTransaction>(txs: T[]) => Promise<T[]>;
+}
+
+export function getProvider(wallet: WalletAdapter) {
   const connection = new Connection(CLUSTER_URL, "confirmed");
-  return new AnchorProvider(connection, wallet, { commitment: "confirmed" });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new AnchorProvider(connection, wallet as any, { commitment: "confirmed" });
 }
 
 export function formatSignature(signature: string, length: number = 8): string {
