@@ -28,22 +28,30 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No authorization header" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "") || "";
     
-    // Verify user
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Check if called with service role key (scheduler/cron) or user token
+    let userId: string;
+    const isServiceRole = token === supabaseServiceKey;
     
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
+    if (isServiceRole) {
+      // Called by scheduler - use system user ID
+      userId = "00000000-0000-0000-0000-000000000000";
+      console.log("[Research Engine] Called by scheduler (service role)");
+    } else if (authHeader) {
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: "Invalid token" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = user.id;
+    } else {
+      return new Response(JSON.stringify({ error: "No authorization header" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -67,7 +75,7 @@ serve(async (req) => {
         result = await suggestRelatedTopics(topic!, diseaseArea, LOVABLE_API_KEY);
         break;
       case "batch_process":
-        result = await batchProcessQueue(supabase, user.id, LOVABLE_API_KEY);
+        result = await batchProcessQueue(supabase, userId, LOVABLE_API_KEY);
         break;
       default:
         throw new Error("Invalid action");
