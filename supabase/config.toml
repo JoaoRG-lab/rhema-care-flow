@@ -1,1 +1,58 @@
 project_id = "rqaqdhmdeyzyjglhxrne"
+
+[functions.ai-agent-scheduler]
+verify_jwt = false
+
+[functions.ai-research-engine]
+verify_jwt = false
+
+[functions.ai-site-agent]
+verify_jwt = false
+
+[functions.ai-sentinel]
+verify_jwt = false
+
+[functions.ai-judge]
+verify_jwt = false
+
+[functions.ai-ignition]
+verify_jwt = false
+
+[functions.ai-guardian-agent]
+verify_jwt = false
+
+[functions.ai-research-outreach]
+verify_jwt = false
+
+[functions.ai-config-assistant]
+verify_jwt = false
+
+[functions.openai-chat]
+verify_jwt = false
+
+[functions.analyze-trends]
+verify_jwt = false
+
+[functions.summarize-visits]
+verify_jwt = false
+
+[functions.send-sms]
+verify_jwt = false
+
+[functions.send-report-email]
+verify_jwt = false
+
+[functions.send-outreach-campaign]
+verify_jwt = false
+
+[functions.process-scheduled-sms]
+verify_jwt = false
+
+[functions.hardware-custody-auth]
+verify_jwt = false
+
+[functions.sumsub-token]
+verify_jwt = false
+
+[functions.sumsub-webhook]
+verify_jwt = false
