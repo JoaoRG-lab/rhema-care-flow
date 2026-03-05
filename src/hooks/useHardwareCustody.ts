@@ -106,6 +106,9 @@ export function useHardwareCustody() {
       if (data.custody?.installation_status === 'active') {
         setCurrentStep('installed');
       } else if (data.custody?.installation_status === 'hardware_connected') {
+        // Generate challenge so signing can proceed
+        const newChallenge = `UHS_ULTIMATE_USER_INSTALLATION_${Date.now()}_${crypto.randomUUID()}`;
+        setChallenge(newChallenge);
         setCurrentStep('signing');
       } else if (data.custody?.installation_status === 'awaiting_hardware') {
         setCurrentStep('awaiting_hardware');
