@@ -75,11 +75,9 @@ export function IgnitionPanel() {
   const handleSeedTopics = async () => {
     setIsSeeding(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-ignition', {
-        body: { action: 'seed_topics' }
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-ignition', { action: 'seed_topics' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       toast.success(`Seeded ${data.new_topics} new topics!`);
       fetchStats();
