@@ -168,15 +168,13 @@ export function useHardwareCustody() {
       else if (solana.isSolflare) hardwareType = 'solflare';
 
       // Register the hardware wallet
-      const { data, error: registerError } = await supabase.functions.invoke('hardware-custody-auth', {
-        body: {
-          action: 'register_hardware_wallet',
-          hardware_pubkey: publicKey,
-          hardware_type: hardwareType,
-        },
+      const { data, error: registerError } = await invokeEdgeFn<any>('hardware-custody-auth', {
+        action: 'register_hardware_wallet',
+        hardware_pubkey: publicKey,
+        hardware_type: hardwareType,
       });
 
-      if (registerError) throw registerError;
+      if (registerError) throw new Error(registerError);
 
       // Generate challenge for signing
       const newChallenge = `UHS_ULTIMATE_USER_INSTALLATION_${Date.now()}_${crypto.randomUUID()}`;
