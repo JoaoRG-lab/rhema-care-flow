@@ -69,12 +69,10 @@ export function useAIResearch() {
     setError(null);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('ai-research-engine', {
-        body: { action, ...params },
-      });
+      const { data, error: fnError } = await invokeEdgeFn<any>('ai-research-engine', { action, ...params });
 
-      if (fnError) throw fnError;
-      if (!data.success) throw new Error(data.error || 'Unknown error');
+      if (fnError) throw new Error(fnError);
+      if (!data?.success) throw new Error(data?.error || 'Unknown error');
 
       return data.data;
     } catch (err) {
