@@ -94,11 +94,9 @@ export function useAIQualitySystem() {
   ): Promise<SentinelResult | null> => {
     setIsMonitoring(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-sentinel', {
-        body: { action: 'monitor', content_id: contentId, pipeline_id: pipelineId },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-sentinel', { action: 'monitor', content_id: contentId, pipeline_id: pipelineId });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       if (data.flagged) {
         toast.warning(`Content flagged! ${data.issues_found} issues found. Recommendation: ${data.recommendation}`);
