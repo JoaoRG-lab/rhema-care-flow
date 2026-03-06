@@ -15,30 +15,11 @@ interface UseEdgeFnOptions {
   errorMessage?: string;
 }
 
-async function parseEdgeFnError(fnError: unknown): Promise<EdgeFnError> {
-  if (fnError instanceof FunctionsHttpError) {
-    try {
-      const body = await fnError.context?.json();
-      return {
-        message: body?.error || body?.message || fnError.message,
-        status: fnError.context?.status,
-        raw: body,
-      };
-    } catch {
-      return {
-        message: fnError.message || 'Edge function returned an error',
-        raw: fnError,
-      };
-    }
-  }
-  if (fnError instanceof FunctionsRelayError) {
-    return { message: fnError.message || 'Network relay error', raw: fnError };
-  }
-  if (fnError instanceof Error) {
-    return { message: fnError.message, raw: fnError };
-  }
-  return { message: 'An unexpected error occurred', raw: fnError };
-}
+/**
+ * Centralized hook for invoking backend functions with consistent
+ * error handling, loading state, and type safety.
+ * Uses invokeEdgeFn internally for proper error extraction.
+ */
 
 /**
  * Centralized hook for invoking backend functions with consistent
