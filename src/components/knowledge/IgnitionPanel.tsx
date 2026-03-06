@@ -98,13 +98,11 @@ export function IgnitionPanel() {
       toast.info('🔥 Ignition sequence started...', { duration: 3000 });
       setProgress(20);
 
-      const { data, error } = await supabase.functions.invoke('ai-ignition', {
-        body: { action: 'ignite' }
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-ignition', { action: 'ignite' });
 
       setProgress(90);
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       setResults(data.results || []);
       setStats(data.stats);
