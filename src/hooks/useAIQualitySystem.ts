@@ -117,11 +117,9 @@ export function useAIQualitySystem() {
   const runSentinelPatrol = useCallback(async () => {
     setIsMonitoring(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-sentinel', {
-        body: { action: 'patrol' },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-sentinel', { action: 'patrol' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       const flagged = data.results?.filter((r: any) => r.flagged).length || 0;
       toast.success(`Patrol complete: ${data.patrolled} items checked, ${flagged} flagged`);
