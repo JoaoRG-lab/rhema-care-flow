@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -28,15 +29,13 @@ export function useSumsubVerification(): UseSumsubVerificationReturn {
         throw new Error('Please sign in to verify your identity');
       }
 
-      const response = await supabase.functions.invoke('sumsub-token', {
-        body: { levelName },
-      });
+      const { data, error } = await invokeEdgeFn<SumsubToken>('sumsub-token', { levelName });
 
-      if (response.error) {
-        throw new Error(response.error.message || 'Failed to get verification token');
+      if (error) {
+        throw new Error(error);
       }
 
-      return response.data as SumsubToken;
+      return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Verification initialization failed';
       setError(message);

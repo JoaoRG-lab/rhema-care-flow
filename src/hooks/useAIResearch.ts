@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { toast } from 'sonner';
 
 interface ResearchResult {
@@ -69,12 +69,10 @@ export function useAIResearch() {
     setError(null);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('ai-research-engine', {
-        body: { action, ...params },
-      });
+      const { data, error: fnError } = await invokeEdgeFn<any>('ai-research-engine', { action, ...params });
 
-      if (fnError) throw fnError;
-      if (!data.success) throw new Error(data.error || 'Unknown error');
+      if (fnError) throw new Error(fnError);
+      if (!data?.success) throw new Error(data?.error || 'Unknown error');
 
       return data.data;
     } catch (err) {

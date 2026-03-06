@@ -20,7 +20,7 @@ import {
   Brain,
   Lightbulb,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -62,11 +62,9 @@ export function AISiteAgentWidget({ className }: { className?: string }) {
   const runAgent = async () => {
     setIsRunning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-site-agent', {
-        body: { task_type: 'all' },
-      });
+      const { data, error } = await invokeEdgeFn<AgentResponse>('ai-site-agent', { task_type: 'all' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       setLastRun(data as AgentResponse);
       toast.success('AI Agent completed analysis!');

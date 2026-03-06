@@ -20,6 +20,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -74,11 +75,9 @@ export function IgnitionPanel() {
   const handleSeedTopics = async () => {
     setIsSeeding(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-ignition', {
-        body: { action: 'seed_topics' }
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-ignition', { action: 'seed_topics' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       toast.success(`Seeded ${data.new_topics} new topics!`);
       fetchStats();
@@ -99,13 +98,11 @@ export function IgnitionPanel() {
       toast.info('🔥 Ignition sequence started...', { duration: 3000 });
       setProgress(20);
 
-      const { data, error } = await supabase.functions.invoke('ai-ignition', {
-        body: { action: 'ignite' }
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-ignition', { action: 'ignite' });
 
       setProgress(90);
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       setResults(data.results || []);
       setStats(data.stats);

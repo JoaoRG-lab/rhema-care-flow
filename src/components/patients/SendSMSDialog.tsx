@@ -14,7 +14,7 @@
  import { Textarea } from "@/components/ui/textarea";
  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  import { MessageSquare, Send, Loader2, FileText, PenLine } from "lucide-react";
- import { supabase } from "@/integrations/supabase/client";
+ import { invokeEdgeFn } from "@/lib/invokeEdgeFn";
  import { toast } from "sonner";
  import { z } from "zod";
  import { SMSTemplateSelector } from "./SMSTemplateSelector";
@@ -70,13 +70,11 @@
  
      setSending(true);
      try {
-       const { data, error } = await supabase.functions.invoke("send-sms", {
-         body: { to: phone, message },
-       });
+       const { data, error } = await invokeEdgeFn<any>("send-sms", { to: phone, message });
  
        if (error) {
          console.error("SMS error:", error);
-         toast.error(error.message || "Failed to send SMS");
+         toast.error(error || "Failed to send SMS");
          return;
        }
  

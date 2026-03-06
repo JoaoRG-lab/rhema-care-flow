@@ -22,6 +22,7 @@ import {
   Send,
   Users,
 } from 'lucide-react';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -194,13 +195,11 @@ export function AIOutreachResearchPanel({ onComplete }: AIOutreachResearchPanelP
         setCurrentStep(`Researching ${RESEARCH_CATEGORIES.find(c => c.id === category)?.label}...`);
         setProgress(((i + 0.5) / totalCategories) * 100);
 
-        const { data, error } = await supabase.functions.invoke('ai-research-outreach', {
-          body: { category },
-        });
+        const { data, error } = await invokeEdgeFn<any>('ai-research-outreach', { category });
 
         if (error) {
           console.error(`Error researching ${category}:`, error);
-          allResults.errors?.push(`Failed to research ${category}: ${error.message}`);
+          allResults.errors?.push(`Failed to research ${category}: ${error}`);
         } else if (data) {
           allResults.found += data.found || 0;
           allResults.saved += data.saved || 0;

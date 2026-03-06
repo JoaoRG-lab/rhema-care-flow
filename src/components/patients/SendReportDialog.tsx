@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Mail, Send, Loader2, User, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 
 interface SendReportDialogProps {
   open: boolean;
@@ -61,20 +61,18 @@ export function SendReportDialog({
 
       // Send email via edge function
       toast.info('Sending email...');
-      const { data, error } = await supabase.functions.invoke('send-report-email', {
-        body: {
-          recipientEmail: recipientEmail.trim(),
-          recipientName: recipientName.trim(),
-          recipientType,
-          patientName,
-          reportType,
-          pdfBase64,
-          additionalMessage: additionalMessage.trim(),
-        },
+      const { data, error } = await invokeEdgeFn<any>('send-report-email', {
+        recipientEmail: recipientEmail.trim(),
+        recipientName: recipientName.trim(),
+        recipientType,
+        patientName,
+        reportType,
+        pdfBase64,
+        additionalMessage: additionalMessage.trim(),
       });
 
       if (error) {
-        throw new Error(error.message || 'Failed to send email');
+        throw new Error(error);
       }
 
       if (!data?.success) {

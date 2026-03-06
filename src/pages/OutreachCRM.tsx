@@ -58,6 +58,7 @@ import {
   Bot,
   Sparkles,
 } from 'lucide-react';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -237,14 +238,11 @@ export default function OutreachCRM() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await supabase.functions.invoke('send-outreach-campaign', {
-        body: { campaignId, testMode, testEmail },
-      });
+      const { data: result, error } = await invokeEdgeFn<any>('send-outreach-campaign', { campaignId, testMode, testEmail });
 
-      if (response.error) throw response.error;
+      if (error) throw new Error(error);
 
-      const result = response.data;
-      if (result.success) {
+      if (result?.success) {
         if (testMode) {
           toast.success(`Test email sent to ${testEmail}`);
         } else {

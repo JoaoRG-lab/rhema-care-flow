@@ -18,7 +18,7 @@ import {
   Copy,
   Download,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -76,11 +76,9 @@ export function AIGuardianPanel() {
   const fetchStandards = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-guardian-agent', {
-        body: { action: 'get_standards' },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-guardian-agent', { action: 'get_standards' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setStandards(data.standards);
       toast.success('Standards retrieved successfully');
     } catch (err: any) {
@@ -98,15 +96,13 @@ export function AIGuardianPanel() {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-guardian-agent', {
-        body: {
-          action: 'generate_confirmation',
-          message: confirmationRequest,
-          context: { timestamp: new Date().toISOString() },
-        },
+      const { data, error } = await invokeEdgeFn<any>('ai-guardian-agent', {
+        action: 'generate_confirmation',
+        message: confirmationRequest,
+        context: { timestamp: new Date().toISOString() },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setConfirmations(prev => [data, ...prev]);
       setConfirmationRequest('');
       toast.success(`Confirmation ${data.confirmation_id} generated`);
@@ -126,11 +122,9 @@ export function AIGuardianPanel() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-guardian-agent', {
-        body: { action: 'chat', message: userMessage },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-guardian-agent', { action: 'chat', message: userMessage });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (err: any) {
       toast.error(err.message || 'Failed to send message');

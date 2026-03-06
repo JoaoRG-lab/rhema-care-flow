@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { toast } from 'sonner';
 
 interface JudgeResult {
@@ -46,11 +47,9 @@ export function useAIQualitySystem() {
   ): Promise<JudgeResult | null> => {
     setIsJudging(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-judge', {
-        body: { action: 'judge', pipeline_id: pipelineId, admin_email: adminEmail },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-judge', { action: 'judge', pipeline_id: pipelineId, admin_email: adminEmail });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       if (data.auto_approved) {
         toast.success(`Article auto-approved! Evidence: ${data.evidence_level}, Grade: ${data.grade}`);
@@ -71,11 +70,9 @@ export function useAIQualitySystem() {
   const batchJudge = useCallback(async (adminEmail?: string) => {
     setIsJudging(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-judge', {
-        body: { action: 'batch_judge', admin_email: adminEmail },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-judge', { action: 'batch_judge', admin_email: adminEmail });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       const autoApproved = data.results?.filter((r: any) => r.auto_approved).length || 0;
       const needsReview = data.results?.filter((r: any) => r.requires_human_review).length || 0;
@@ -97,11 +94,9 @@ export function useAIQualitySystem() {
   ): Promise<SentinelResult | null> => {
     setIsMonitoring(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-sentinel', {
-        body: { action: 'monitor', content_id: contentId, pipeline_id: pipelineId },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-sentinel', { action: 'monitor', content_id: contentId, pipeline_id: pipelineId });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       if (data.flagged) {
         toast.warning(`Content flagged! ${data.issues_found} issues found. Recommendation: ${data.recommendation}`);
@@ -122,11 +117,9 @@ export function useAIQualitySystem() {
   const runSentinelPatrol = useCallback(async () => {
     setIsMonitoring(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-sentinel', {
-        body: { action: 'patrol' },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-sentinel', { action: 'patrol' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       const flagged = data.results?.filter((r: any) => r.flagged).length || 0;
       toast.success(`Patrol complete: ${data.patrolled} items checked, ${flagged} flagged`);
@@ -142,11 +135,9 @@ export function useAIQualitySystem() {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('ai-sentinel', {
-        body: { action: 'get_alerts' },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-sentinel', { action: 'get_alerts' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setAlerts(data.alerts || []);
       return data.alerts;
     } catch (err) {

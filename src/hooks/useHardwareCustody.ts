@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { FunctionsHttpError } from '@supabase/supabase-js';
+import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { toast } from 'sonner';
 import { PublicKey } from '@solana/web3.js';
 
@@ -97,19 +96,10 @@ export function useHardwareCustody() {
 
   const fetchCustodyStatus = useCallback(async () => {
     try {
-      const { data, error: fetchError } = await supabase.functions.invoke('hardware-custody-auth', {
-        body: { action: 'get_custody_status' },
-      });
+      const { data, error } = await invokeEdgeFn<any>('hardware-custody-auth', { action: 'get_custody_status' });
 
-      if (fetchError) {
-        // Extract real message from FunctionsHttpError
-        if (fetchError instanceof FunctionsHttpError) {
-          try {
-            const body = await fetchError.context?.json();
-            console.warn('Custody status error:', body?.error || fetchError.message);
-          } catch { /* ignore parse errors */ }
-        }
-        // Don't show error for auth failures on initial load (user not logged in)
+      if (error) {
+        console.warn('Custody status error:', error);
         return;
       }
 
@@ -141,11 +131,9 @@ export function useHardwareCustody() {
     setRetryCount(0);
 
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke('hardware-custody-auth', {
-        body: { action: 'initiate_hardware_transfer' },
-      });
+      const { data, error: invokeError } = await invokeEdgeFn<any>('hardware-custody-auth', { action: 'initiate_hardware_transfer' });
 
-      if (invokeError) throw invokeError;
+      if (invokeError) throw new Error(invokeError);
 
       setCurrentStep('awaiting_hardware');
       toast.success('Hardware transfer initiated. Connect your hardware wallet.');
@@ -180,15 +168,13 @@ export function useHardwareCustody() {
       else if (solana.isSolflare) hardwareType = 'solflare';
 
       // Register the hardware wallet
-      const { data, error: registerError } = await supabase.functions.invoke('hardware-custody-auth', {
-        body: {
-          action: 'register_hardware_wallet',
-          hardware_pubkey: publicKey,
-          hardware_type: hardwareType,
-        },
+      const { data, error: registerError } = await invokeEdgeFn<any>('hardware-custody-auth', {
+        action: 'register_hardware_wallet',
+        hardware_pubkey: publicKey,
+        hardware_type: hardwareType,
       });
 
-      if (registerError) throw registerError;
+      if (registerError) throw new Error(registerError);
 
       // Generate challenge for signing
       const newChallenge = `UHS_ULTIMATE_USER_INSTALLATION_${Date.now()}_${crypto.randomUUID()}`;
@@ -254,16 +240,14 @@ export function useHardwareCustody() {
       setCurrentStep('broadcasting');
       toast.info('Signature received. Broadcasting to network...');
 
-      const { data, error: completeError } = await supabase.functions.invoke('hardware-custody-auth', {
-        body: {
-          action: 'complete_installation',
-          signature: signatureHex,
-          challenge,
-          publicKey: publicKey.toBase58(),
-        },
+      const { data, error: completeError } = await invokeEdgeFn<any>('hardware-custody-auth', {
+        action: 'complete_installation',
+        signature: signatureHex,
+        challenge,
+        publicKey: publicKey.toBase58(),
       });
 
-      if (completeError) throw completeError;
+      if (completeError) throw new Error(completeError);
 
       setCurrentStep('installed');
       setRetryCount(0);
