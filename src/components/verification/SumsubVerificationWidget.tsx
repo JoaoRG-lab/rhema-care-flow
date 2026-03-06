@@ -26,15 +26,13 @@ export function SumsubVerificationWidget({
 
   const getAccessToken = async (): Promise<string | null> => {
     try {
-      const response = await supabase.functions.invoke('sumsub-token', {
-        body: { levelName },
-      });
+      const { data, error } = await invokeEdgeFn<any>('sumsub-token', { levelName });
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (error) {
+        throw new Error(error);
       }
 
-      return response.data.token;
+      return data?.token || null;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to initialize verification';
       setError(message);

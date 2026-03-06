@@ -237,11 +237,9 @@ export default function OutreachCRM() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await supabase.functions.invoke('send-outreach-campaign', {
-        body: { campaignId, testMode, testEmail },
-      });
+      const { data: result, error } = await invokeEdgeFn<any>('send-outreach-campaign', { campaignId, testMode, testEmail });
 
-      if (response.error) throw response.error;
+      if (error) throw new Error(error);
 
       const result = response.data;
       if (result.success) {

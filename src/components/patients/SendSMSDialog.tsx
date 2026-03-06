@@ -70,13 +70,11 @@
  
      setSending(true);
      try {
-       const { data, error } = await supabase.functions.invoke("send-sms", {
-         body: { to: phone, message },
-       });
+       const { data, error } = await invokeEdgeFn<any>("send-sms", { to: phone, message });
  
        if (error) {
          console.error("SMS error:", error);
-         toast.error(error.message || "Failed to send SMS");
+         toast.error(error || "Failed to send SMS");
          return;
        }
  
