@@ -70,11 +70,9 @@ export function useAIQualitySystem() {
   const batchJudge = useCallback(async (adminEmail?: string) => {
     setIsJudging(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-judge', {
-        body: { action: 'batch_judge', admin_email: adminEmail },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-judge', { action: 'batch_judge', admin_email: adminEmail });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       const autoApproved = data.results?.filter((r: any) => r.auto_approved).length || 0;
       const needsReview = data.results?.filter((r: any) => r.requires_human_review).length || 0;
