@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 export interface EdgeFnError {
@@ -13,6 +14,31 @@ interface UseEdgeFnOptions {
   showErrorToast?: boolean;
   /** Custom error message for toast */
   errorMessage?: string;
+}
+
+async function parseEdgeFnError(fnError: unknown): Promise<EdgeFnError> {
+  if (fnError instanceof FunctionsHttpError) {
+    try {
+      const body = await fnError.context?.json();
+      return {
+        message: body?.error || body?.message || fnError.message,
+        status: fnError.context?.status,
+        raw: body,
+      };
+    } catch {
+      return {
+        message: fnError.message || 'Edge function returned an error',
+        raw: fnError,
+      };
+    }
+  }
+  if (fnError instanceof FunctionsRelayError) {
+    return { message: fnError.message || 'Network relay error', raw: fnError };
+  }
+  if (fnError instanceof Error) {
+    return { message: fnError.message, raw: fnError };
+  }
+  return { message: 'An unexpected error occurred', raw: fnError };
 }
 
 /**
@@ -38,10 +64,7 @@ export function useEdgeFn<TResult = unknown, TBody = Record<string, unknown>>(
         });
 
         if (fnError) {
-          const parsed: EdgeFnError = {
-            message: fnError.message || 'Request failed',
-            raw: fnError,
-          };
+          const parsed = await parseEdgeFnError(fnError);
           setError(parsed);
           if (showErrorToast) {
             toast.error(errorMessage || parsed.message);
@@ -51,12 +74,10 @@ export function useEdgeFn<TResult = unknown, TBody = Record<string, unknown>>(
 
         return { data: data as TResult, error: null };
       } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : 'An unexpected error occurred';
-        const parsed: EdgeFnError = { message, raw: err };
+        const parsed = await parseEdgeFnError(err);
         setError(parsed);
         if (showErrorToast) {
-          toast.error(errorMessage || message);
+          toast.error(errorMessage || parsed.message);
         }
         return { data: null, error: parsed };
       } finally {

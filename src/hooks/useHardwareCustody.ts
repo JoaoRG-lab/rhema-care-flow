@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { PublicKey } from '@solana/web3.js';
 
@@ -100,22 +101,31 @@ export function useHardwareCustody() {
         body: { action: 'get_custody_status' },
       });
 
-      if (fetchError) throw fetchError;
-      setCustodyStatus(data.custody);
+      if (fetchError) {
+        // Extract real message from FunctionsHttpError
+        if (fetchError instanceof FunctionsHttpError) {
+          try {
+            const body = await fetchError.context?.json();
+            console.warn('Custody status error:', body?.error || fetchError.message);
+          } catch { /* ignore parse errors */ }
+        }
+        // Don't show error for auth failures on initial load (user not logged in)
+        return;
+      }
+
+      setCustodyStatus(data?.custody || null);
       
-      if (data.custody?.installation_status === 'active') {
+      if (data?.custody?.installation_status === 'active') {
         setCurrentStep('installed');
-      } else if (data.custody?.installation_status === 'hardware_connected') {
-        // Generate challenge so signing can proceed
+      } else if (data?.custody?.installation_status === 'hardware_connected') {
         const newChallenge = `UHS_ULTIMATE_USER_INSTALLATION_${Date.now()}_${crypto.randomUUID()}`;
         setChallenge(newChallenge);
         setCurrentStep('signing');
-      } else if (data.custody?.installation_status === 'awaiting_hardware') {
+      } else if (data?.custody?.installation_status === 'awaiting_hardware') {
         setCurrentStep('awaiting_hardware');
       }
     } catch (err: any) {
       console.error('Failed to fetch custody status:', err);
-      setError(parseHardwareError(err));
     } finally {
       setIsLoading(false);
     }
