@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface SumsubToken {

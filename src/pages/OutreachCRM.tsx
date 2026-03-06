@@ -242,8 +242,7 @@ export default function OutreachCRM() {
 
       if (error) throw new Error(error);
 
-      const result = response.data;
-      if (result.success) {
+      if (result?.success) {
         if (testMode) {
           toast.success(`Test email sent to ${testEmail}`);
         } else {
