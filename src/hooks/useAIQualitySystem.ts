@@ -135,11 +135,9 @@ export function useAIQualitySystem() {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('ai-sentinel', {
-        body: { action: 'get_alerts' },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-sentinel', { action: 'get_alerts' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setAlerts(data.alerts || []);
       return data.alerts;
     } catch (err) {
