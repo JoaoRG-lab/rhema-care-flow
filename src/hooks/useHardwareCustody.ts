@@ -131,11 +131,9 @@ export function useHardwareCustody() {
     setRetryCount(0);
 
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke('hardware-custody-auth', {
-        body: { action: 'initiate_hardware_transfer' },
-      });
+      const { data, error: invokeError } = await invokeEdgeFn<any>('hardware-custody-auth', { action: 'initiate_hardware_transfer' });
 
-      if (invokeError) throw invokeError;
+      if (invokeError) throw new Error(invokeError);
 
       setCurrentStep('awaiting_hardware');
       toast.success('Hardware transfer initiated. Connect your hardware wallet.');
