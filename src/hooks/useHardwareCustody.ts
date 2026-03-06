@@ -240,16 +240,14 @@ export function useHardwareCustody() {
       setCurrentStep('broadcasting');
       toast.info('Signature received. Broadcasting to network...');
 
-      const { data, error: completeError } = await supabase.functions.invoke('hardware-custody-auth', {
-        body: {
-          action: 'complete_installation',
-          signature: signatureHex,
-          challenge,
-          publicKey: publicKey.toBase58(),
-        },
+      const { data, error: completeError } = await invokeEdgeFn<any>('hardware-custody-auth', {
+        action: 'complete_installation',
+        signature: signatureHex,
+        challenge,
+        publicKey: publicKey.toBase58(),
       });
 
-      if (completeError) throw completeError;
+      if (completeError) throw new Error(completeError);
 
       setCurrentStep('installed');
       setRetryCount(0);
