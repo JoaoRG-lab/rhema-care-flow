@@ -96,15 +96,13 @@ export function AIGuardianPanel() {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-guardian-agent', {
-        body: {
-          action: 'generate_confirmation',
-          message: confirmationRequest,
-          context: { timestamp: new Date().toISOString() },
-        },
+      const { data, error } = await invokeEdgeFn<any>('ai-guardian-agent', {
+        action: 'generate_confirmation',
+        message: confirmationRequest,
+        context: { timestamp: new Date().toISOString() },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setConfirmations(prev => [data, ...prev]);
       setConfirmationRequest('');
       toast.success(`Confirmation ${data.confirmation_id} generated`);
