@@ -122,11 +122,9 @@ export function AIGuardianPanel() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-guardian-agent', {
-        body: { action: 'chat', message: userMessage },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-guardian-agent', { action: 'chat', message: userMessage });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (err: any) {
       toast.error(err.message || 'Failed to send message');
