@@ -59,6 +59,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
