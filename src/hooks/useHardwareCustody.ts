@@ -96,19 +96,10 @@ export function useHardwareCustody() {
 
   const fetchCustodyStatus = useCallback(async () => {
     try {
-      const { data, error: fetchError } = await supabase.functions.invoke('hardware-custody-auth', {
-        body: { action: 'get_custody_status' },
-      });
+      const { data, error } = await invokeEdgeFn<any>('hardware-custody-auth', { action: 'get_custody_status' });
 
-      if (fetchError) {
-        // Extract real message from FunctionsHttpError
-        if (fetchError instanceof FunctionsHttpError) {
-          try {
-            const body = await fetchError.context?.json();
-            console.warn('Custody status error:', body?.error || fetchError.message);
-          } catch { /* ignore parse errors */ }
-        }
-        // Don't show error for auth failures on initial load (user not logged in)
+      if (error) {
+        console.warn('Custody status error:', error);
         return;
       }
 
