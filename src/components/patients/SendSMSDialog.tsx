@@ -14,7 +14,7 @@
  import { Textarea } from "@/components/ui/textarea";
  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  import { MessageSquare, Send, Loader2, FileText, PenLine } from "lucide-react";
- import { supabase } from "@/integrations/supabase/client";
+ import { invokeEdgeFn } from "@/lib/invokeEdgeFn";
  import { toast } from "sonner";
  import { z } from "zod";
  import { SMSTemplateSelector } from "./SMSTemplateSelector";
