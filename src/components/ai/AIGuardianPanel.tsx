@@ -76,11 +76,9 @@ export function AIGuardianPanel() {
   const fetchStandards = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-guardian-agent', {
-        body: { action: 'get_standards' },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-guardian-agent', { action: 'get_standards' });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setStandards(data.standards);
       toast.success('Standards retrieved successfully');
     } catch (err: any) {
