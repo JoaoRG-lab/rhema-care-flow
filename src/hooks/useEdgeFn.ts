@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 export interface EdgeFnError {
