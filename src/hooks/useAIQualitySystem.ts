@@ -47,11 +47,9 @@ export function useAIQualitySystem() {
   ): Promise<JudgeResult | null> => {
     setIsJudging(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-judge', {
-        body: { action: 'judge', pipeline_id: pipelineId, admin_email: adminEmail },
-      });
+      const { data, error } = await invokeEdgeFn<any>('ai-judge', { action: 'judge', pipeline_id: pipelineId, admin_email: adminEmail });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       if (data.auto_approved) {
         toast.success(`Article auto-approved! Evidence: ${data.evidence_level}, Grade: ${data.grade}`);
