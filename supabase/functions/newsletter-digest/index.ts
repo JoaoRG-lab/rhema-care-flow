@@ -159,38 +159,52 @@ RECENT AI AGENT RUNS:
 ${agentSummary || "  No recent runs"}
 `;
 
+  // Try multiple AI providers with fallback
+  const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
   const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-  if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
   const systemPrompt = `You are the official newsletter editor for UHS Health OS, a cutting-edge rheumatology clinical intelligence platform. 
 You write professional, engaging digests that make complex system data accessible and interesting.
 Always use emojis for section headers. Be data-driven but human-readable.
 Output in markdown format. The subject line should be on the first line prefixed with "SUBJECT: "`;
 
-  const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      max_tokens: config.maxTokens,
-      temperature: 0.7,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `${config.prompt}\n\n${systemContext}` },
-      ],
-    }),
-  });
+  const userPrompt = `${config.prompt}\n\n${systemContext}`;
+  let content = "";
 
-  if (!aiResponse.ok) {
-    const err = await aiResponse.text();
-    throw new Error(`OpenAI API failed [${aiResponse.status}]: ${err}`);
+  // Try Perplexity first
+  if (PERPLEXITY_API_KEY) {
+    try {
+      const res = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "sonar",
+          max_tokens: config.maxTokens,
+          temperature: 0.7,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        content = data.choices?.[0]?.message?.content || "";
+      } else {
+        console.warn("Perplexity failed:", res.status, await res.text());
+      }
+    } catch (e) {
+      console.warn("Perplexity error:", e);
+    }
   }
 
-  const aiData = await aiResponse.json();
-  const content = aiData.choices?.[0]?.message?.content || "";
+  if (!content) {
+    throw new Error("All AI providers failed or are unavailable. Check API keys.");
+  }
 
   // Extract subject
   let subject = `UHS Health OS — ${digestType.charAt(0).toUpperCase() + digestType.slice(1)} Digest — ${dateStr}`;
