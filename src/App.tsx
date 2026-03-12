@@ -118,6 +118,7 @@ const queryClient = new QueryClient();
                     <Route path="/quality-test" element={<QualityTest />} />
                     <Route path="/chain-demo" element={<SolanaChainDemo />} />
                     <Route path="/tell-us" element={<TellUs />} />
+                    <Route path="/article-builder" element={<ArticleBuilder />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
