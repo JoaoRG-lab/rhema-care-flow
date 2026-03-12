@@ -49,6 +49,7 @@ const GuardianAgent = lazy(() => import("./pages/GuardianAgent"));
 const QualityTest = lazy(() => import("./pages/QualityTest"));
 const SolanaChainDemo = lazy(() => import("./pages/SolanaChainDemo"));
 const TellUs = lazy(() => import("./pages/TellUs"));
+const ArticleBuilder = lazy(() => import("./pages/ArticleBuilder"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
