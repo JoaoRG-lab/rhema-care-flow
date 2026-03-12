@@ -24,6 +24,7 @@ import {
   Blocks,
   Link2,
   MessageSquare,
+  PenLine,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
