@@ -116,6 +116,7 @@ const queryClient = new QueryClient();
                     <Route path="/guardian" element={<ProtectedRoute><GuardianAgent /></ProtectedRoute>} />
                     <Route path="/quality-test" element={<QualityTest />} />
                     <Route path="/chain-demo" element={<SolanaChainDemo />} />
+                    <Route path="/tell-us" element={<TellUs />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
