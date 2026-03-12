@@ -46,6 +46,7 @@ const SpecialtyPortal = lazy(() => import("./pages/SpecialtyPortal"));
 const AIResearch = lazy(() => import("./pages/AIResearch"));
 const OutreachCRM = lazy(() => import("./pages/OutreachCRM"));
 const GuardianAgent = lazy(() => import("./pages/GuardianAgent"));
+const QualityTest = lazy(() => import("./pages/QualityTest"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -111,6 +112,7 @@ const queryClient = new QueryClient();
                     <Route path="/ai-research" element={<ProtectedRoute><AIResearch /></ProtectedRoute>} />
                     <Route path="/outreach" element={<ProtectedRoute><OutreachCRM /></ProtectedRoute>} />
                     <Route path="/guardian" element={<ProtectedRoute><GuardianAgent /></ProtectedRoute>} />
+                    <Route path="/quality-test" element={<QualityTest />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
