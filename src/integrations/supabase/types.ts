@@ -758,6 +758,45 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_digests: {
+        Row: {
+          content_html: string
+          content_text: string | null
+          created_at: string
+          digest_type: string
+          id: string
+          sent_at: string | null
+          sent_to: string[] | null
+          stats_snapshot: Json | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          content_html: string
+          content_text?: string | null
+          created_at?: string
+          digest_type?: string
+          id?: string
+          sent_at?: string | null
+          sent_to?: string[] | null
+          stats_snapshot?: Json | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          content_html?: string
+          content_text?: string | null
+          created_at?: string
+          digest_type?: string
+          id?: string
+          sent_at?: string | null
+          sent_to?: string[] | null
+          stats_snapshot?: Json | null
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       outreach_campaigns: {
         Row: {
           campaign_type: string
