@@ -73,8 +73,49 @@ import {
    const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
    const [selectedTier, setSelectedTier] = useState<VerificationTier>(null);
    const [reviewerNotes, setReviewerNotes] = useState('');
-   const [submitting, setSubmitting] = useState(false);
-   const [filter, setFilter] = useState<'all' | 'pending' | 'under_review' | 'approved' | 'rejected'>('pending');
+  const [submitting, setSubmitting] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'under_review' | 'approved' | 'rejected'>('pending');
+  const [exporting, setExporting] = useState(false);
+
+  const handleAuditExport = async () => {
+    setExporting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/audit-data-export`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Export failed');
+      }
+      
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `uhs-audit-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Audit data exported successfully (PII encrypted)');
+    } catch (error: any) {
+      console.error('Audit export failed:', error);
+      toast.error(error.message || 'Failed to export audit data');
+    } finally {
+      setExporting(false);
+    }
+  };
  
    useEffect(() => {
      if (isAdmin) {
