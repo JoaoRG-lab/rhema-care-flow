@@ -232,7 +232,7 @@ export default function SolanaChainDemo() {
       const features = { R: 72, P: 81, I: 76, E: 66, X: 79 };
       const featHash = await sha256(new TextEncoder().encode(canonicalize(features)));
       const prevHash = localChain.lastScoreHash;
-      const toHash = new Uint8Array([...prevHash, ...featHash, ...u32ToLeBytes(score), ...u16ToLeBytes(conf)]);
+      const toHash = new Uint8Array([...Array.from(prevHash), ...Array.from(featHash), ...Array.from(u32ToLeBytes(score)), ...Array.from(u16ToLeBytes(conf))]);
       const newHash = await sha256(toHash);
       // Verify chain link
       if (hexFromBytes(prevHash) !== localChain.updates[localChain.updates.length - 1].newHash) {
