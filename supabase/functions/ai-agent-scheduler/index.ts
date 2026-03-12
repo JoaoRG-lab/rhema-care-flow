@@ -38,13 +38,13 @@ serve(async (req) => {
 
     console.log(`[Scheduler] Checking at ${now.toISOString()} (UTC hour: ${currentHour})`);
 
-    // Check quiet hours
-    const isQuietHours = currentHour >= QUIET_HOURS_START && currentHour < QUIET_HOURS_END;
+    // Maintenance window: 1 hour at 07:00 UTC (4 AM UTC-3)
+    const isMaintenanceHour = currentHour === MAINTENANCE_HOUR_UTC;
     
-    if (isQuietHours && !forceRun) {
-      console.log(`[Scheduler] Quiet hours. Skipping.`);
+    if (isMaintenanceHour && !forceRun) {
+      console.log(`[Scheduler] Maintenance hour (4 AM UTC-3). Paused.`);
       return new Response(
-        JSON.stringify({ success: true, action: "skipped", reason: "quiet_hours", current_hour: currentHour }),
+        JSON.stringify({ success: true, action: "skipped", reason: "maintenance_window", current_hour: currentHour }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
