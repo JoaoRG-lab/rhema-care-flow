@@ -245,7 +245,7 @@ export default function SolanaChainDemo() {
         featuresHash: hexFromBytes(featHash),
         timestamp: Date.now(),
       });
-      localChain.lastScoreHash = newHash;
+      localChain.lastScoreHash = new Uint8Array(newHash);
       localChain.lastScoreU32 = score;
       return { details: `Score update #2 ✓ (URV=73.00, chained from previous hash)`, hash: hexFromBytes(newHash).slice(0, 16) + "..." };
     });
