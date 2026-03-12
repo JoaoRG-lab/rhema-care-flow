@@ -48,6 +48,7 @@ const OutreachCRM = lazy(() => import("./pages/OutreachCRM"));
 const GuardianAgent = lazy(() => import("./pages/GuardianAgent"));
 const QualityTest = lazy(() => import("./pages/QualityTest"));
 const SolanaChainDemo = lazy(() => import("./pages/SolanaChainDemo"));
+const TellUs = lazy(() => import("./pages/TellUs"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -115,6 +116,7 @@ const queryClient = new QueryClient();
                     <Route path="/guardian" element={<ProtectedRoute><GuardianAgent /></ProtectedRoute>} />
                     <Route path="/quality-test" element={<QualityTest />} />
                     <Route path="/chain-demo" element={<SolanaChainDemo />} />
+                    <Route path="/tell-us" element={<TellUs />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
