@@ -8,7 +8,10 @@ const MenubarMenu = MenubarPrimitive.Menu;
 
 const MenubarGroup = MenubarPrimitive.Group;
 
-const MenubarPortal = MenubarPrimitive.Portal;
+const MenubarPortal = ({ children, ...props }: MenubarPrimitive.MenubarPortalProps) => (
+  <MenubarPrimitive.Portal {...props}>{children}</MenubarPrimitive.Portal>
+);
+MenubarPortal.displayName = "MenubarPortal";
 
 const MenubarSub = MenubarPrimitive.Sub;
 
