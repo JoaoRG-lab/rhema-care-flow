@@ -7,11 +7,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Configuration
-const QUIET_HOURS_START = 18; // 18:00 UTC
-const QUIET_HOURS_END = 22;   // 22:00 UTC
-const PEAK_HOURS_START = 1;   // 01:00 UTC
-const PEAK_HOURS_END = 6;     // 06:00 UTC
+// Configuration — runs 23h/day, maintenance at 07:00 UTC (4 AM UTC-3)
+const MAINTENANCE_HOUR_UTC = 7; // 4 AM UTC-3 = 7 AM UTC
+const PEAK_HOURS_START = 1;     // 01:00 UTC
+const PEAK_HOURS_END = 6;       // 06:00 UTC
 const INACTIVITY_THRESHOLD_HOURS = 3;
 
 interface SchedulerConfig {
@@ -39,13 +38,13 @@ serve(async (req) => {
 
     console.log(`[Scheduler] Checking at ${now.toISOString()} (UTC hour: ${currentHour})`);
 
-    // Check quiet hours
-    const isQuietHours = currentHour >= QUIET_HOURS_START && currentHour < QUIET_HOURS_END;
+    // Maintenance window: 1 hour at 07:00 UTC (4 AM UTC-3)
+    const isMaintenanceHour = currentHour === MAINTENANCE_HOUR_UTC;
     
-    if (isQuietHours && !forceRun) {
-      console.log(`[Scheduler] Quiet hours. Skipping.`);
+    if (isMaintenanceHour && !forceRun) {
+      console.log(`[Scheduler] Maintenance hour (4 AM UTC-3). Paused.`);
       return new Response(
-        JSON.stringify({ success: true, action: "skipped", reason: "quiet_hours", current_hour: currentHour }),
+        JSON.stringify({ success: true, action: "skipped", reason: "maintenance_window", current_hour: currentHour }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -63,10 +62,11 @@ serve(async (req) => {
     let shouldRun = false;
     let runReason = "";
 
+    // Redundancy: always run outside maintenance hour
     if (forceRun) { shouldRun = true; runReason = "force_run"; }
     else if (isPeakHours) { shouldRun = true; runReason = "peak_hours"; }
     else if (hasRecentActivity) { shouldRun = true; runReason = "recent_activity"; }
-    else { runReason = "no_activity"; }
+    else { shouldRun = true; runReason = "scheduled_24_7"; }
 
     console.log(`[Scheduler] Decision: shouldRun=${shouldRun}, reason=${runReason}`);
 
