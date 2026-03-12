@@ -211,7 +211,7 @@ export default function SolanaChainDemo() {
       const conf = 9100; // 91%
       const features = { R: 70, P: 80, I: 75, E: 65, X: 78 };
       const featHash = await sha256(new TextEncoder().encode(canonicalize(features)));
-      const toHash = new Uint8Array([...localChain.lastScoreHash, ...featHash, ...u32ToLeBytes(score), ...u16ToLeBytes(conf)]);
+      const toHash = new Uint8Array([...Array.from(localChain.lastScoreHash), ...Array.from(featHash), ...Array.from(u32ToLeBytes(score)), ...Array.from(u16ToLeBytes(conf))]);
       const newHash = await sha256(toHash);
       localChain.updates.push({
         score, confidence: conf,
