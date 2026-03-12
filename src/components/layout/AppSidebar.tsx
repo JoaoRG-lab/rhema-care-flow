@@ -23,6 +23,7 @@ import {
   Bot,
   Blocks,
   Link2,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -57,6 +58,7 @@ const navItems = [
   { path: '/focus', label: 'Focus', icon: Timer },
   { path: '/ai-assistant', label: 'AI Assistant', icon: Bot },
   { path: '/blockchain', label: 'URV Chain', icon: Blocks },
+  { path: '/tell-us', label: 'Tell Us', icon: MessageSquare },
 ];
 
 const academicNavItems = [

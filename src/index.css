@@ -77,6 +77,23 @@
     --warning: 42 85% 50%;
     --info: 200 70% 48%;
 
+    /* Blue-scale tokens (Tell Us / light themes) */
+    --blue-50: 214 100% 97%;
+    --blue-100: 214 95% 93%;
+    --blue-200: 213 97% 87%;
+    --blue-300: 212 96% 78%;
+    --blue-400: 213 94% 68%;
+    --blue-500: 217 91% 60%;
+    --blue-600: 221 83% 53%;
+    --blue-700: 224 76% 48%;
+    --blue-800: 226 71% 40%;
+    --blue-900: 224 64% 33%;
+    --gradient-blue: linear-gradient(135deg, hsl(217 91% 60%), hsl(224 76% 48%));
+    --gradient-blue-light: linear-gradient(135deg, hsl(214 100% 97%), hsl(214 95% 93%));
+    --gradient-blue-hero: linear-gradient(135deg, hsl(224 64% 33%), hsl(221 83% 53%));
+    --shadow-blue-soft: 0 4px 20px -5px hsl(217 91% 60% / 0.15);
+    --shadow-blue-glow: 0 0 40px -10px hsl(217 91% 60% / 0.3);
+
     /* Gradient tokens */
     --gradient-primary: linear-gradient(135deg, hsl(168 55% 38%), hsl(165 60% 48%));
     --gradient-hero: linear-gradient(135deg, hsl(170 25% 12%), hsl(168 30% 22%));
