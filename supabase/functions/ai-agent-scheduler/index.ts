@@ -62,10 +62,11 @@ serve(async (req) => {
     let shouldRun = false;
     let runReason = "";
 
+    // Redundancy: always run outside maintenance hour
     if (forceRun) { shouldRun = true; runReason = "force_run"; }
     else if (isPeakHours) { shouldRun = true; runReason = "peak_hours"; }
     else if (hasRecentActivity) { shouldRun = true; runReason = "recent_activity"; }
-    else { runReason = "no_activity"; }
+    else { shouldRun = true; runReason = "scheduled_24_7"; }
 
     console.log(`[Scheduler] Decision: shouldRun=${shouldRun}, reason=${runReason}`);
 
