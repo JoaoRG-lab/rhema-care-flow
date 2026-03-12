@@ -171,21 +171,23 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Log agent activity
-    await supabase.from("audit_logs").insert({
-      user_id: "00000000-0000-0000-0000-000000000000", // System user
-      action: "ai_agent_run",
-      resource_type: "site_improvement",
-      resource_id: null,
-      metadata: {
-        tasks_run: tasksToRun.map(t => t.id),
-        results_summary: Object.keys(results).map(k => ({
-          task: k,
-          suggestions_count: results[k].suggestions?.length || 0,
-          has_error: !!results[k].error,
-        })),
-      },
-    }).catch(() => {}); // Non-critical
+    // Log agent activity (non-critical)
+    try {
+      await supabase.from("audit_logs").insert({
+        user_id: "00000000-0000-0000-0000-000000000000",
+        action: "ai_agent_run",
+        resource_type: "site_improvement",
+        resource_id: null,
+        metadata: {
+          tasks_run: tasksToRun.map(t => t.id),
+          results_summary: Object.keys(results).map(k => ({
+            task: k,
+            suggestions_count: results[k].suggestions?.length || 0,
+            has_error: !!results[k].error,
+          })),
+        },
+      });
+    } catch (_) { /* non-critical logging */ }
 
     return new Response(
       JSON.stringify({

@@ -142,7 +142,7 @@ serve(async (req) => {
         const resp = await fetch(`${supabaseUrl}/functions/v1/ai-sentinel`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseKey}` },
-          body: JSON.stringify({ action: "check_all" }),
+          body: JSON.stringify({ action: "patrol" }),
         });
         const result = await resp.json();
         results.sentinel = result;
