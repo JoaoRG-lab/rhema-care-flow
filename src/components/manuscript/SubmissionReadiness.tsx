@@ -16,20 +16,20 @@ export function SubmissionReadiness({ sections }: Props) {
   const has = (id: string) => (sections.find((s) => s.id === id)?.content.trim().length ?? 0) > 10;
 
   const checks: CheckItem[] = [
-    { label: 'Title completed', passed: has('title') > 0 },
-    { label: 'Authors listed', passed: has('authors') > 0 },
-    { label: 'Corresponding author', passed: has('corresponding') > 0 },
-    { label: 'Abstract completed', passed: has('abstract') > 0 },
-    { label: 'Keywords provided', passed: has('keywords') > 0 },
-    { label: 'Introduction written', passed: has('introduction') > 0 },
-    { label: 'Methods written', passed: has('methods') > 0 },
-    { label: 'Results presented', passed: has('results') > 0 },
-    { label: 'Discussion completed', passed: has('discussion') > 0 },
-    { label: 'Conclusion provided', passed: has('conclusion') > 0 },
-    { label: 'References listed', passed: has('references') > 0 },
-    { label: 'Ethics considered', passed: has('ethics') > 0 },
-    { label: 'Funding disclosed', passed: has('funding') > 0 },
-    { label: 'Conflicts declared', passed: has('conflicts') > 0 },
+    { label: 'Title completed', passed: has('title') },
+    { label: 'Authors listed', passed: has('authors') },
+    { label: 'Corresponding author', passed: has('corresponding') },
+    { label: 'Abstract completed', passed: has('abstract') },
+    { label: 'Keywords provided', passed: has('keywords') },
+    { label: 'Introduction written', passed: has('introduction') },
+    { label: 'Methods written', passed: has('methods') },
+    { label: 'Results presented', passed: has('results') },
+    { label: 'Discussion completed', passed: has('discussion') },
+    { label: 'Conclusion provided', passed: has('conclusion') },
+    { label: 'References listed', passed: has('references') },
+    { label: 'Ethics considered', passed: has('ethics') },
+    { label: 'Funding disclosed', passed: has('funding') },
+    { label: 'Conflicts declared', passed: has('conflicts') },
   ];
 
   const passed = checks.filter((c) => c.passed).length;
