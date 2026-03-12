@@ -11,11 +11,11 @@
  import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
  import { ScrollArea } from '@/components/ui/scroll-area';
  import { Alert, AlertDescription } from '@/components/ui/alert';
- import { 
-   Shield, Users, BadgeCheck, Clock, CheckCircle, XCircle, 
-   Eye, FileText, ExternalLink, Mail, Building, Calendar,
-   AlertTriangle, Loader2
- } from 'lucide-react';
+import { 
+    Shield, Users, BadgeCheck, Clock, CheckCircle, XCircle, 
+    Eye, FileText, ExternalLink, Mail, Building, Calendar,
+    AlertTriangle, Loader2, Download
+  } from 'lucide-react';
  import { useUserRole } from '@/hooks/useUserRole';
  import { useAuth } from '@/contexts/AuthContext';
  import { supabase } from '@/integrations/supabase/client';
