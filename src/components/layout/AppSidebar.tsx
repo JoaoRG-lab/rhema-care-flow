@@ -23,6 +23,7 @@ import {
   Bot,
   Blocks,
   Link2,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
