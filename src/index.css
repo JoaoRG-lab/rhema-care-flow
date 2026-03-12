@@ -347,33 +347,21 @@
 
 @layer utilities {
   .animate-in {
-    animation: animate-in 0.3s ease-out;
+    animation: animate-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes animate-in {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .slide-in-left {
-    animation: slide-in-left 0.3s ease-out;
+    animation: slide-in-left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes slide-in-left {
-    from {
-      opacity: 0;
-      transform: translateX(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   .float-slow {
@@ -381,12 +369,8 @@
   }
 
   @keyframes float-slow {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
   }
 
   .pulse-glow {
@@ -394,12 +378,115 @@
   }
 
   @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 20px -5px hsl(168 55% 45% / 0.3);
-    }
-    50% {
-      box-shadow: 0 0 40px -5px hsl(168 55% 45% / 0.5);
-    }
+    0%, 100% { box-shadow: 0 0 20px -5px hsl(168 55% 45% / 0.3); }
+    50% { box-shadow: 0 0 50px -5px hsl(168 55% 45% / 0.5); }
+  }
+
+  /* ── Dazzling effects ── */
+
+  .shimmer {
+    animation: shimmer 3s ease-in-out infinite;
+    background-size: 200% 100%;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .glow-ring {
+    animation: glow-ring 4s ease-in-out infinite;
+  }
+
+  @keyframes glow-ring {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(168 55% 45% / 0.4); }
+    50% { box-shadow: 0 0 0 12px hsl(168 55% 45% / 0); }
+  }
+
+  .fade-up-stagger > * {
+    opacity: 0;
+    animation: fade-up-item 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .fade-up-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+  .fade-up-stagger > *:nth-child(2) { animation-delay: 0.1s; }
+  .fade-up-stagger > *:nth-child(3) { animation-delay: 0.15s; }
+  .fade-up-stagger > *:nth-child(4) { animation-delay: 0.2s; }
+  .fade-up-stagger > *:nth-child(5) { animation-delay: 0.25s; }
+  .fade-up-stagger > *:nth-child(6) { animation-delay: 0.3s; }
+  .fade-up-stagger > *:nth-child(7) { animation-delay: 0.35s; }
+
+  @keyframes fade-up-item {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .text-shine {
+    background: linear-gradient(
+      120deg,
+      hsl(168 55% 38%) 0%,
+      hsl(165 60% 55%) 25%,
+      hsl(42 85% 55%) 50%,
+      hsl(165 60% 55%) 75%,
+      hsl(168 55% 38%) 100%
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: text-shine 4s ease-in-out infinite;
+  }
+
+  @keyframes text-shine {
+    0% { background-position: 100% 50%; }
+    100% { background-position: -100% 50%; }
+  }
+
+  .rotate-slow {
+    animation: rotate-slow 20s linear infinite;
+  }
+
+  @keyframes rotate-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .scale-in {
+    animation: scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .hero-blob {
+    animation: hero-blob 8s ease-in-out infinite;
+  }
+
+  @keyframes hero-blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 15px) scale(0.95); }
+  }
+
+  .hero-blob-2 {
+    animation: hero-blob-2 10s ease-in-out infinite;
+  }
+
+  @keyframes hero-blob-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-25px, 20px) scale(1.08); }
+    66% { transform: translate(20px, -25px) scale(0.92); }
+  }
+
+  .particle {
+    animation: particle 3s ease-in-out infinite;
+  }
+
+  @keyframes particle {
+    0%, 100% { opacity: 0.3; transform: translateY(0) scale(1); }
+    50% { opacity: 0.8; transform: translateY(-8px) scale(1.2); }
   }
 }
 
