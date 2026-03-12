@@ -273,7 +273,7 @@ export default function SolanaChainDemo() {
         featuresHash: hexFromBytes(featHash),
         timestamp: Date.now(),
       });
-      localChain.lastScoreHash = newHash;
+      localChain.lastScoreHash = new Uint8Array(newHash);
       localChain.lastScoreU32 = validScore;
       return { details: `Step limiter ✓ (±5% enforced, range [${minDn}-${maxUp}], accepted ${validScore}, rejected ${invalidScore})`, hash: hexFromBytes(newHash).slice(0, 16) + "..." };
     });
