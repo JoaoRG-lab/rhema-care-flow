@@ -47,6 +47,7 @@ const AIResearch = lazy(() => import("./pages/AIResearch"));
 const OutreachCRM = lazy(() => import("./pages/OutreachCRM"));
 const GuardianAgent = lazy(() => import("./pages/GuardianAgent"));
 const QualityTest = lazy(() => import("./pages/QualityTest"));
+const SolanaChainDemo = lazy(() => import("./pages/SolanaChainDemo"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
