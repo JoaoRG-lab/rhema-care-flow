@@ -11,11 +11,11 @@
  import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
  import { ScrollArea } from '@/components/ui/scroll-area';
  import { Alert, AlertDescription } from '@/components/ui/alert';
- import { 
-   Shield, Users, BadgeCheck, Clock, CheckCircle, XCircle, 
-   Eye, FileText, ExternalLink, Mail, Building, Calendar,
-   AlertTriangle, Loader2
- } from 'lucide-react';
+import { 
+    Shield, Users, BadgeCheck, Clock, CheckCircle, XCircle, 
+    Eye, FileText, ExternalLink, Mail, Building, Calendar,
+    AlertTriangle, Loader2, Download
+  } from 'lucide-react';
  import { useUserRole } from '@/hooks/useUserRole';
  import { useAuth } from '@/contexts/AuthContext';
  import { supabase } from '@/integrations/supabase/client';
@@ -73,8 +73,49 @@
    const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
    const [selectedTier, setSelectedTier] = useState<VerificationTier>(null);
    const [reviewerNotes, setReviewerNotes] = useState('');
-   const [submitting, setSubmitting] = useState(false);
-   const [filter, setFilter] = useState<'all' | 'pending' | 'under_review' | 'approved' | 'rejected'>('pending');
+  const [submitting, setSubmitting] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'under_review' | 'approved' | 'rejected'>('pending');
+  const [exporting, setExporting] = useState(false);
+
+  const handleAuditExport = async () => {
+    setExporting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/audit-data-export`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Export failed');
+      }
+      
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `uhs-audit-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Audit data exported successfully (PII encrypted)');
+    } catch (error: any) {
+      console.error('Audit export failed:', error);
+      toast.error(error.message || 'Failed to export audit data');
+    } finally {
+      setExporting(false);
+    }
+  };
  
    useEffect(() => {
      if (isAdmin) {
@@ -170,13 +211,19 @@
    return (
      <AppLayout>
        <div className="p-6 lg:p-8">
-         <div className="mb-6">
-           <h1 className="text-2xl font-bold flex items-center gap-2">
-             <Shield className="h-6 w-6 text-primary" />
-             Admin Panel
-           </h1>
-           <p className="text-muted-foreground">Manage verification requests and user roles</p>
-         </div>
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Shield className="h-6 w-6 text-primary" />
+                Admin Panel
+              </h1>
+              <p className="text-muted-foreground">Manage verification requests and user roles</p>
+            </div>
+            <Button onClick={handleAuditExport} disabled={exporting} variant="outline" size="sm" className="gap-2 self-start">
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {exporting ? 'Exporting...' : 'Export Audit Data'}
+            </Button>
+          </div>
  
          {/* Stats */}
          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
