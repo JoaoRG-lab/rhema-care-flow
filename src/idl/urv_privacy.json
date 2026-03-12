@@ -1,3 +1,121 @@
 {
-  "_todo": "Paste the real Anchor IDL here after you run: cd anchor && anchor build. Then copy anchor/target/idl/urv_privacy.json into this file."
+  "address": "URVPr1vacy11111111111111111111111111111111",
+  "metadata": {
+    "name": "urv_privacy",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "URV Health Value Chain - Privacy-Preserving Audit Ledger"
+  },
+  "instructions": [
+    {
+      "name": "init_state",
+      "discriminator": [0, 0, 0, 0, 0, 0, 0, 1],
+      "accounts": [
+        { "name": "admin", "writable": true, "signer": true },
+        { "name": "state", "writable": true, "pda": { "seeds": [{ "kind": "const", "value": [115, 116, 97, 116, 101] }, { "kind": "account", "path": "admin" }] } },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "oracle", "type": "pubkey" }
+      ]
+    },
+    {
+      "name": "create_record",
+      "discriminator": [0, 0, 0, 0, 0, 0, 0, 2],
+      "accounts": [
+        { "name": "owner", "writable": true, "signer": true },
+        { "name": "state", "writable": false },
+        { "name": "record", "writable": true, "pda": { "seeds": [{ "kind": "const", "value": [114, 101, 99] }, { "kind": "account", "path": "owner" }, { "kind": "arg", "path": "data_hash" }] } },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "data_hash", "type": { "array": ["u8", 32] } },
+        { "name": "uri", "type": "string" },
+        { "name": "schema_version", "type": "u16" }
+      ]
+    },
+    {
+      "name": "post_score_update",
+      "discriminator": [0, 0, 0, 0, 0, 0, 0, 3],
+      "accounts": [
+        { "name": "oracle", "writable": true, "signer": true },
+        { "name": "state", "writable": true, "pda": { "seeds": [{ "kind": "const", "value": [115, 116, 97, 116, 101] }, { "kind": "account", "path": "state.admin" }] } },
+        { "name": "update", "writable": true, "pda": { "seeds": [{ "kind": "const", "value": [117, 112, 100] }, { "kind": "account", "path": "state" }, { "kind": "arg", "path": "new_score_hash" }] } },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "record_data_hash", "type": { "array": ["u8", 32] } },
+        { "name": "features_hash", "type": { "array": ["u8", 32] } },
+        { "name": "score_u32", "type": "u32" },
+        { "name": "confidence_bps", "type": "u16" },
+        { "name": "prev_score_hash", "type": { "array": ["u8", 32] } },
+        { "name": "new_score_hash", "type": { "array": ["u8", 32] } }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "UrvState",
+      "discriminator": [0, 0, 0, 0, 0, 0, 1, 0]
+    },
+    {
+      "name": "Record",
+      "discriminator": [0, 0, 0, 0, 0, 0, 1, 1]
+    },
+    {
+      "name": "ScoreUpdate",
+      "discriminator": [0, 0, 0, 0, 0, 0, 1, 2]
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "UriTooLong", "msg": "URI too long" },
+    { "code": 6001, "name": "BadConfidence", "msg": "Bad confidence" },
+    { "code": 6002, "name": "NotOracle", "msg": "Caller is not oracle" },
+    { "code": 6003, "name": "BadPrevHash", "msg": "Bad previous score hash" },
+    { "code": 6004, "name": "DeltaTooLarge", "msg": "Score delta too large" }
+  ],
+  "types": [
+    {
+      "name": "UrvState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "admin", "type": "pubkey" },
+          { "name": "oracle", "type": "pubkey" },
+          { "name": "last_score_u32", "type": "u32" },
+          { "name": "last_score_hash", "type": { "array": ["u8", 32] } },
+          { "name": "updated_at", "type": "i64" }
+        ]
+      }
+    },
+    {
+      "name": "Record",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "owner", "type": "pubkey" },
+          { "name": "data_hash", "type": { "array": ["u8", 32] } },
+          { "name": "schema_version", "type": "u16" },
+          { "name": "created_at", "type": "i64" },
+          { "name": "uri", "type": "string" }
+        ]
+      }
+    },
+    {
+      "name": "ScoreUpdate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "oracle", "type": "pubkey" },
+          { "name": "record_data_hash", "type": { "array": ["u8", 32] } },
+          { "name": "features_hash", "type": { "array": ["u8", 32] } },
+          { "name": "score_u32", "type": "u32" },
+          { "name": "confidence_bps", "type": "u16" },
+          { "name": "prev_score_hash", "type": { "array": ["u8", 32] } },
+          { "name": "new_score_hash", "type": { "array": ["u8", 32] } },
+          { "name": "created_at", "type": "i64" }
+        ]
+      }
+    }
+  ]
 }
