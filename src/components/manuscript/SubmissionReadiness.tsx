@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function SubmissionReadiness({ sections }: Props) {
-  const has = (id: string) => sections.find((s) => s.id === id)?.content.trim().length ?? 0 > 10;
+  const has = (id: string) => (sections.find((s) => s.id === id)?.content.trim().length ?? 0) > 10;
 
   const checks: CheckItem[] = [
     { label: 'Title completed', passed: has('title') > 0 },
