@@ -10,7 +10,10 @@ const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
 
 const ContextMenuGroup = ContextMenuPrimitive.Group;
 
-const ContextMenuPortal = ContextMenuPrimitive.Portal;
+const ContextMenuPortal = ({ children, ...props }: ContextMenuPrimitive.ContextMenuPortalProps) => (
+  <ContextMenuPrimitive.Portal {...props}>{children}</ContextMenuPrimitive.Portal>
+);
+ContextMenuPortal.displayName = "ContextMenuPortal";
 
 const ContextMenuSub = ContextMenuPrimitive.Sub;
 
