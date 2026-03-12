@@ -260,7 +260,7 @@ export default function SolanaChainDemo() {
       const validScore = lastScore + Math.floor(step * 0.8);
       const features = { R: 73, P: 82, I: 77 };
       const featHash = await sha256(new TextEncoder().encode(canonicalize(features)));
-      const toHash = new Uint8Array([...localChain.lastScoreHash, ...featHash, ...u32ToLeBytes(validScore), ...u16ToLeBytes(9300)]);
+      const toHash = new Uint8Array([...Array.from(localChain.lastScoreHash), ...Array.from(featHash), ...Array.from(u32ToLeBytes(validScore)), ...Array.from(u16ToLeBytes(9300))]);
       const newHash = await sha256(toHash);
       // Verify limiter would reject excessive change
       const invalidScore = lastScore + step * 3;
