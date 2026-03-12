@@ -112,6 +112,7 @@ const queryClient = new QueryClient();
                     <Route path="/ai-research" element={<ProtectedRoute><AIResearch /></ProtectedRoute>} />
                     <Route path="/outreach" element={<ProtectedRoute><OutreachCRM /></ProtectedRoute>} />
                     <Route path="/guardian" element={<ProtectedRoute><GuardianAgent /></ProtectedRoute>} />
+                    <Route path="/quality-test" element={<QualityTest />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
