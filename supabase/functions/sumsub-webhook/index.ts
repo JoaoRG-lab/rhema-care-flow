@@ -4,7 +4,7 @@ import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-payload-digest",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-payload-digest, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Verification tier mapping based on Sumsub review results
