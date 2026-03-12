@@ -49,6 +49,7 @@ const GuardianAgent = lazy(() => import("./pages/GuardianAgent"));
 const QualityTest = lazy(() => import("./pages/QualityTest"));
 const SolanaChainDemo = lazy(() => import("./pages/SolanaChainDemo"));
 const TellUs = lazy(() => import("./pages/TellUs"));
+const ArticleBuilder = lazy(() => import("./pages/ArticleBuilder"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -117,6 +118,7 @@ const queryClient = new QueryClient();
                     <Route path="/quality-test" element={<QualityTest />} />
                     <Route path="/chain-demo" element={<SolanaChainDemo />} />
                     <Route path="/tell-us" element={<TellUs />} />
+                    <Route path="/article-builder" element={<ArticleBuilder />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>

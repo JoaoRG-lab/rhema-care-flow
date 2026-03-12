@@ -24,6 +24,7 @@ import {
   Blocks,
   Link2,
   MessageSquare,
+  PenLine,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -59,6 +60,7 @@ const navItems = [
   { path: '/ai-assistant', label: 'AI Assistant', icon: Bot },
   { path: '/blockchain', label: 'URV Chain', icon: Blocks },
   { path: '/tell-us', label: 'Tell Us', icon: MessageSquare },
+  { path: '/article-builder', label: 'Article Builder', icon: PenLine },
 ];
 
 const academicNavItems = [
