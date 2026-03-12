@@ -46,6 +46,7 @@ const SpecialtyPortal = lazy(() => import("./pages/SpecialtyPortal"));
 const AIResearch = lazy(() => import("./pages/AIResearch"));
 const OutreachCRM = lazy(() => import("./pages/OutreachCRM"));
 const GuardianAgent = lazy(() => import("./pages/GuardianAgent"));
+const QualityTest = lazy(() => import("./pages/QualityTest"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
