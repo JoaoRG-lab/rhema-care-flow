@@ -159,40 +159,35 @@ RECENT AI AGENT RUNS:
 ${agentSummary || "  No recent runs"}
 `;
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
-  const aiResponse = await fetch("https://ai.lovable.dev/api/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        {
-          role: "system",
-          content: `You are the official newsletter editor for UHS Health OS, a cutting-edge rheumatology clinical intelligence platform. 
+  const systemPrompt = `You are the official newsletter editor for UHS Health OS, a cutting-edge rheumatology clinical intelligence platform. 
 You write professional, engaging digests that make complex system data accessible and interesting.
 Always use emojis for section headers. Be data-driven but human-readable.
-Output in markdown format. The subject line should be on the first line prefixed with "SUBJECT: "`,
-        },
-        {
-          role: "user",
-          content: `${config.prompt}\n\n${systemContext}`,
-        },
-      ],
-    }),
-  });
+Output in markdown format. The subject line should be on the first line prefixed with "SUBJECT: "`;
+
+  const aiResponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          { role: "user", parts: [{ text: `${systemPrompt}\n\n${config.prompt}\n\n${systemContext}` }] },
+        ],
+        generationConfig: { maxOutputTokens: config.maxTokens, temperature: 0.7 },
+      }),
+    }
+  );
 
   if (!aiResponse.ok) {
     const err = await aiResponse.text();
-    throw new Error(`AI generation failed [${aiResponse.status}]: ${err}`);
+    throw new Error(`Gemini API failed [${aiResponse.status}]: ${err}`);
   }
 
   const aiData = await aiResponse.json();
-  const content = aiData.choices?.[0]?.message?.content || aiData.content || "";
+  const content = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
   // Extract subject
   let subject = `UHS Health OS — ${digestType.charAt(0).toUpperCase() + digestType.slice(1)} Digest — ${dateStr}`;
