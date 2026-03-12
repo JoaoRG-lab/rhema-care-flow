@@ -57,6 +57,7 @@ const navItems = [
   { path: '/focus', label: 'Focus', icon: Timer },
   { path: '/ai-assistant', label: 'AI Assistant', icon: Bot },
   { path: '/blockchain', label: 'URV Chain', icon: Blocks },
+  { path: '/tell-us', label: 'Tell Us', icon: MessageSquare },
 ];
 
 const academicNavItems = [
