@@ -7,11 +7,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Configuration
-const QUIET_HOURS_START = 18; // 18:00 UTC
-const QUIET_HOURS_END = 22;   // 22:00 UTC
-const PEAK_HOURS_START = 1;   // 01:00 UTC
-const PEAK_HOURS_END = 6;     // 06:00 UTC
+// Configuration — runs 23h/day, maintenance at 07:00 UTC (4 AM UTC-3)
+const MAINTENANCE_HOUR_UTC = 7; // 4 AM UTC-3 = 7 AM UTC
+const PEAK_HOURS_START = 1;     // 01:00 UTC
+const PEAK_HOURS_END = 6;       // 06:00 UTC
 const INACTIVITY_THRESHOLD_HOURS = 3;
 
 interface SchedulerConfig {
