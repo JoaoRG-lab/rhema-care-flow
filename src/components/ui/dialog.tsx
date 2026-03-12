@@ -8,7 +8,11 @@ const Dialog = DialogPrimitive.Root;
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal = DialogPrimitive.Portal;
+// Wrap Portal to avoid ref warnings in newer Radix versions
+const DialogPortal = ({ children, ...props }: DialogPrimitive.DialogPortalProps) => (
+  <DialogPrimitive.Portal {...props}>{children}</DialogPrimitive.Portal>
+);
+DialogPortal.displayName = "DialogPortal";
 
 const DialogClose = DialogPrimitive.Close;
 
