@@ -211,13 +211,19 @@ import {
    return (
      <AppLayout>
        <div className="p-6 lg:p-8">
-         <div className="mb-6">
-           <h1 className="text-2xl font-bold flex items-center gap-2">
-             <Shield className="h-6 w-6 text-primary" />
-             Admin Panel
-           </h1>
-           <p className="text-muted-foreground">Manage verification requests and user roles</p>
-         </div>
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Shield className="h-6 w-6 text-primary" />
+                Admin Panel
+              </h1>
+              <p className="text-muted-foreground">Manage verification requests and user roles</p>
+            </div>
+            <Button onClick={handleAuditExport} disabled={exporting} variant="outline" size="sm" className="gap-2 self-start">
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {exporting ? 'Exporting...' : 'Export Audit Data'}
+            </Button>
+          </div>
  
          {/* Stats */}
          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
