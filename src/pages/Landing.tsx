@@ -42,9 +42,14 @@ export default function Landing() {
           <UHSLogo size="sm" />
           <div className="flex items-center gap-3">
             <LanguageSelector variant="minimal" />
-            <Link to="/reumato">
+            <Link to="/learn">
               <Button variant="ghost" size="sm" className="gap-1 text-primary hidden sm:flex">
-                <Activity className="h-4 w-4" /> Reumato
+                <BookOpen className="h-4 w-4" /> Library
+              </Button>
+            </Link>
+            <Link to="/scores">
+              <Button variant="ghost" size="sm" className="gap-1 text-primary hidden sm:flex">
+                <Activity className="h-4 w-4" /> Calculators
               </Button>
             </Link>
             <Link to="/login">
@@ -130,9 +135,19 @@ export default function Landing() {
 
             {/* Quick links */}
             <div className="mb-14 flex flex-wrap justify-center gap-3 animate-in" style={{ animationDelay: '0.5s' }}>
+              <Link to="/learn">
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
+                  <BookOpen className="h-4 w-4" /> Knowledge Library <ArrowRight className="h-3 w-3" />
+                </Button>
+              </Link>
+              <Link to="/scores">
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
+                  <Activity className="h-4 w-4" /> Clinical Calculators <ArrowRight className="h-3 w-3" />
+                </Button>
+              </Link>
               <Link to="/reumato">
                 <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
-                  <Activity className="h-4 w-4" /> Rheumatology Portal <ArrowRight className="h-3 w-3" />
+                  <Heart className="h-4 w-4" /> Rheumatology Portal <ArrowRight className="h-3 w-3" />
                 </Button>
               </Link>
               <Link to="/urv">
