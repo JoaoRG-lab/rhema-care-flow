@@ -26,6 +26,7 @@ import {
   MessageSquare,
   PenLine,
   Brain,
+  BarChart3,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -64,6 +65,7 @@ const navItems = [
   { path: '/tell-us', label: 'Tell Us', icon: MessageSquare },
   { path: '/article-builder', label: 'Article Builder', icon: PenLine },
   { path: '/epi-matrix', label: 'Epi Matrix', icon: Brain },
+  { path: '/site-analytics', label: 'Site Analytics', icon: BarChart3 },
 ];
 
 const academicNavItems = [
