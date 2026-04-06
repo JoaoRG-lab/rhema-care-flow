@@ -7,10 +7,12 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PersonaProvider } from "@/contexts/PersonaContext";
 import { useActivityTracker } from "@/hooks/useActivityTracker";
+import { useSiteTracker } from "@/hooks/useSiteTracker";
 
 // Activity tracker wrapper component
 function ActivityTracker({ children }: { children: React.ReactNode }) {
   useActivityTracker();
+  useSiteTracker();
   return <>{children}</>;
 }
  // Lazy load pages for code splitting
@@ -52,6 +54,7 @@ const TellUs = lazy(() => import("./pages/TellUs"));
 const ArticleBuilder = lazy(() => import("./pages/ArticleBuilder"));
 const EpidemiologicalMatrix = lazy(() => import("./pages/EpidemiologicalMatrix"));
 const AboutManifest = lazy(() => import("./pages/AboutManifest"));
+const SiteAnalytics = lazy(() => import("./pages/SiteAnalytics"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -123,6 +126,7 @@ const queryClient = new QueryClient();
                     <Route path="/article-builder" element={<ArticleBuilder />} />
                     <Route path="/epi-matrix" element={<ProtectedRoute><EpidemiologicalMatrix /></ProtectedRoute>} />
                     <Route path="/about" element={<AboutManifest />} />
+                    <Route path="/site-analytics" element={<ProtectedRoute><SiteAnalytics /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
