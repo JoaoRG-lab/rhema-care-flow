@@ -51,6 +51,7 @@ const SolanaChainDemo = lazy(() => import("./pages/SolanaChainDemo"));
 const TellUs = lazy(() => import("./pages/TellUs"));
 const ArticleBuilder = lazy(() => import("./pages/ArticleBuilder"));
 const EpidemiologicalMatrix = lazy(() => import("./pages/EpidemiologicalMatrix"));
+const AboutManifest = lazy(() => import("./pages/AboutManifest"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
