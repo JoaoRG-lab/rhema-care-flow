@@ -503,6 +503,217 @@ export type Database = {
         }
         Relationships: []
       }
+      epi_aggregated_stats: {
+        Row: {
+          cohort_key: string
+          computed_at: string
+          confidence_interval: Json | null
+          id: string
+          noise_epsilon: number
+          sample_size: number
+          stat_type: string
+          stat_value: number | null
+          variable_code: string
+        }
+        Insert: {
+          cohort_key: string
+          computed_at?: string
+          confidence_interval?: Json | null
+          id?: string
+          noise_epsilon?: number
+          sample_size?: number
+          stat_type?: string
+          stat_value?: number | null
+          variable_code: string
+        }
+        Update: {
+          cohort_key?: string
+          computed_at?: string
+          confidence_interval?: Json | null
+          id?: string
+          noise_epsilon?: number
+          sample_size?: number
+          stat_type?: string
+          stat_value?: number | null
+          variable_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_aggregated_stats_variable_code_fkey"
+            columns: ["variable_code"]
+            isOneToOne: false
+            referencedRelation: "epi_variable_definitions"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      epi_chain_anchors: {
+        Row: {
+          anchor_type: string
+          created_at: string
+          data_hash: string
+          id: string
+          metadata: Json | null
+          tx_signature: string | null
+        }
+        Insert: {
+          anchor_type: string
+          created_at?: string
+          data_hash: string
+          id?: string
+          metadata?: Json | null
+          tx_signature?: string | null
+        }
+        Update: {
+          anchor_type?: string
+          created_at?: string
+          data_hash?: string
+          id?: string
+          metadata?: Json | null
+          tx_signature?: string | null
+        }
+        Relationships: []
+      }
+      epi_feature_vectors: {
+        Row: {
+          created_at: string
+          dimension: number
+          id: string
+          noise_added: boolean
+          patient_card_id: string | null
+          source: string
+          updated_at: string
+          user_id: string
+          variable_codes: string[]
+          vector_encrypted: string
+          vector_hash: string
+        }
+        Insert: {
+          created_at?: string
+          dimension: number
+          id?: string
+          noise_added?: boolean
+          patient_card_id?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+          variable_codes: string[]
+          vector_encrypted: string
+          vector_hash: string
+        }
+        Update: {
+          created_at?: string
+          dimension?: number
+          id?: string
+          noise_added?: boolean
+          patient_card_id?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+          variable_codes?: string[]
+          vector_encrypted?: string
+          vector_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_feature_vectors_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_feature_vectors_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_risk_scores: {
+        Row: {
+          computed_at: string
+          contributing_factors: Json | null
+          feature_vector_id: string
+          id: string
+          model_version: string
+          risk_category: string | null
+          risk_model: string
+          risk_score: number | null
+        }
+        Insert: {
+          computed_at?: string
+          contributing_factors?: Json | null
+          feature_vector_id: string
+          id?: string
+          model_version?: string
+          risk_category?: string | null
+          risk_model: string
+          risk_score?: number | null
+        }
+        Update: {
+          computed_at?: string
+          contributing_factors?: Json | null
+          feature_vector_id?: string
+          id?: string
+          model_version?: string
+          risk_category?: string | null
+          risk_model?: string
+          risk_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_risk_scores_feature_vector_id_fkey"
+            columns: ["feature_vector_id"]
+            isOneToOne: false
+            referencedRelation: "epi_feature_vectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_variable_definitions: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          data_type: string
+          description: string | null
+          id: string
+          is_system: boolean
+          label: string
+          sort_order: number
+          updated_at: string
+          value_range: Json | null
+        }
+        Insert: {
+          category?: string
+          code: string
+          created_at?: string
+          data_type?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          label: string
+          sort_order?: number
+          updated_at?: string
+          value_range?: Json | null
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          data_type?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          label?: string
+          sort_order?: number
+          updated_at?: string
+          value_range?: Json | null
+        }
+        Relationships: []
+      }
       feedback_submissions: {
         Row: {
           category: string
