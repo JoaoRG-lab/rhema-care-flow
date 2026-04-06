@@ -52,6 +52,11 @@ export default function Landing() {
                 <Activity className="h-4 w-4" /> Calculators
               </Button>
             </Link>
+            <Link to="/about">
+              <Button variant="ghost" size="sm" className="gap-1 text-primary hidden sm:flex">
+                <Shield className="h-4 w-4" /> About
+              </Button>
+            </Link>
             <Link to="/login">
               <Button variant="ghost" size="sm">{t('common.login')}</Button>
             </Link>

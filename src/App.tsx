@@ -51,6 +51,7 @@ const SolanaChainDemo = lazy(() => import("./pages/SolanaChainDemo"));
 const TellUs = lazy(() => import("./pages/TellUs"));
 const ArticleBuilder = lazy(() => import("./pages/ArticleBuilder"));
 const EpidemiologicalMatrix = lazy(() => import("./pages/EpidemiologicalMatrix"));
+const AboutManifest = lazy(() => import("./pages/AboutManifest"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -121,6 +122,7 @@ const queryClient = new QueryClient();
                     <Route path="/tell-us" element={<TellUs />} />
                     <Route path="/article-builder" element={<ArticleBuilder />} />
                     <Route path="/epi-matrix" element={<ProtectedRoute><EpidemiologicalMatrix /></ProtectedRoute>} />
+                    <Route path="/about" element={<AboutManifest />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
