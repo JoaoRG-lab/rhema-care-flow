@@ -127,6 +127,9 @@ export default function PatientEducationLibrary() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Link to="/scores">
+                <Button variant="ghost" size="sm">Calculators</Button>
+              </Link>
               <Link to="/especialidades">
                 <Button variant="ghost" size="sm">Especialidades</Button>
               </Link>
