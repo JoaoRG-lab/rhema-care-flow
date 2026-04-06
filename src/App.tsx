@@ -122,6 +122,7 @@ const queryClient = new QueryClient();
                     <Route path="/tell-us" element={<TellUs />} />
                     <Route path="/article-builder" element={<ArticleBuilder />} />
                     <Route path="/epi-matrix" element={<ProtectedRoute><EpidemiologicalMatrix /></ProtectedRoute>} />
+                    <Route path="/about" element={<AboutManifest />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
