@@ -244,6 +244,98 @@ export type Database = {
         }
         Relationships: []
       }
+      case_studies: {
+        Row: {
+          author_id: string
+          avg_score: number | null
+          completion_count: number
+          created_at: string
+          description: string | null
+          diagnosis_tags: string[] | null
+          difficulty: string
+          id: string
+          is_published: boolean
+          scenario_json: Json
+          specialty: string | null
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          author_id: string
+          avg_score?: number | null
+          completion_count?: number
+          created_at?: string
+          description?: string | null
+          diagnosis_tags?: string[] | null
+          difficulty?: string
+          id?: string
+          is_published?: boolean
+          scenario_json?: Json
+          specialty?: string | null
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          author_id?: string
+          avg_score?: number | null
+          completion_count?: number
+          created_at?: string
+          description?: string | null
+          diagnosis_tags?: string[] | null
+          difficulty?: string
+          id?: string
+          is_published?: boolean
+          scenario_json?: Json
+          specialty?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      case_study_attempts: {
+        Row: {
+          case_study_id: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          responses: Json
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          case_study_id: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          responses?: Json
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          case_study_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          responses?: Json
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_study_attempts_case_study_id_fkey"
+            columns: ["case_study_id"]
+            isOneToOne: false
+            referencedRelation: "case_studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultation_sessions: {
         Row: {
           created_at: string
@@ -1251,6 +1343,51 @@ export type Database = {
           therapy_tags?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      peer_reviews: {
+        Row: {
+          checklist: Json | null
+          content_id: string
+          content_type: string
+          created_at: string
+          feedback: string | null
+          id: string
+          reviewed_at: string | null
+          reviewer_id: string
+          reviewer_specialty: string | null
+          score: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          checklist?: Json | null
+          content_id: string
+          content_type?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewer_id: string
+          reviewer_specialty?: string | null
+          score?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          checklist?: Json | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewer_id?: string
+          reviewer_specialty?: string | null
+          score?: number | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
