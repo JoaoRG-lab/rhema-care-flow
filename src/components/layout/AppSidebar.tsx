@@ -27,6 +27,7 @@ import {
   PenLine,
   Brain,
   BarChart3,
+  Stethoscope,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -66,6 +67,7 @@ const navItems = [
   { path: '/article-builder', label: 'Article Builder', icon: PenLine },
   { path: '/epi-matrix', label: 'Epi Matrix', icon: Brain },
   { path: '/site-analytics', label: 'Site Analytics', icon: BarChart3 },
+  { path: '/case-studies', label: 'Case Studies', icon: Stethoscope },
 ];
 
 const academicNavItems = [
