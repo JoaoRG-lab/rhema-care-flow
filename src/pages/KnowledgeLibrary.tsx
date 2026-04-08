@@ -32,6 +32,7 @@ import {
   Bot,
   Globe,
   ArrowLeft,
+  Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useKnowledgeContributions, ContributionCategory, KnowledgeContribution } from '@/hooks/useKnowledgeContributions';
@@ -43,6 +44,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CommentThread } from '@/components/knowledge/CommentThread';
+import { exportContentAsPdf } from '@/lib/contentPdfExport';
 import {
   Sheet,
   SheetContent,
@@ -347,6 +349,22 @@ export default function KnowledgeLibrary() {
                     )} />
                     <span>{contribution.helpful_count}</span>
                   </button>
+                  {isExpanded && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        exportContentAsPdf(contribution.title, contribution.content, {
+                          category: config.label,
+                          date: format(new Date(contribution.created_at), 'MMMM d, yyyy'),
+                          tags: contribution.disease_area ? [contribution.disease_area] : [],
+                        });
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                    >
+                      <Download className="h-4 w-4" />
+                      PDF
+                    </button>
+                  )}
                 </div>
               </div>
 
