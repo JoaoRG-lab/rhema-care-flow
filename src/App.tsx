@@ -55,6 +55,7 @@ const ArticleBuilder = lazy(() => import("./pages/ArticleBuilder"));
 const EpidemiologicalMatrix = lazy(() => import("./pages/EpidemiologicalMatrix"));
 const AboutManifest = lazy(() => import("./pages/AboutManifest"));
 const SiteAnalytics = lazy(() => import("./pages/SiteAnalytics"));
+const CaseStudies = lazy(() => import("./pages/CaseStudies"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
