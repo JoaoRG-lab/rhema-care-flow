@@ -428,8 +428,8 @@ function ContentViewerDialog({
   
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <div className="flex items-start gap-3">
             <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0 -ml-2">
               <ArrowLeft className="h-4 w-4" />
@@ -463,6 +463,15 @@ function ContentViewerDialog({
               <Calendar className="h-4 w-4" />
               {format(new Date(content.published_at || content.created_at), 'MMMM d, yyyy')}
             </span>
+            <Button variant="outline" size="sm" className="ml-auto" onClick={() => {
+              exportContentAsPdf(content.title, content.content, {
+                category: content.category,
+                date: format(new Date(content.published_at || content.created_at), 'MMMM d, yyyy'),
+                tags: content.diagnosis_tags || [],
+              });
+            }}>
+              <Download className="h-4 w-4 mr-1" /> PDF
+            </Button>
           </div>
           
           {content.diagnosis_tags && content.diagnosis_tags.length > 0 && (
@@ -474,14 +483,14 @@ function ContentViewerDialog({
           )}
         </DialogHeader>
         
-        <ScrollArea className="flex-1 mt-4">
-          <article className="prose prose-sm dark:prose-invert max-w-none pr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto mt-4 pr-2">
+          <article className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown>{content.content}</ReactMarkdown>
           </article>
-        </ScrollArea>
+        </div>
         
         {content.external_url && (
-          <div className="pt-4 border-t mt-4">
+          <div className="pt-4 border-t mt-4 shrink-0">
             <Button asChild variant="outline" className="w-full">
               <a href={content.external_url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4 mr-2" />
@@ -491,7 +500,7 @@ function ContentViewerDialog({
           </div>
         )}
         
-        <div className="pt-4 border-t text-xs text-muted-foreground text-center">
+        <div className="pt-4 border-t text-xs text-muted-foreground text-center shrink-0">
           This content is for educational purposes only. Always consult your healthcare provider for medical advice.
         </div>
       </DialogContent>
