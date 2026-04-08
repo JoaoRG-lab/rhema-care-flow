@@ -32,6 +32,7 @@ import {
   Bot,
   Globe,
   ArrowLeft,
+  Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useKnowledgeContributions, ContributionCategory, KnowledgeContribution } from '@/hooks/useKnowledgeContributions';
@@ -43,6 +44,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CommentThread } from '@/components/knowledge/CommentThread';
+import { exportContentAsPdf } from '@/lib/contentPdfExport';
 import {
   Sheet,
   SheetContent,
