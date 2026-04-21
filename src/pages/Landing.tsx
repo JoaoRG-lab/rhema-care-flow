@@ -48,13 +48,13 @@ export default function Landing() {
               </Button>
             </Link>
             <Link to="/scores">
-              <Button variant="ghost" size="sm" className="gap-1 text-primary hidden sm:flex">
-                <Activity className="h-4 w-4" /> Calculators
+              <Button variant="ghost" size="sm" className="gap-1 text-primary flex">
+                <Activity className="h-4 w-4" /> <span className="hidden sm:inline">Calculators</span>
               </Button>
             </Link>
             <Link to="/about">
-              <Button variant="ghost" size="sm" className="gap-1 text-primary hidden sm:flex">
-                <Shield className="h-4 w-4" /> About
+              <Button variant="ghost" size="sm" className="gap-1 text-primary flex">
+                <Shield className="h-4 w-4" /> <span className="hidden sm:inline">About</span>
               </Button>
             </Link>
             <Link to="/login">
