@@ -43,8 +43,8 @@ export default function Landing() {
           <div className="flex items-center gap-3">
             <LanguageSelector variant="minimal" />
             <Link to="/learn">
-              <Button variant="ghost" size="sm" className="gap-1 text-primary hidden sm:flex">
-                <BookOpen className="h-4 w-4" /> Library
+              <Button variant="ghost" size="sm" className="gap-1 text-primary flex">
+                <BookOpen className="h-4 w-4" /> <span className="hidden sm:inline">Library</span>
               </Button>
             </Link>
             <Link to="/scores">
