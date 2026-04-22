@@ -319,20 +319,21 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
                       )}
                     </div>
                     <div>
-                      Re-anchor to lock the new state on chain.
+                      One click locks the newly recomputed hash as a fresh on-chain anchor.
                     </div>
                     <Button
                       type="button"
-                      size="sm"
+                      size="default"
                       onClick={createAnchor}
                       disabled={building}
+                      className="w-full sm:w-auto"
                     >
                       {building ? (
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
                         <Link2 className="h-4 w-4 mr-2" />
                       )}
-                      Re-anchor this timeline
+                      Create new anchor now
                     </Button>
                   </div>
                 );
