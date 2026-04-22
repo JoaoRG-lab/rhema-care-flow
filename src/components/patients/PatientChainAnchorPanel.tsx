@@ -144,6 +144,7 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
       const built = await buildPatientTimelineAnchor(patientCardId);
       const latestAnchor = anchors[0];
       const match = built.hashHex === latestAnchor.timeline_hash;
+      const verifiedAt = new Date().toISOString();
       setVerifyResult({
         match,
         current: built.hashHex,
@@ -152,7 +153,15 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
         anchoredAt: latestAnchor.created_at,
         currentCounts: built.counts,
         storedCounts: latestAnchor.record_counts ?? {},
-        verifiedAt: new Date().toISOString(),
+        verifiedAt,
+      });
+      appendAudit({
+        verifiedAt,
+        anchorId: latestAnchor.id,
+        anchoredAt: latestAnchor.created_at,
+        match,
+        currentHash: built.hashHex,
+        storedHash: latestAnchor.timeline_hash,
       });
       if (match) toast.success("Hash matches — timeline is intact");
       else toast.warning("Hash mismatch — timeline has changed since last anchor");
