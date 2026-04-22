@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const PATIENT_TIMELINE_VARIABLES = [
   // Core clinical
-  "patient_code",
+  "patient_code_hash",
   "diagnosis_tags",
   "therapy_tags",
   "risk_flags",
@@ -51,6 +51,7 @@ export interface BuiltAnchor {
   canonical: string;
   hashHex: string;
   hashBytes: Uint8Array;
+  patientCodeHash: string;
   counts: { visits: number; scores: number; infusions: number; monitoring: number };
 }
 
@@ -58,6 +59,20 @@ function toHex(u8: Uint8Array): string {
   return Array.from(u8)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+/**
+ * Deterministic, non-identifying hash of a patient_code.
+ * The raw patient_code (already a de-identified clinic-local label) is replaced
+ * by SHA-256("patient_code:v1|<code>") before being included in the canonical
+ * snapshot. The on-chain anchor therefore contains NO clinic-local identifier —
+ * only an opaque 32-byte digest that cannot be reversed without the original
+ * code held in the doctor's private database.
+ */
+export async function hashPatientCode(patientCode: string): Promise<string> {
+  const input = `patient_code:v1|${patientCode}`;
+  const bytes = await sha256(new TextEncoder().encode(input));
+  return toHex(bytes);
 }
 
 /**
@@ -112,11 +127,18 @@ export async function buildPatientTimelineAnchor(
   if (firstErr) throw new Error(firstErr.message);
   if (!patient) throw new Error("Patient not found or access denied");
 
+  // Replace patient_code with its SHA-256 hash so that nothing identifying
+  // (not even the clinic-local code) is part of the canonical on-chain payload.
+  const rawCore = patient as Record<string, unknown>;
+  const patientCodeHash = await hashPatientCode(String(rawCore.patient_code ?? ""));
+  const { patient_code: _omit, ...restCore } = rawCore;
+  const core = { ...restCore, patient_code_hash: patientCodeHash };
+
   const snapshot: PatientTimelineSnapshot = {
     patient_card_id: patientCardId,
     schema_version: 1,
     variable_codes: [...PATIENT_TIMELINE_VARIABLES],
-    core: patient as Record<string, unknown>,
+    core,
     visits: visits ?? [],
     scores: scores ?? [],
     infusions: infusions ?? [],
@@ -131,6 +153,7 @@ export async function buildPatientTimelineAnchor(
     canonical,
     hashHex: toHex(hashBytes),
     hashBytes,
+    patientCodeHash,
     counts: {
       visits: snapshot.visits.length,
       scores: snapshot.scores.length,
