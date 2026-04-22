@@ -1346,6 +1346,63 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_chain_anchors: {
+        Row: {
+          anchor_type: string
+          cluster: string
+          created_at: string
+          id: string
+          notes: string | null
+          patient_card_id: string
+          record_counts: Json
+          timeline_hash: string
+          tx_signature: string | null
+          user_id: string
+          variable_codes: string[]
+        }
+        Insert: {
+          anchor_type?: string
+          cluster?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_card_id: string
+          record_counts?: Json
+          timeline_hash: string
+          tx_signature?: string | null
+          user_id: string
+          variable_codes?: string[]
+        }
+        Update: {
+          anchor_type?: string
+          cluster?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_card_id?: string
+          record_counts?: Json
+          timeline_hash?: string
+          tx_signature?: string | null
+          user_id?: string
+          variable_codes?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_chain_anchors_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_chain_anchors_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       peer_reviews: {
         Row: {
           checklist: Json | null
