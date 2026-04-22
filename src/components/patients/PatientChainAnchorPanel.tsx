@@ -487,6 +487,15 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
           </AlertDescription>
         </Alert>
 
+        <p className="flex items-start gap-2 text-xs text-muted-foreground rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+          <Lock className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-primary" />
+          <span>
+            <strong className="text-foreground">No raw clinical values are posted anywhere publicly.</strong>{" "}
+            Only encrypted, de-identified aggregates (hashes and counts) are eligible to be included on chain —
+            individual notes, lab values, doses, and identifiers stay AES-encrypted on your device.
+          </span>
+        </p>
+
         <div className="flex flex-wrap gap-2">
           <Button onClick={createAnchor} disabled={building}>
             {building ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Link2 className="h-4 w-4 mr-2" />}
