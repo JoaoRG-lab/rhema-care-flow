@@ -621,6 +621,8 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
               })()}
             </AlertDescription>
           </Alert>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
         <div className="space-y-2">
