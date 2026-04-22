@@ -796,7 +796,21 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
                         </>
                       )}
                     </div>
-                    <div>
+                    <Alert className="border-amber-500/40 bg-amber-500/10">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertTitle className="text-xs">Best practice — batch your edits</AlertTitle>
+                      <AlertDescription className="text-[11px] space-y-1">
+                        <div>
+                          Re-anchor <strong>once at the end of a clinic session</strong>, not after every edit.
+                          Each anchor is a permanent on-chain record; batching multiple visit/score updates into a
+                          single anchor reduces noise, repeated mismatches, and on-chain cost.
+                        </div>
+                        <div className="opacity-80">
+                          Suggested workflow: finish all patient updates → verify once → create new anchor now.
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="text-xs">
                       One click locks the newly recomputed hash as a fresh on-chain anchor.
                     </div>
                     <Button
