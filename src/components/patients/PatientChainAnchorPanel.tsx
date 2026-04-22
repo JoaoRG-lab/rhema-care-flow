@@ -164,6 +164,19 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
           </AlertDescription>
         </Alert>
 
+        <Alert>
+          <ShieldCheck className="h-4 w-4" />
+          <AlertTitle className="text-sm">Integrity check, not a medical record</AlertTitle>
+          <AlertDescription className="text-xs">
+            The recomputed hash is a <strong>non-identifying SHA-256 digest</strong> of de-identified
+            timeline metadata (record counts and variable codes only). It verifies that your local
+            timeline has not been altered since the last anchor — it is <strong>not</strong> a
+            medical record, does not contain clinical values, and cannot be used for diagnosis,
+            treatment, or as legal proof of care. Raw clinical data stays encrypted on your device
+            and is never sent on-chain.
+          </AlertDescription>
+        </Alert>
+
         <div className="flex flex-wrap gap-2">
           <Button onClick={createAnchor} disabled={building}>
             {building ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Link2 className="h-4 w-4 mr-2" />}
