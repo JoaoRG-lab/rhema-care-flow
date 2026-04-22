@@ -44,9 +44,51 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
   }>(null);
   const [codeHash, setCodeHash] = useState<string>("");
 
+  type AuditEntry = {
+    verifiedAt: string;
+    anchorId: string;
+    anchoredAt: string;
+    match: boolean;
+    currentHash: string;
+    storedHash: string;
+  };
+  const auditKey = `pca-audit:${patientCardId}`;
+  const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([]);
+
   useEffect(() => {
     hashPatientCode(patientCode).then(setCodeHash).catch(() => setCodeHash(""));
   }, [patientCode]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(auditKey);
+      setAuditTrail(raw ? (JSON.parse(raw) as AuditEntry[]) : []);
+    } catch {
+      setAuditTrail([]);
+    }
+  }, [auditKey]);
+
+  const appendAudit = (entry: AuditEntry) => {
+    setAuditTrail((prev) => {
+      const next = [entry, ...prev].slice(0, 50);
+      try {
+        localStorage.setItem(auditKey, JSON.stringify(next));
+      } catch {
+        /* ignore quota */
+      }
+      return next;
+    });
+  };
+
+  const clearAudit = () => {
+    setAuditTrail([]);
+    try {
+      localStorage.removeItem(auditKey);
+    } catch {
+      /* ignore */
+    }
+    toast.success("Verification trail cleared");
+  };
 
   const load = async () => {
     setLoading(true);
