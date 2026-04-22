@@ -418,7 +418,65 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
 
         <Alert>
           <ShieldCheck className="h-4 w-4" />
-          <AlertTitle className="text-sm">Integrity check, not a medical record</AlertTitle>
+          <AlertTitle className="text-sm flex items-center justify-between gap-2 flex-wrap">
+            <span>Integrity check, not a medical record</span>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-xs font-normal text-primary hover:underline"
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                  What this hash means
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-primary" />
+                    What this hash means
+                  </DialogTitle>
+                  <DialogDescription>
+                    A precise breakdown of what is — and is not — included in the SHA-256 timeline digest anchored on chain.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <div className="font-semibold mb-1">Inputs (what is hashed)</div>
+                    <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                      <li>SHA-256 digest of your local patient code (not the code itself)</li>
+                      <li>Per-domain record counts: visits, scores, infusions, monitoring</li>
+                      <li>Ordered list of timestamps (creation/visit dates) per domain</li>
+                      <li>Canonical list of variable codes that exist on the timeline</li>
+                      <li>Schema version tag (so future hash formats remain comparable)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <div className="font-semibold mb-1">Scope</div>
+                    <p className="text-muted-foreground">
+                      The digest proves <strong>integrity</strong> of de-identified timeline metadata: any addition,
+                      removal, or content edit of a record changes the hash. It does <strong>not</strong> prove the
+                      clinical truth, accuracy, or appropriateness of care.
+                    </p>
+                  </div>
+                  <div>
+                    <div className="font-semibold mb-1">Excluded (never hashed, never sent on chain)</div>
+                    <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                      <li>Patient name, MRN, CPF, phone, address or any direct identifier</li>
+                      <li>Free-text clinical notes and next-step instructions</li>
+                      <li>Lab values, imaging findings, score numerical values, drug doses</li>
+                      <li>Attachments, photos, PDFs, signatures</li>
+                      <li>Any data from other physicians' patients</li>
+                    </ul>
+                  </div>
+                  <div className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+                    Raw clinical data stays AES-encrypted on your device. Only you, the owning physician,
+                    can recompute and verify this hash. The on-chain value is mathematically non-identifying.
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </AlertTitle>
           <AlertDescription className="text-xs">
             The recomputed hash is a <strong>non-identifying SHA-256 digest</strong> of de-identified
             timeline metadata (record counts and variable codes only). It verifies that your local
