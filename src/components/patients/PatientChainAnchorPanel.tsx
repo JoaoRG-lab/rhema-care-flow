@@ -553,7 +553,7 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
           {PATIENT_TIMELINE_VARIABLES.length} fields across 5 domains
         </div>
 
-        {verifyResult && (
+        {verifyResult && acknowledged && (
           <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
             <CollapsibleTrigger asChild>
               <button
