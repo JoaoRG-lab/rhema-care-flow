@@ -752,6 +752,26 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
                       )}
                       Create new anchor now
                     </Button>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => exportDrilldown("json")}
+                      >
+                        <FileDown className="h-3.5 w-3.5 mr-1.5" />
+                        Export JSON
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => exportDrilldown("csv")}
+                      >
+                        <FileDown className="h-3.5 w-3.5 mr-1.5" />
+                        Export CSV
+                      </Button>
+                    </div>
                   </div>
                 );
               })()}
