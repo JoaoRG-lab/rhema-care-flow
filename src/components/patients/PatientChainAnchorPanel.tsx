@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildPatientTimelineAnchor, PATIENT_TIMELINE_VARIABLES, hashPatientCode } from "@/lib/patientChainAnchor";
 import { getExplorerUrl, formatSignature } from "@/lib/solana";
+import { buildDrilldownReport, buildFieldHints } from "@/lib/chainDrilldown";
 
 interface AnchorRow {
   id: string;
