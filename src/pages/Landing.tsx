@@ -14,13 +14,13 @@ import {
 } from 'lucide-react';
 
 const features = [
-  { icon: Shield, title: 'Privacy-First Architecture', description: 'Zero PHI on-chain. Only cryptographic proofs and consent records touch the blockchain.', badge: 'Core' },
-  { icon: Link2, title: 'Blockchain Audit Trail', description: 'Immutable record of every access, consent, and clinical score update on Solana.' },
-  { icon: Activity, title: 'Clinical Value Scoring', description: 'URV methodology: Results, Process, Infrastructure, Evolution, Experience metrics.' },
-  { icon: Fingerprint, title: 'Consent Management', description: 'Patient-controlled data access with revocable consent and purpose-based permissions.' },
-  { icon: Brain, title: 'AI Clinical Insights', description: 'Longitudinal analysis and decision support powered by privacy-preserving AI.' },
-  { icon: BookOpen, title: 'Knowledge Repository', description: 'Curated guidelines, protocols, and clinical pearls from rheumatology societies worldwide.' },
-  { icon: Sparkles, title: 'AI Research Engine', description: 'Exponentially grow knowledge with AI-powered research, generation, and multi-step verification.', badge: 'New' },
+  { icon: Shield, title: 'Privacy-First Architecture', description: 'Zero PHI on-chain. Only cryptographic proofs and consent records touch the blockchain.', badge: 'Core', href: '/about' },
+  { icon: Link2, title: 'Blockchain Audit Trail', description: 'Immutable record of every access, consent, and clinical score update on Solana.', href: '/urv' },
+  { icon: Activity, title: 'Clinical Value Scoring', description: 'URV methodology: Results, Process, Infrastructure, Evolution, Experience metrics.', href: '/scores' },
+  { icon: Fingerprint, title: 'Consent Management', description: 'Patient-controlled data access with revocable consent and purpose-based permissions.', href: '/about' },
+  { icon: Brain, title: 'AI Clinical Insights', description: 'Longitudinal analysis and decision support powered by privacy-preserving AI.', href: '/ai-assistant' },
+  { icon: BookOpen, title: 'Knowledge Repository', description: 'Curated guidelines, protocols, and clinical pearls from rheumatology societies worldwide.', href: '/learn' },
+  { icon: Sparkles, title: 'AI Research Engine', description: 'Exponentially grow knowledge with AI-powered research, generation, and multi-step verification.', badge: 'New', href: '/ai-research' },
 ];
 
 const stats = [
