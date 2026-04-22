@@ -449,6 +449,32 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
         </div>
 
         {verifyResult && (
+          <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="w-full flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 hover:bg-muted/50 transition-colors px-3 py-2 text-sm"
+              >
+                <span className="flex items-center gap-2">
+                  {verifyResult.match ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                  )}
+                  <span className="font-medium">
+                    {verifyResult.match ? "Verified" : "Mismatch"} ·{" "}
+                    <span className="font-normal opacity-80">
+                      {format(new Date(verifyResult.verifiedAt), "PP HH:mm")}
+                    </span>
+                  </span>
+                </span>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  {detailsOpen ? "Hide details" : "View details"}
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${detailsOpen ? "rotate-180" : ""}`} />
+                </span>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
           <Alert variant={verifyResult.match ? "default" : "destructive"}>
             {verifyResult.match ? (
               <CheckCircle2 className="h-4 w-4" />
