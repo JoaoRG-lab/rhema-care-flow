@@ -3,12 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, ShieldCheck, Link2, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
+import { Loader2, ShieldCheck, Link2, CheckCircle2, AlertTriangle, ExternalLink, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { buildPatientTimelineAnchor, PATIENT_TIMELINE_VARIABLES } from "@/lib/patientChainAnchor";
+import { buildPatientTimelineAnchor, PATIENT_TIMELINE_VARIABLES, hashPatientCode } from "@/lib/patientChainAnchor";
 import { getExplorerUrl, formatSignature } from "@/lib/solana";
 
 interface AnchorRow {
@@ -33,6 +33,11 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
   const [building, setBuilding] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<null | { match: boolean; current: string; latest: string }>(null);
+  const [codeHash, setCodeHash] = useState<string>("");
+
+  useEffect(() => {
+    hashPatientCode(patientCode).then(setCodeHash).catch(() => setCodeHash(""));
+  }, [patientCode]);
 
   const load = async () => {
     setLoading(true);
@@ -103,10 +108,24 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
           Blockchain Anchor — Patient {patientCode}
         </CardTitle>
         <CardDescription>
-          PHI never leaves your device. Only SHA-256 of the canonical timeline (core, visits, scores, infusions, monitoring) is recorded. Only you, the owning physician, can produce or verify these anchors.
+          PHI never leaves your device. The patient code is replaced by its SHA-256 digest before hashing, so the on-chain value is non-identifying — it cannot be reversed to your local patient label without your private database. Only you, the owning physician, can produce or verify these anchors.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertTitle className="text-sm">Non-identifying on-chain value</AlertTitle>
+          <AlertDescription className="text-xs space-y-1">
+            <div>
+              Your local code <code className="font-mono">{patientCode}</code> is never anchored.
+              We anchor <code className="font-mono">SHA-256("patient_code:v1|{patientCode}")</code>:
+            </div>
+            <code className="block font-mono break-all text-[11px] text-muted-foreground">
+              {codeHash || "computing…"}
+            </code>
+          </AlertDescription>
+        </Alert>
+
         <div className="flex flex-wrap gap-2">
           <Button onClick={createAnchor} disabled={building}>
             {building ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Link2 className="h-4 w-4 mr-2" />}
