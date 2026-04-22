@@ -44,9 +44,51 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
   }>(null);
   const [codeHash, setCodeHash] = useState<string>("");
 
+  type AuditEntry = {
+    verifiedAt: string;
+    anchorId: string;
+    anchoredAt: string;
+    match: boolean;
+    currentHash: string;
+    storedHash: string;
+  };
+  const auditKey = `pca-audit:${patientCardId}`;
+  const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([]);
+
   useEffect(() => {
     hashPatientCode(patientCode).then(setCodeHash).catch(() => setCodeHash(""));
   }, [patientCode]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(auditKey);
+      setAuditTrail(raw ? (JSON.parse(raw) as AuditEntry[]) : []);
+    } catch {
+      setAuditTrail([]);
+    }
+  }, [auditKey]);
+
+  const appendAudit = (entry: AuditEntry) => {
+    setAuditTrail((prev) => {
+      const next = [entry, ...prev].slice(0, 50);
+      try {
+        localStorage.setItem(auditKey, JSON.stringify(next));
+      } catch {
+        /* ignore quota */
+      }
+      return next;
+    });
+  };
+
+  const clearAudit = () => {
+    setAuditTrail([]);
+    try {
+      localStorage.removeItem(auditKey);
+    } catch {
+      /* ignore */
+    }
+    toast.success("Verification trail cleared");
+  };
 
   const load = async () => {
     setLoading(true);
@@ -102,6 +144,7 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
       const built = await buildPatientTimelineAnchor(patientCardId);
       const latestAnchor = anchors[0];
       const match = built.hashHex === latestAnchor.timeline_hash;
+      const verifiedAt = new Date().toISOString();
       setVerifyResult({
         match,
         current: built.hashHex,
@@ -110,7 +153,15 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
         anchoredAt: latestAnchor.created_at,
         currentCounts: built.counts,
         storedCounts: latestAnchor.record_counts ?? {},
-        verifiedAt: new Date().toISOString(),
+        verifiedAt,
+      });
+      appendAudit({
+        verifiedAt,
+        anchorId: latestAnchor.id,
+        anchoredAt: latestAnchor.created_at,
+        match,
+        currentHash: built.hashHex,
+        storedHash: latestAnchor.timeline_hash,
       });
       if (match) toast.success("Hash matches — timeline is intact");
       else toast.warning("Hash mismatch — timeline has changed since last anchor");
@@ -341,6 +392,47 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
             </AlertDescription>
           </Alert>
         )}
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-sm font-medium">Verification trail (this device)</h4>
+            {auditTrail.length > 0 && (
+              <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={clearAudit}>
+                Clear
+              </Button>
+            )}
+          </div>
+          {auditTrail.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No verification attempts recorded yet for this patient card. Each "Verify latest vs stored hash" run will be logged here.
+            </p>
+          ) : (
+            <div className="rounded-md border divide-y text-xs max-h-64 overflow-auto">
+              {auditTrail.map((e, i) => (
+                <div key={`${e.verifiedAt}-${i}`} className="flex items-center justify-between gap-2 px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {e.match ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <div className="font-medium">
+                        {format(new Date(e.verifiedAt), "PPpp")}
+                      </div>
+                      <div className="text-muted-foreground font-mono truncate">
+                        anchor {e.anchorId.slice(0, 8)}… · stored {e.storedHash.slice(0, 10)}… · now {e.currentHash.slice(0, 10)}…
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant={e.match ? "outline" : "destructive"} className="text-[10px] shrink-0">
+                    {e.match ? "match" : "mismatch"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Anchor history</h4>
