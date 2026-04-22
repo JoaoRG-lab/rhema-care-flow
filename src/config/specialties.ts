@@ -15,6 +15,8 @@ import {
   Bone,
   Wind,
   Flame,
+  Baby,
+  Cross,
   LucideIcon,
 } from 'lucide-react';
 
