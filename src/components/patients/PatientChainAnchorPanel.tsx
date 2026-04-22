@@ -169,6 +169,7 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
       });
       if (match) toast.success("Hash matches — timeline is intact");
       else toast.warning("Hash mismatch — timeline has changed since last anchor");
+      setDetailsOpen(!match);
     } catch (e: any) {
       toast.error(e?.message ?? "Verification failed");
     } finally {
