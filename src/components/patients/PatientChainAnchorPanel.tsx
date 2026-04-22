@@ -258,9 +258,24 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
               </div>
 
               {!verifyResult.match && (
-                <div className="pt-1 border-t border-border/40">
-                  Hashes diverge. This is expected if you added/edited visits, scores, infusions or
-                  monitoring since the last anchor — create a new anchor to lock the new state.
+                <div className="pt-2 border-t border-border/40 space-y-2">
+                  <div>
+                    Hashes diverge. This is expected if you added/edited visits, scores, infusions or
+                    monitoring since the last anchor — re-anchor to lock the new state on chain.
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={createAnchor}
+                    disabled={building}
+                  >
+                    {building ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Link2 className="h-4 w-4 mr-2" />
+                    )}
+                    Re-anchor this timeline
+                  </Button>
                 </div>
               )}
             </AlertDescription>
