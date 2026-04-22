@@ -394,6 +394,47 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
         )}
 
         <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-sm font-medium">Verification trail (this device)</h4>
+            {auditTrail.length > 0 && (
+              <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={clearAudit}>
+                Clear
+              </Button>
+            )}
+          </div>
+          {auditTrail.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No verification attempts recorded yet for this patient card. Each "Verify latest vs stored hash" run will be logged here.
+            </p>
+          ) : (
+            <div className="rounded-md border divide-y text-xs max-h-64 overflow-auto">
+              {auditTrail.map((e, i) => (
+                <div key={`${e.verifiedAt}-${i}`} className="flex items-center justify-between gap-2 px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {e.match ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <div className="font-medium">
+                        {format(new Date(e.verifiedAt), "PPpp")}
+                      </div>
+                      <div className="text-muted-foreground font-mono truncate">
+                        anchor {e.anchorId.slice(0, 8)}… · stored {e.storedHash.slice(0, 10)}… · now {e.currentHash.slice(0, 10)}…
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant={e.match ? "outline" : "destructive"} className="text-[10px] shrink-0">
+                    {e.match ? "match" : "mismatch"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
           <h4 className="text-sm font-medium">Anchor history</h4>
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading…</p>
