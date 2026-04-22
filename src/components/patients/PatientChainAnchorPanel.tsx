@@ -343,13 +343,57 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
     }
   };
 
+  const status: "verified" | "mismatch" | "unverified" = !verifyResult
+    ? "unverified"
+    : verifyResult.match
+    ? "verified"
+    : "mismatch";
+
+  const statusConfig = {
+    verified: {
+      label: "Verified",
+      icon: CheckCircle2,
+      className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+      dot: "bg-emerald-500",
+    },
+    mismatch: {
+      label: "Mismatch",
+      icon: AlertTriangle,
+      className: "border-destructive/40 bg-destructive/10 text-destructive",
+      dot: "bg-destructive",
+    },
+    unverified: {
+      label: "Not verified",
+      icon: HelpCircle,
+      className: "border-border bg-muted text-muted-foreground",
+      dot: "bg-muted-foreground/60",
+    },
+  } as const;
+  const StatusIcon = statusConfig[status].icon;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <ShieldCheck className="h-4 w-4 text-primary" />
-          Blockchain Anchor — Patient {patientCode}
-        </CardTitle>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            Blockchain Anchor — Patient {patientCode}
+          </CardTitle>
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${statusConfig[status].className}`}
+            aria-live="polite"
+            role="status"
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${statusConfig[status].dot} ${status === "unverified" ? "" : "animate-pulse"}`} />
+            <StatusIcon className="h-3.5 w-3.5" />
+            {statusConfig[status].label}
+            {verifyResult && (
+              <span className="opacity-70 font-normal hidden sm:inline">
+                · {format(new Date(verifyResult.verifiedAt), "HH:mm")}
+              </span>
+            )}
+          </div>
+        </div>
         <CardDescription>
           PHI never leaves your device. The patient code is replaced by its SHA-256 digest before hashing, so the on-chain value is non-identifying — it cannot be reversed to your local patient label without your private database. Only you, the owning physician, can produce or verify these anchors.
         </CardDescription>
