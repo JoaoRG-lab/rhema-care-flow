@@ -140,6 +140,157 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
       }))
     : [];
 
+  const exportPdf = () => {
+    try {
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      let y = margin;
+
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Blockchain Anchor — Verification Report", margin, y);
+      y += 7;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Patient code (local): ${patientCode}`, margin, y);
+      y += 5;
+      doc.text(`Generated: ${format(new Date(), "PPpp")}`, margin, y);
+      y += 5;
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      const disclaimer = doc.splitTextToSize(
+        "Non-identifying integrity report. The recomputed hash is a SHA-256 digest of de-identified timeline metadata (record counts and variable codes only). It is NOT a medical record and contains no clinical values. Raw clinical data stays encrypted on the owning physician's device.",
+        pageWidth - margin * 2,
+      );
+      doc.text(disclaimer, margin, y);
+      y += disclaimer.length * 4 + 4;
+      doc.setTextColor(0);
+
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Patient code digest (anchored value)", margin, y);
+      y += 5;
+      doc.setFont("courier", "normal");
+      doc.setFontSize(8);
+      const codeLines = doc.splitTextToSize(codeHash || "(not computed)", pageWidth - margin * 2);
+      doc.text(codeLines, margin, y);
+      y += codeLines.length * 4 + 4;
+
+      if (verifyResult) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text(
+          verifyResult.match
+            ? "Verification result: MATCH — timeline integrity verified"
+            : "Verification result: MISMATCH — timeline drift detected",
+          margin,
+          y,
+        );
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(`Verified at: ${format(new Date(verifyResult.verifiedAt), "PPpp")}`, margin, y);
+        y += 4;
+        doc.text(`Anchor created: ${format(new Date(verifyResult.anchoredAt), "PPpp")}`, margin, y);
+        y += 4;
+        doc.text(`Anchor ID: ${verifyResult.anchorId}`, margin, y);
+        y += 6;
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Recomputed hash (now)", margin, y);
+        y += 4;
+        doc.setFont("courier", "normal");
+        doc.setFontSize(8);
+        const recLines = doc.splitTextToSize(verifyResult.current, pageWidth - margin * 2);
+        doc.text(recLines, margin, y);
+        y += recLines.length * 4 + 3;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text("Stored hash (latest anchor)", margin, y);
+        y += 4;
+        doc.setFont("courier", "normal");
+        doc.setFontSize(8);
+        const storLines = doc.splitTextToSize(verifyResult.latest, pageWidth - margin * 2);
+        doc.text(storLines, margin, y);
+        y += storLines.length * 4 + 4;
+
+        autoTable(doc, {
+          startY: y,
+          head: [["Domain", "Stored", "Now", "Δ", "Note"]],
+          body: countDiffs.map((d) => {
+            const delta = d.current - d.stored;
+            return [
+              d.key,
+              String(d.stored),
+              String(d.current),
+              delta === 0 ? "—" : delta > 0 ? `+${delta}` : String(delta),
+              delta === 0 ? "" : delta > 0 ? "added" : "removed",
+            ];
+          }),
+          theme: "grid",
+          headStyles: { fillColor: [30, 41, 59] },
+          styles: { fontSize: 9 },
+          margin: { left: margin, right: margin },
+        });
+        y = (doc as any).lastAutoTable.finalY + 6;
+
+        if (!verifyResult.match) {
+          const changedCount = countDiffs.filter((d) => d.current !== d.stored).length;
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(8);
+          doc.setTextColor(120);
+          const note =
+            changedCount === 0
+              ? "Record counts identical but hash differs — content of one or more records was edited without adding or removing rows."
+              : `${changedCount} domain(s) contributed to the mismatch since the stored anchor.`;
+          const noteLines = doc.splitTextToSize(note, pageWidth - margin * 2);
+          doc.text(noteLines, margin, y);
+          y += noteLines.length * 4 + 4;
+          doc.setTextColor(0);
+        }
+      } else {
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(9);
+        doc.setTextColor(120);
+        doc.text("No verification has been run in this session. Run 'Verify latest vs stored hash' to populate this report.", margin, y);
+        y += 6;
+        doc.setTextColor(0);
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Anchor history", margin, y);
+      y += 4;
+
+      autoTable(doc, {
+        startY: y,
+        head: [["Created", "Cluster", "Hash (truncated)", "Visits", "Scores", "Infusions", "Monitoring", "Tx"]],
+        body: anchors.map((a) => [
+          format(new Date(a.created_at), "yyyy-MM-dd HH:mm"),
+          a.cluster,
+          `${a.timeline_hash.slice(0, 16)}…${a.timeline_hash.slice(-6)}`,
+          String(a.record_counts?.visits ?? 0),
+          String(a.record_counts?.scores ?? 0),
+          String(a.record_counts?.infusions ?? 0),
+          String(a.record_counts?.monitoring ?? 0),
+          a.tx_signature ? formatSignature(a.tx_signature) : "—",
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [30, 41, 59] },
+        styles: { fontSize: 8 },
+        margin: { left: margin, right: margin },
+      });
+
+      const filename = `chain-anchor-${patientCode}-${format(new Date(), "yyyyMMdd-HHmm")}.pdf`;
+      doc.save(filename);
+      toast.success("PDF report downloaded");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to generate PDF");
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
