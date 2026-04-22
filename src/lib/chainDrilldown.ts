@@ -52,6 +52,51 @@ export function buildDomainDiffs(
   });
 }
 
+/**
+ * Suggests which record attributes most likely changed for a given domain,
+ * based on the direction of the count delta (added vs removed) and known
+ * canonical fields included in the on-chain hash. When counts are unchanged
+ * but the hash differs, every domain is treated as a potential edit target.
+ */
+export function getFieldHints(
+  key: DomainKey,
+  direction: "added" | "removed" | "unchanged",
+): string[] {
+  const FIELDS: Record<DomainKey, string[]> = {
+    visits: ["visit_date", "disease_activity", "actions", "labs_ordered", "imaging", "next_steps"],
+    scores: ["score_type", "calculated_score", "data_json (inputs)", "created_at"],
+    infusions: ["drug", "next_date", "interval_days", "pre_checklist"],
+    monitoring: ["event_type", "due_date", "status", "completed_at"],
+  };
+  return FIELDS[key];
+}
+
+export interface FieldHintGroup {
+  key: DomainKey;
+  direction: "added" | "removed" | "unchanged" | "edited";
+  fields: string[];
+}
+
+/**
+ * Produces field-level hint groups suitable for UI rendering, covering both
+ * added/removed domains and the content-edited fallback (counts identical,
+ * hash mismatch — likely an in-place value edit).
+ */
+export function buildFieldHints(report: DrilldownReport): FieldHintGroup[] {
+  if (report.contentEditedFallback) {
+    return DOMAIN_KEYS.map((key) => ({
+      key,
+      direction: "edited" as const,
+      fields: getFieldHints(key, "unchanged"),
+    }));
+  }
+  return report.changed.map((d) => ({
+    key: d.key,
+    direction: d.direction,
+    fields: getFieldHints(d.key, d.direction),
+  }));
+}
+
 export function buildDrilldownReport(
   current: DomainCounts,
   stored: DomainCounts,
