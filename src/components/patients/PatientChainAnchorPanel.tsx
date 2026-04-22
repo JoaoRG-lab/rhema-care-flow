@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, ShieldCheck, Link2, CheckCircle2, AlertTriangle, ExternalLink, Lock } from "lucide-react";
+import { Loader2, ShieldCheck, Link2, CheckCircle2, AlertTriangle, ExternalLink, Lock, Copy, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,16 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
   const [loading, setLoading] = useState(true);
   const [building, setBuilding] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<null | { match: boolean; current: string; latest: string }>(null);
+  const [verifyResult, setVerifyResult] = useState<null | {
+    match: boolean;
+    current: string;
+    latest: string;
+    anchorId: string;
+    anchoredAt: string;
+    currentCounts: { visits: number; scores: number; infusions: number; monitoring: number };
+    storedCounts: { visits?: number; scores?: number; infusions?: number; monitoring?: number };
+    verifiedAt: string;
+  }>(null);
   const [codeHash, setCodeHash] = useState<string>("");
 
   useEffect(() => {
@@ -91,14 +100,43 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
     setVerifying(true);
     try {
       const built = await buildPatientTimelineAnchor(patientCardId);
-      const latest = anchors[0].timeline_hash;
-      setVerifyResult({ match: built.hashHex === latest, current: built.hashHex, latest });
+      const latestAnchor = anchors[0];
+      const match = built.hashHex === latestAnchor.timeline_hash;
+      setVerifyResult({
+        match,
+        current: built.hashHex,
+        latest: latestAnchor.timeline_hash,
+        anchorId: latestAnchor.id,
+        anchoredAt: latestAnchor.created_at,
+        currentCounts: built.counts,
+        storedCounts: latestAnchor.record_counts ?? {},
+        verifiedAt: new Date().toISOString(),
+      });
+      if (match) toast.success("Hash matches — timeline is intact");
+      else toast.warning("Hash mismatch — timeline has changed since last anchor");
     } catch (e: any) {
       toast.error(e?.message ?? "Verification failed");
     } finally {
       setVerifying(false);
     }
   };
+
+  const copyHash = async (label: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
+
+  const countDiffs = verifyResult
+    ? (["visits", "scores", "infusions", "monitoring"] as const).map((k) => ({
+        key: k,
+        current: verifyResult.currentCounts[k] ?? 0,
+        stored: (verifyResult.storedCounts as any)?.[k] ?? 0,
+      }))
+    : [];
 
   return (
     <Card>
@@ -132,8 +170,8 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
             Anchor current timeline
           </Button>
           <Button variant="outline" onClick={verifyAgainstLatest} disabled={verifying || anchors.length === 0}>
-            {verifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-            Verify integrity vs latest
+            {verifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+            Verify latest vs stored hash
           </Button>
         </div>
 
@@ -150,12 +188,81 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
               <AlertTriangle className="h-4 w-4" />
             )}
             <AlertTitle>
-              {verifyResult.match ? "Timeline integrity verified" : "Timeline drift detected"}
+              {verifyResult.match
+                ? "✅ Hash match — timeline integrity verified"
+                : "⚠️ Hash mismatch — timeline drift detected"}
             </AlertTitle>
-            <AlertDescription className="font-mono text-xs break-all">
-              current: {verifyResult.current.slice(0, 24)}…
-              <br />
-              latest:&nbsp; {verifyResult.latest.slice(0, 24)}…
+            <AlertDescription className="space-y-3 text-xs">
+              <div className="text-xs opacity-80">
+                Verified {format(new Date(verifyResult.verifiedAt), "PPpp")} against anchor created{" "}
+                {format(new Date(verifyResult.anchoredAt), "PPpp")}.
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">Recomputed (now)</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2"
+                    onClick={() => copyHash("Recomputed hash", verifyResult.current)}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+                <code className="block font-mono break-all bg-muted/40 rounded px-2 py-1">
+                  {verifyResult.current}
+                </code>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">Stored anchor (latest)</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2"
+                    onClick={() => copyHash("Stored hash", verifyResult.latest)}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+                <code className="block font-mono break-all bg-muted/40 rounded px-2 py-1">
+                  {verifyResult.latest}
+                </code>
+              </div>
+
+              <div className="space-y-1">
+                <div className="font-medium">Record counts</div>
+                <div className="grid grid-cols-5 gap-1 text-[11px]">
+                  <div className="font-medium opacity-70">domain</div>
+                  <div className="font-medium opacity-70">stored</div>
+                  <div className="font-medium opacity-70">now</div>
+                  <div className="font-medium opacity-70 col-span-2">Δ</div>
+                  {countDiffs.map((d) => {
+                    const delta = d.current - d.stored;
+                    return (
+                      <div key={d.key} className="contents">
+                        <div className="capitalize">{d.key}</div>
+                        <div>{d.stored}</div>
+                        <div>{d.current}</div>
+                        <div className={`col-span-2 ${delta === 0 ? "" : "font-semibold"}`}>
+                          {delta === 0 ? "—" : delta > 0 ? `+${delta}` : delta}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {!verifyResult.match && (
+                <div className="pt-1 border-t border-border/40">
+                  Hashes diverge. This is expected if you added/edited visits, scores, infusions or
+                  monitoring since the last anchor — create a new anchor to lock the new state.
+                </div>
+              )}
             </AlertDescription>
           </Alert>
         )}
