@@ -60,6 +60,8 @@ export const ACTIVE_SPECIALTIES = [
   'endocrinology',
   'nephrology',
   'hematology',
+  'pediatrics',
+  'obstetrics',
 ];
 
 export const SPECIALTIES: SpecialtyConfig[] = [
