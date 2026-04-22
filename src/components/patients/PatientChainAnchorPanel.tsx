@@ -270,27 +270,73 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
                 </div>
               </div>
 
-              {!verifyResult.match && (
-                <div className="pt-2 border-t border-border/40 space-y-2">
-                  <div>
-                    Hashes diverge. This is expected if you added/edited visits, scores, infusions or
-                    monitoring since the last anchor — re-anchor to lock the new state on chain.
+              {!verifyResult.match && (() => {
+                const changed = countDiffs.filter((d) => d.current !== d.stored);
+                const totalDelta = changed.reduce(
+                  (sum, d) => sum + Math.abs(d.current - d.stored),
+                  0,
+                );
+                return (
+                  <div className="pt-2 border-t border-border/40 space-y-3">
+                    <div className="space-y-2">
+                      <div className="font-medium">
+                        Drill-down — {changed.length === 0 ? "no record-count changes detected" : `${changed.length} domain${changed.length === 1 ? "" : "s"} contributed to the mismatch`}
+                      </div>
+                      {changed.length === 0 ? (
+                        <div className="text-[11px] opacity-80">
+                          Counts are identical but the hash differs. This means the <em>content</em> of
+                          one or more records was edited (values changed) without adding or removing
+                          rows. Re-anchor to lock the new content state.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-[11px] opacity-80">
+                            {totalDelta} record{totalDelta === 1 ? "" : "s"} changed across{" "}
+                            {changed.length} domain{changed.length === 1 ? "" : "s"} since the stored
+                            anchor.
+                          </div>
+                          <div className="space-y-1">
+                            {changed.map((d) => {
+                              const delta = d.current - d.stored;
+                              const direction = delta > 0 ? "added" : "removed";
+                              return (
+                                <div
+                                  key={d.key}
+                                  className="flex items-center justify-between gap-2 rounded border border-border/50 bg-muted/30 px-2 py-1 text-[11px]"
+                                >
+                                  <span className="capitalize font-medium">{d.key}</span>
+                                  <span className="opacity-80">
+                                    {d.stored} → {d.current}
+                                  </span>
+                                  <Badge variant="outline" className="text-[10px]">
+                                    {Math.abs(delta)} {direction}
+                                  </Badge>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div>
+                      Re-anchor to lock the new state on chain.
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={createAnchor}
+                      disabled={building}
+                    >
+                      {building ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Link2 className="h-4 w-4 mr-2" />
+                      )}
+                      Re-anchor this timeline
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={createAnchor}
-                    disabled={building}
-                  >
-                    {building ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Link2 className="h-4 w-4 mr-2" />
-                    )}
-                    Re-anchor this timeline
-                  </Button>
-                </div>
-              )}
+                );
+              })()}
             </AlertDescription>
           </Alert>
         )}
