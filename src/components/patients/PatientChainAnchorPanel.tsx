@@ -339,6 +339,10 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
             {verifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
             Verify latest vs stored hash
           </Button>
+          <Button variant="secondary" onClick={exportPdf} disabled={anchors.length === 0 && !verifyResult}>
+            <FileDown className="h-4 w-4 mr-2" />
+            Download PDF report
+          </Button>
         </div>
 
         <div className="text-xs text-muted-foreground">
