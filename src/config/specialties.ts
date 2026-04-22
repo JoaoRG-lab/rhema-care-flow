@@ -62,6 +62,11 @@ export const ACTIVE_SPECIALTIES = [
   'hematology',
   'pediatrics',
   'obstetrics',
+  'infectious-disease',
+  'pulmonology',
+  'gastroenterology',
+  'geriatrics',
+  'intensive-care',
 ];
 
 export const SPECIALTIES: SpecialtyConfig[] = [
