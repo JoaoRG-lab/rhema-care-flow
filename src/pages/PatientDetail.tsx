@@ -16,6 +16,7 @@ import { AddVisitDialog } from '@/components/patients/AddVisitDialog';
 import { PatientMonitoring } from '@/components/patients/PatientMonitoring';
 import { TreatmentResponseTimeline } from '@/components/patients/TreatmentResponseTimeline';
 import { PatientSmsHistory } from '@/components/patients/PatientSmsHistory';
+import { PatientChainAnchorPanel } from '@/components/patients/PatientChainAnchorPanel';
 import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
 import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
 import { QuickScoreEntry } from '@/components/patients/QuickScoreEntry';
@@ -325,11 +326,15 @@ import type { PatientCard } from '@/types/clinical';
                 <ArrowLeftRight className="h-4 w-4" />
                 Response
               </TabsTrigger>
-              <TabsTrigger value="sms" className="gap-2">
-                <MessageSquare className="h-4 w-4" />
-                SMS
-              </TabsTrigger>
-            </TabsList>
+               <TabsTrigger value="sms" className="gap-2">
+                 <MessageSquare className="h-4 w-4" />
+                 SMS
+               </TabsTrigger>
+               <TabsTrigger value="chain" className="gap-2">
+                 <Shield className="h-4 w-4" />
+                 Chain
+               </TabsTrigger>
+             </TabsList>
  
            <TabsContent value="visits">
             <VisitHistory 
@@ -361,14 +366,21 @@ import type { PatientCard } from '@/types/clinical';
               />
             </TabsContent>
 
-            <TabsContent value="sms">
-              <PatientSmsHistory 
-                patientId={patient.id} 
-                patientCode={patient.patient_code}
-                refreshKey={refreshKey}
-              />
-            </TabsContent>
-          </Tabs>
+             <TabsContent value="sms">
+               <PatientSmsHistory 
+                 patientId={patient.id} 
+                 patientCode={patient.patient_code}
+                 refreshKey={refreshKey}
+               />
+             </TabsContent>
+
+             <TabsContent value="chain">
+               <PatientChainAnchorPanel
+                 patientCardId={patient.id}
+                 patientCode={patient.patient_code}
+               />
+             </TabsContent>
+           </Tabs>
            
            <EditPatientDialog 
              patient={patient} 
