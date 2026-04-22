@@ -48,6 +48,15 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
   }>(null);
   const [codeHash, setCodeHash] = useState<string>("");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const ackKey = `pca-ack:${patientCardId}`;
+  const [acknowledged, setAcknowledged] = useState<boolean>(() => {
+    try { return localStorage.getItem(ackKey) === "1"; } catch { return false; }
+  });
+  const setAck = (v: boolean) => {
+    setAcknowledged(v);
+    try { v ? localStorage.setItem(ackKey, "1") : localStorage.removeItem(ackKey); } catch {}
+    if (!v) setDetailsOpen(false);
+  };
 
   type AuditEntry = {
     verifiedAt: string;
