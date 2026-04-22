@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -48,6 +49,15 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
   }>(null);
   const [codeHash, setCodeHash] = useState<string>("");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const ackKey = `pca-ack:${patientCardId}`;
+  const [acknowledged, setAcknowledged] = useState<boolean>(() => {
+    try { return localStorage.getItem(ackKey) === "1"; } catch { return false; }
+  });
+  const setAck = (v: boolean) => {
+    setAcknowledged(v);
+    try { v ? localStorage.setItem(ackKey, "1") : localStorage.removeItem(ackKey); } catch {}
+    if (!v) setDetailsOpen(false);
+  };
 
   type AuditEntry = {
     verifiedAt: string;
@@ -496,12 +506,39 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
           </span>
         </p>
 
+        <label
+          htmlFor={`pca-ack-${patientCardId}`}
+          className={`flex items-start gap-2 rounded-md border px-3 py-2 cursor-pointer transition-colors ${
+            acknowledged
+              ? "border-emerald-500/40 bg-emerald-500/5"
+              : "border-amber-500/50 bg-amber-500/10"
+          }`}
+        >
+          <Checkbox
+            id={`pca-ack-${patientCardId}`}
+            checked={acknowledged}
+            onCheckedChange={(v) => setAck(v === true)}
+            className="mt-0.5"
+          />
+          <span className="text-xs leading-relaxed">
+            <strong>I understand this is not a medical record.</strong> The hash and counts shown here
+            verify timeline integrity only — they are not a clinical record, do not constitute medical
+            advice, and cannot be used as legal proof of care. I am the owning physician and accept
+            responsibility for the underlying encrypted data on my device.
+          </span>
+        </label>
+
         <div className="flex flex-wrap gap-2">
           <Button onClick={createAnchor} disabled={building}>
             {building ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Link2 className="h-4 w-4 mr-2" />}
             Anchor current timeline
           </Button>
-          <Button variant="outline" onClick={verifyAgainstLatest} disabled={verifying || anchors.length === 0}>
+          <Button
+            variant="outline"
+            onClick={verifyAgainstLatest}
+            disabled={verifying || anchors.length === 0 || !acknowledged}
+            title={!acknowledged ? "Accept the acknowledgement to enable advanced integrity details" : undefined}
+          >
             {verifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
             Verify latest vs stored hash
           </Button>
@@ -516,7 +553,7 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
           {PATIENT_TIMELINE_VARIABLES.length} fields across 5 domains
         </div>
 
-        {verifyResult && (
+        {verifyResult && acknowledged && (
           <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
             <CollapsibleTrigger asChild>
               <button
