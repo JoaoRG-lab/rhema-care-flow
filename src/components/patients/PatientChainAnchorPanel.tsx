@@ -796,6 +796,60 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
                           </div>
                         </>
                       )}
+                      {(() => {
+                        const report = buildDrilldownReport(
+                          {
+                            visits: verifyResult.currentCounts.visits,
+                            scores: verifyResult.currentCounts.scores,
+                            infusions: verifyResult.currentCounts.infusions,
+                            monitoring: verifyResult.currentCounts.monitoring,
+                          },
+                          verifyResult.storedCounts,
+                          verifyResult.match,
+                        );
+                        const hints = buildFieldHints(report);
+                        if (hints.length === 0) return null;
+                        const labels: Record<string, string> = {
+                          added: "Likely new fields",
+                          removed: "Likely fields on deleted records",
+                          edited: "Likely edited fields",
+                          unchanged: "Fields",
+                        };
+                        return (
+                          <div className="space-y-1.5 pt-1">
+                            <div className="text-[11px] font-medium opacity-80">
+                              Field-level hints — review these attributes before re-anchoring
+                            </div>
+                            {hints.map((h) => (
+                              <div
+                                key={h.key}
+                                className="rounded border border-border/50 bg-muted/20 px-2 py-1.5 text-[11px] space-y-1"
+                              >
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="capitalize font-medium">{h.key}</span>
+                                  <Badge variant="secondary" className="text-[10px]">
+                                    {labels[h.direction] ?? h.direction}
+                                  </Badge>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {h.fields.map((f) => (
+                                    <code
+                                      key={f}
+                                      className="font-mono text-[10px] bg-background/60 border border-border/40 rounded px-1.5 py-0.5"
+                                    >
+                                      {f}
+                                    </code>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                            <div className="text-[10px] opacity-70 italic">
+                              Hints are heuristics from the canonical hash schema — only the listed
+                              attributes can affect the digest. No clinical values are shown.
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <Alert className="border-amber-500/40 bg-amber-500/10">
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
