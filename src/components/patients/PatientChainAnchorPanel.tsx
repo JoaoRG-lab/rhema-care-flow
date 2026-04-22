@@ -195,6 +195,74 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
       }))
     : [];
 
+  const downloadFile = (filename: string, content: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportDrilldown = (fmt: "json" | "csv") => {
+    if (!verifyResult) return;
+    const changed = countDiffs.filter((d) => d.current !== d.stored);
+    const totalDelta = changed.reduce((s, d) => s + Math.abs(d.current - d.stored), 0);
+    const ts = format(new Date(), "yyyyMMdd-HHmm");
+    const base = `chain-mismatch-${patientCode}-${ts}`;
+
+    if (fmt === "json") {
+      const payload = {
+        patient_code: patientCode,
+        patient_card_id: patientCardId,
+        verified_at: verifyResult.verifiedAt,
+        anchor_id: verifyResult.anchorId,
+        anchored_at: verifyResult.anchoredAt,
+        match: verifyResult.match,
+        recomputed_hash: verifyResult.current,
+        stored_hash: verifyResult.latest,
+        domains: countDiffs.map((d) => ({
+          domain: d.key,
+          stored: d.stored,
+          now: d.current,
+          delta: d.current - d.stored,
+          direction: d.current === d.stored ? "unchanged" : d.current > d.stored ? "added" : "removed",
+        })),
+        changed_domains: changed.length,
+        total_delta: totalDelta,
+        disclaimer: "Non-identifying integrity report. No clinical values included.",
+      };
+      downloadFile(`${base}.json`, JSON.stringify(payload, null, 2), "application/json");
+    } else {
+      const escape = (v: string | number) => {
+        const s = String(v);
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const rows: string[] = [];
+      rows.push(["domain", "stored", "now", "delta", "direction"].join(","));
+      countDiffs.forEach((d) => {
+        const delta = d.current - d.stored;
+        const direction = delta === 0 ? "unchanged" : delta > 0 ? "added" : "removed";
+        rows.push([d.key, d.stored, d.current, delta, direction].map(escape).join(","));
+      });
+      rows.push("");
+      rows.push(["# meta"].join(","));
+      rows.push(["patient_code", escape(patientCode)].join(","));
+      rows.push(["verified_at", escape(verifyResult.verifiedAt)].join(","));
+      rows.push(["anchor_id", escape(verifyResult.anchorId)].join(","));
+      rows.push(["anchored_at", escape(verifyResult.anchoredAt)].join(","));
+      rows.push(["recomputed_hash", escape(verifyResult.current)].join(","));
+      rows.push(["stored_hash", escape(verifyResult.latest)].join(","));
+      rows.push(["changed_domains", changed.length].join(","));
+      rows.push(["total_delta", totalDelta].join(","));
+      downloadFile(`${base}.csv`, rows.join("\n"), "text/csv");
+    }
+    toast.success(`Mismatch report (${fmt.toUpperCase()}) downloaded`);
+  };
+
   const exportPdf = () => {
     try {
       const doc = new jsPDF({ unit: "mm", format: "a4" });
