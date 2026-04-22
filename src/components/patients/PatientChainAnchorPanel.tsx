@@ -497,6 +497,30 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
           </AlertDescription>
         </Alert>
 
+        <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2.5">
+          <div className="text-xs font-medium mb-1.5 flex items-center gap-1.5">
+            <Lock className="h-3.5 w-3.5 text-primary" />
+            Explicitly excluded from the digest
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            {[
+              "Patient names & nicknames",
+              "MRN, CPF, phone, address, email",
+              "Diagnosis values (only counts/codes)",
+              "Medication names & doses",
+              "Lab values & imaging findings",
+              "Score numerical values",
+              "Free-text clinical notes",
+              "Attachments, photos, signatures",
+            ].map((item) => (
+              <li key={item} className="flex items-start gap-1.5">
+                <span className="mt-0.5 text-destructive font-bold">✕</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         <p className="flex items-start gap-2 text-xs text-muted-foreground rounded-md border border-border/60 bg-muted/30 px-3 py-2">
           <Lock className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-primary" />
           <span>
