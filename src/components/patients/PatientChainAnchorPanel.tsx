@@ -46,6 +46,7 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
     verifiedAt: string;
   }>(null);
   const [codeHash, setCodeHash] = useState<string>("");
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   type AuditEntry = {
     verifiedAt: string;
