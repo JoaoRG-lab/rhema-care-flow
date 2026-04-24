@@ -40,6 +40,8 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid" | "failed" | "expired">("pending");
+  const [paidAt, setPaidAt] = useState<string | null>(null);
+  const [balanceAfter, setBalanceAfter] = useState<number | null>(null);
 
   const freeUsed = credits?.free_quota_used ?? 0;
   const freeLimit = credits?.free_quota_limit ?? 0;
@@ -52,6 +54,8 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
       setCopied(false);
       setPolling(false);
       setPaymentStatus("pending");
+      setPaidAt(null);
+      setBalanceAfter(null);
     }
   }, [open]);
 
