@@ -47,6 +47,7 @@ const BlockchainRegistry = lazy(() => import("./pages/BlockchainRegistry"));
 const UrvPage = lazy(() => import("./pages/UrvPage"));
 const ReumatoPortal = lazy(() => import("./pages/ReumatoPortal"));
 const PediatriaPortal = lazy(() => import("./pages/PediatriaPortal"));
+const ObstetriciaPortal = lazy(() => import("./pages/ObstetriciaPortal"));
 const SpecialtyPortal = lazy(() => import("./pages/SpecialtyPortal"));
 const AIResearch = lazy(() => import("./pages/AIResearch"));
 const OutreachCRM = lazy(() => import("./pages/OutreachCRM"));
@@ -125,6 +126,7 @@ const queryClient = new QueryClient();
                     <Route path="/urv" element={<UrvPage />} />
                     <Route path="/reumato" element={<ReumatoPortal />} />
                     <Route path="/pediatria" element={<PediatriaPortal />} />
+                    <Route path="/obstetrics" element={<ObstetriciaPortal />} />
                     <Route path="/especialidades" element={<SpecialtyPortal />} />
                     <Route path="/specialty/:specialtyId" element={<SpecialtyPortal />} />
                     <Route path="/ai-research" element={<ProtectedRoute><AIResearch /></ProtectedRoute>} />

@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 function specialtyPath(id: string): string {
   if (id === 'rheumatology') return '/reumato';
   if (id === 'pediatrics') return '/pediatria';
+  if (id === 'obstetrics') return '/obstetrics';
   return `/specialty/${id}`;
 }
 

@@ -53,6 +53,17 @@ import { DehydrationCalculator } from '@/components/scores/DehydrationCalculator
 import { HollidaySegarCalculator } from '@/components/scores/HollidaySegarCalculator';
 import { RochesterCalculator } from '@/components/scores/RochesterCalculator';
 import { MCHATCalculator } from '@/components/scores/MCHATCalculator';
+import { BishopCalculator } from '@/components/scores/BishopCalculator';
+import { GestationalAgeCalculator } from '@/components/scores/GestationalAgeCalculator';
+import { PreeclampsiaCalculator } from '@/components/scores/PreeclampsiaCalculator';
+import { PEEarlyRiskCalculator } from '@/components/scores/PEEarlyRiskCalculator';
+import { HPPCalculator } from '@/components/scores/HPPCalculator';
+import { GDMCalculator } from '@/components/scores/GDMCalculator';
+import { VBACCalculator } from '@/components/scores/VBACCalculator';
+import { BiophysicalProfileCalculator } from '@/components/scores/BiophysicalProfileCalculator';
+import { PretermRiskCalculator } from '@/components/scores/PretermRiskCalculator';
+import { AmniotiFluidCalculator } from '@/components/scores/AmniotiFluidCalculator';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
  
@@ -167,6 +178,26 @@ import { toast } from 'sonner';
         return <RochesterCalculator />;
       case 'mchat':
         return <MCHATCalculator />;
+      case 'bishop':
+        return <BishopCalculator />;
+      case 'gestational-age':
+        return <GestationalAgeCalculator />;
+      case 'preeclampsia':
+        return <PreeclampsiaCalculator />;
+      case 'pe-early-risk':
+        return <PEEarlyRiskCalculator />;
+      case 'hpp':
+        return <HPPCalculator />;
+      case 'gdm':
+        return <GDMCalculator />;
+      case 'vbac':
+        return <VBACCalculator />;
+      case 'biophysical-profile':
+        return <BiophysicalProfileCalculator />;
+      case 'preterm-risk':
+        return <PretermRiskCalculator />;
+      case 'amniotic-fluid':
+        return <AmniotiFluidCalculator />;
       default:
         return null;
     }
