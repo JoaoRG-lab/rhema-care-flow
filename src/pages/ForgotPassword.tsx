@@ -87,6 +87,25 @@ export default function ForgotPassword() {
     return () => clearInterval(id);
   }, [cooldown]);
 
+  // Refs for keyboard-friendly focus transitions on status change.
+  const statusRegionRef = useRef<HTMLDivElement>(null);
+  const resendButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Move focus to the most relevant element when status changes so keyboard
+  // and screen-reader users land on the new content immediately.
+  useEffect(() => {
+    if (status === 'sent' || status === 'expired') {
+      // Defer to allow the alert + retry actions to render first.
+      const id = window.setTimeout(() => {
+        resendButtonRef.current?.focus();
+      }, 50);
+      return () => window.clearTimeout(id);
+    }
+    if (status === 'error') {
+      statusRegionRef.current?.focus();
+    }
+  }, [status]);
+
   const sendReset = async (target: string) => {
     setStatus('requested');
     setErrorMsg(null);
