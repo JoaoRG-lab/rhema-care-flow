@@ -432,7 +432,19 @@ export default function AdminBilling() {
                   ) : (
                     filteredCredits.map((c) => (
                       <TableRow key={c.user_id}>
-                        <TableCell className="font-mono text-xs">{short(c.user_id)}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <button
+                            onClick={() =>
+                              setSelectedUser({
+                                id: c.user_id,
+                                name: profiles[c.user_id]?.full_name ?? null,
+                              })
+                            }
+                            className="hover:text-primary hover:underline"
+                          >
+                            {short(c.user_id)}
+                          </button>
+                        </TableCell>
                         <TableCell className="text-right font-bold text-primary">
                           {c.credits_balance}
                         </TableCell>
