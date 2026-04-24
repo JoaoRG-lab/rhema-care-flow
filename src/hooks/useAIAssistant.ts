@@ -79,6 +79,7 @@ export function useAIAssistant() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'x-idempotency-key': userMessage.id,
         },
         body: JSON.stringify({ messages: conversationHistory }),
       });
