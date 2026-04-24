@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_assistant_idempotency: {
+        Row: {
+          created_at: string
+          debit_source: string | null
+          debited: boolean
+          id: string
+          idempotency_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          debit_source?: string | null
+          debited?: boolean
+          id?: string
+          idempotency_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          debit_source?: string | null
+          debited?: boolean
+          id?: string
+          idempotency_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_research_pipeline: {
         Row: {
           academic_review_requested_at: string | null
