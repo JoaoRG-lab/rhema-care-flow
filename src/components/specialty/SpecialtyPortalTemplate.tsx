@@ -40,10 +40,10 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
             </div>
           </Link>
           <div className="flex items-center gap-4">
-            <Link to="/login">
+            <Link to={`/login${redirectParam}`}>
               <Button variant="ghost" size="sm">Entrar</Button>
             </Link>
-            <Link to="/signup">
+            <Link to={`/signup${redirectParam}`}>
               <Button 
                 size="sm" 
                 className="gap-2 hover:opacity-90"
