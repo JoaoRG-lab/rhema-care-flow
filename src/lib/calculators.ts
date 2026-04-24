@@ -50,6 +50,7 @@
    fm: { label: 'FM', color: 'tag-fm' },
   gout: { label: 'Gout', color: 'bg-orange-100 text-orange-800 border-orange-300' },
   pediatric: { label: 'Pediatric', color: 'bg-sky-100 text-sky-800 border-sky-300' },
+  obgyn: { label: 'OB/GYN', color: 'bg-pink-100 text-pink-800 border-pink-300' },
   general: { label: 'General', color: 'bg-slate-100 text-slate-700 border-slate-300' },
 };
  
