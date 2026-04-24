@@ -1,13 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, Loader2, CheckCircle2, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Mail,
+  Loader2,
+  CheckCircle2,
+  ArrowLeft,
+  AlertCircle,
+  Send,
+  Clock,
+  RefreshCw,
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+
+type ResetStatus = 'idle' | 'requested' | 'sent' | 'expired' | 'error';
 
 const emailSchema = z
   .string()
@@ -16,17 +27,66 @@ const emailSchema = z
   .max(255, { message: 'Email is too long' })
   .email({ message: 'Enter a valid email address' });
 
+// Reset links typically expire after ~1 hour. We surface a "link expired"
+// banner after this window so the user can resend without confusion.
+const LINK_TTL_MS = 60 * 60 * 1000;
+const RESEND_COOLDOWN_S = 30;
+
 export default function ForgotPassword() {
   const { resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [status, setStatus] = useState<ResetStatus>('idle');
+  const [sentAt, setSentAt] = useState<number | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+  const [now, setNow] = useState(Date.now());
+
+  // Tick every second so the "sent X min ago" + expiry banner update live.
+  useEffect(() => {
+    if (status !== 'sent') return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [status]);
+
+  // Auto-flip to "expired" once the link TTL passes.
+  useEffect(() => {
+    if (status === 'sent' && sentAt && now - sentAt >= LINK_TTL_MS) {
+      setStatus('expired');
+    }
+  }, [now, sentAt, status]);
+
+  // Resend cooldown countdown.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
+  const sendReset = async (target: string) => {
+    setStatus('requested');
+    setErrorMsg(null);
+    try {
+      const { error } = await resetPassword(target);
+      if (error) {
+        if (/rate|too many/i.test(error.message)) {
+          setStatus('error');
+          setErrorMsg('Too many requests. Please wait a minute and try again.');
+          return;
+        }
+        // Treat other errors as success to prevent account enumeration.
+      }
+      setSentAt(Date.now());
+      setStatus('sent');
+      setCooldown(RESEND_COOLDOWN_S);
+    } catch {
+      setStatus('error');
+      setErrorMsg('Something went wrong. Please try again shortly.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitError(null);
     setFieldError(null);
 
     const parsed = emailSchema.safeParse(email);
@@ -34,27 +94,18 @@ export default function ForgotPassword() {
       setFieldError(parsed.error.issues[0]?.message ?? 'Invalid email');
       return;
     }
-
-    setSubmitting(true);
-    try {
-      const { error } = await resetPassword(parsed.data.toLowerCase());
-      if (error) {
-        // Avoid leaking whether the account exists; only surface rate-limit-style errors.
-        if (/rate|too many/i.test(error.message)) {
-          setSubmitError('Too many requests. Please wait a minute and try again.');
-        } else {
-          // Still confirm success to prevent account enumeration
-          setSuccess(true);
-        }
-      } else {
-        setSuccess(true);
-      }
-    } catch {
-      setSubmitError('Something went wrong. Please try again shortly.');
-    } finally {
-      setSubmitting(false);
-    }
+    await sendReset(parsed.data.toLowerCase());
   };
+
+  const handleResend = async () => {
+    if (!email || cooldown > 0) return;
+    await sendReset(email.trim().toLowerCase());
+  };
+
+  const minutesAgo = sentAt ? Math.floor((now - sentAt) / 60000) : 0;
+  const minutesLeft = sentAt
+    ? Math.max(0, Math.ceil((LINK_TTL_MS - (now - sentAt)) / 60000))
+    : 0;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -69,15 +120,78 @@ export default function ForgotPassword() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {success ? (
-            <Alert className="border-primary/30">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
+          {/* Status banners */}
+          {status === 'requested' && (
+            <Alert>
+              <Send className="h-4 w-4 animate-pulse" />
+              <AlertTitle>Sending request…</AlertTitle>
               <AlertDescription>
-                If an account exists for <span className="font-medium">{email}</span>,
-                a password reset link has been sent. Check your inbox (and spam folder).
-                The link expires shortly for security.
+                Contacting the authentication service.
               </AlertDescription>
             </Alert>
+          )}
+
+          {status === 'sent' && (
+            <Alert className="border-primary/30">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <AlertTitle>Email sent</AlertTitle>
+              <AlertDescription className="space-y-1">
+                <p>
+                  If an account exists for <span className="font-medium">{email}</span>,
+                  a reset link is on its way. Check your inbox and spam folder.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Sent {minutesAgo === 0 ? 'just now' : `${minutesAgo} min ago`} ·
+                  Link expires in ~{minutesLeft} min
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {status === 'expired' && (
+            <Alert variant="destructive">
+              <Clock className="h-4 w-4" />
+              <AlertTitle>Link expired</AlertTitle>
+              <AlertDescription>
+                Your previous reset link has expired. Send a new one to continue.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {status === 'error' && errorMsg && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Couldn't send email</AlertTitle>
+              <AlertDescription>{errorMsg}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Form / retry actions */}
+          {status === 'sent' || status === 'expired' ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Didn't receive it? You can resend the link below.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleResend}
+                  disabled={cooldown > 0}
+                  className="flex-1"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend reset email'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setStatus('idle');
+                    setSentAt(null);
+                  }}
+                >
+                  Use a different email
+                </Button>
+              </div>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div className="space-y-2">
@@ -94,7 +208,7 @@ export default function ForgotPassword() {
                   }}
                   aria-invalid={!!fieldError}
                   aria-describedby={fieldError ? 'email-error' : undefined}
-                  disabled={submitting}
+                  disabled={status === 'requested'}
                 />
                 {fieldError && (
                   <p id="email-error" className="text-sm text-destructive flex items-center gap-1">
@@ -104,15 +218,8 @@ export default function ForgotPassword() {
                 )}
               </div>
 
-              {submitError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{submitError}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? (
+              <Button type="submit" className="w-full" disabled={status === 'requested'}>
+                {status === 'requested' ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Sending reset link...
