@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
+import { errorResponse } from "../_shared/errors.ts";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -764,8 +765,6 @@ Respond in JSON:
 
   } catch (error) {
     console.error('Ignition error:', error);
-    return new Response(JSON.stringify({
-      error: String(error)
-    }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse(error, { status: 500, code: "INTERNAL_ERROR", headers: corsHeaders });
   }
 });

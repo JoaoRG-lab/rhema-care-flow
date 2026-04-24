@@ -2,6 +2,7 @@
  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
  
+ import { errorResponse } from "../_shared/errors.ts";
  const corsHeaders = {
    "Access-Control-Allow-Origin": "*",
    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -210,9 +211,6 @@
      });
    } catch (error) {
      console.error("summarize-visits error:", error);
-     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
-       status: 500,
-       headers: { ...corsHeaders, "Content-Type": "application/json" },
-     });
+     return errorResponse(error, { status: 500, code: "INTERNAL_ERROR", headers: corsHeaders });
    }
  });
