@@ -22,6 +22,8 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import { useAIAssistant, Message } from '@/hooks/useAIAssistant';
+import { PaywallDialog } from '@/components/billing/PaywallDialog';
+import { useAICredits } from '@/hooks/useAICredits';
 import { format } from 'date-fns';
 
 const QUICK_PROMPTS = [
@@ -34,7 +36,8 @@ const QUICK_PROMPTS = [
 ];
 
 export default function AIAssistant() {
-  const { messages, isLoading, sendMessage, clearMessages } = useAIAssistant();
+  const { messages, isLoading, sendMessage, clearMessages, paywallOpen, setPaywallOpen } = useAIAssistant();
+  const { credits, remainingFree, refresh: refreshCredits } = useAICredits();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
