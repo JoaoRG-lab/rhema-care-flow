@@ -18,7 +18,9 @@ import {
   Calendar,
   FileText,
   Lightbulb,
+  Lock,
 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import { useAIAssistant, Message } from '@/hooks/useAIAssistant';
