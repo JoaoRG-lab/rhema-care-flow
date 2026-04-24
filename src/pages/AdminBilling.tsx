@@ -164,6 +164,32 @@ export default function AdminBilling() {
     [idem, f]
   );
 
+  // User search across all loaded data + profiles
+  const userSearchResults = useMemo(() => {
+    if (!f) return [];
+    const ids = new Set<string>();
+    const matchProfile = (uid: string) => {
+      const p = profiles[uid];
+      return (
+        uid.toLowerCase().includes(f) ||
+        (p?.full_name ?? "").toLowerCase().includes(f) ||
+        (p?.institution ?? "").toLowerCase().includes(f)
+      );
+    };
+    transactions.forEach((t) => matchProfile(t.user_id) && ids.add(t.user_id));
+    credits.forEach((c) => matchProfile(c.user_id) && ids.add(c.user_id));
+    idem.forEach((i) => matchProfile(i.user_id) && ids.add(i.user_id));
+    return Array.from(ids)
+      .slice(0, 10)
+      .map((id) => ({
+        id,
+        profile: profiles[id],
+        txCount: transactions.filter((t) => t.user_id === id).length,
+        reqCount: idem.filter((i) => i.user_id === id).length,
+        balance: credits.find((c) => c.user_id === id)?.credits_balance ?? 0,
+      }));
+  }, [f, transactions, credits, idem, profiles]);
+
   const totals = useMemo(() => {
     const paid = transactions.filter((t) => t.status === "paid");
     const sumBrl = paid.reduce((s, t) => s + Number(t.amount_brl || 0), 0);
