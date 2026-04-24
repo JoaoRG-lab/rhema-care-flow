@@ -413,6 +413,50 @@
     formula: 'dose = min(weight × mg/kg, max_single_dose)',
     implemented: true,
   },
+
+  // ===== OB/GYN calculators =====
+  {
+    id: 'bishop',
+    name: 'Bishop Score',
+    shortName: 'Bishop',
+    description: 'Avaliação da maturidade cervical para indução do trabalho de parto.',
+    category: 'prognosis',
+    diseases: ['obgyn'],
+    formula: 'Dilatação + Apagamento + Altura + Consistência + Posição (0–13)',
+    reference: 'Bishop EH, 1964',
+    implemented: true,
+  },
+  {
+    id: 'gestational-age',
+    name: 'Idade Gestacional (DUM)',
+    shortName: 'IG',
+    description: 'Cálculo da IG e DPP pela regra de Naegele.',
+    category: 'monitoring',
+    diseases: ['obgyn'],
+    formula: 'Hoje − DUM (em dias) → semanas + dias; DPP = DUM + 280 dias',
+    reference: 'Naegele FK',
+    implemented: true,
+  },
+  {
+    id: 'preeclampsia-risk',
+    name: 'Risco de Pré-eclâmpsia',
+    shortName: 'PE Risk',
+    description: 'Triagem clínica para profilaxia com AAS no 1º trimestre.',
+    category: 'prognosis',
+    diseases: ['obgyn'],
+    reference: 'ACOG 2018 / USPSTF / FEBRASGO',
+    implemented: true,
+  },
+  {
+    id: 'pregnancy-bmi',
+    name: 'IMC e Ganho Ponderal Gestacional',
+    shortName: 'IMC Gestação',
+    description: 'Faixas de ganho de peso na gestação por IMC pré-gestacional (IOM 2009).',
+    category: 'monitoring',
+    diseases: ['obgyn'],
+    reference: 'Institute of Medicine, 2009',
+    implemented: true,
+  },
 ];
 
 // Favorites management
