@@ -148,9 +148,9 @@ const handler = async (req: Request): Promise<Response> => {
     const sanitizedPatientName = patientName.replace(/[^a-zA-Z0-9]/g, '_');
     const filename = `${sanitizedPatientName}_${reportType.replace(/\s+/g, '_')}_${timestamp}.pdf`;
 
-    const emailResponse: any = await resend.emails.send({
+    const emailResponse = await sendEmail(resend, {
       from: "RheumaFlow <noreply@rheumaflow.com>", // Replace with your verified domain
-      to: [recipientEmail],
+      to: recipientEmail,
       subject,
       html: htmlContent,
       attachments: [
@@ -158,17 +158,25 @@ const handler = async (req: Request): Promise<Response> => {
           filename,
           content: pdfBuffer,
           contentType: 'application/pdf',
-        } as any,
+        },
       ],
     });
 
-    console.log("Report email sent successfully:", emailResponse);
+    if (!emailResponse.ok) {
+      console.error("Report email failed:", emailResponse.error, emailResponse.details);
+      return new Response(
+        JSON.stringify({ success: false, error: emailResponse.error }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Report email sent successfully:", emailResponse.id);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        messageId: emailResponse?.id ?? emailResponse?.data?.id,
-        message: `Report sent successfully to ${recipientEmail}` 
+      JSON.stringify({
+        success: true,
+        messageId: emailResponse.id,
+        message: `Report sent successfully to ${recipientEmail}`
       }),
       {
         status: 200,
