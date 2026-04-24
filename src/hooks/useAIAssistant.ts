@@ -173,7 +173,7 @@ export function useAIAssistant() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, consumeCredit]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -184,5 +184,7 @@ export function useAIAssistant() {
     isLoading,
     sendMessage,
     clearMessages,
+    paywallOpen,
+    setPaywallOpen,
   };
 }
