@@ -1,12 +1,25 @@
-import { corsHeaders } from '@supabase/supabase-js/cors';
-import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { z } from 'npm:zod@3.23.8';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 const BodySchema = z.object({
   email: z.string().trim().email().max(255),
 });
 
-Deno.serve(async (req) => {
+async function hashEmail(email: string): Promise<string> {
+  const buf = new TextEncoder().encode(email);
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -60,10 +73,9 @@ Deno.serve(async (req) => {
     }
     const targetEmail = parsed.data.email.toLowerCase();
 
-    // Look up target user by email
+    // Look up target user by email (paginate up to 4000 users)
     let targetUserId: string | null = null;
-    let page = 1;
-    while (page <= 20) {
+    for (let page = 1; page <= 20; page++) {
       const { data: list, error: listErr } = await admin.auth.admin.listUsers({
         page,
         perPage: 200,
@@ -75,12 +87,10 @@ Deno.serve(async (req) => {
         break;
       }
       if (list.users.length < 200) break;
-      page += 1;
     }
 
     // Always return generic success to avoid revealing account existence
     if (!targetUserId) {
-      // Audit attempt
       await admin.from('audit_logs').insert({
         user_id: userData.user.id,
         action: 'admin_signout_all_sessions_no_match',
@@ -123,11 +133,3 @@ Deno.serve(async (req) => {
     });
   }
 });
-
-async function hashEmail(email: string): Promise<string> {
-  const buf = new TextEncoder().encode(email);
-  const digest = await crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
