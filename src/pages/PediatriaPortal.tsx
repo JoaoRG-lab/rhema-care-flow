@@ -278,7 +278,96 @@ export default function PediatriaPortal() {
             </p>
           </div>
 
-          {loading ? (
+          {/* Category breakdown */}
+          {!loading && categoryCounts.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Filtrar por categoria · SBP / AAP
+                </p>
+                <Link
+                  to="/learn/pediatrics"
+                  className="text-xs font-medium hover:underline inline-flex items-center gap-1"
+                  style={{ color: PEDIA_COLOR }}
+                >
+                  Ver tudo na biblioteca
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('all')}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition-all ${
+                    activeCategory === 'all'
+                      ? 'border-transparent text-white shadow-sm'
+                      : 'bg-card border-border hover:border-primary/40'
+                  }`}
+                  style={
+                    activeCategory === 'all'
+                      ? { backgroundColor: PEDIA_COLOR }
+                      : undefined
+                  }
+                >
+                  Todos
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                      activeCategory === 'all'
+                        ? 'bg-white/20'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {allPediatric.length}
+                  </span>
+                </button>
+                {categoryCounts.map(([cat, count]) => {
+                  const active = activeCategory === cat;
+                  return (
+                    <div key={cat} className="inline-flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => setActiveCategory(cat)}
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-l-full text-sm border-y border-l transition-all ${
+                          active
+                            ? 'border-transparent text-white shadow-sm'
+                            : 'bg-card border-border hover:border-primary/40'
+                        }`}
+                        style={active ? { backgroundColor: PEDIA_COLOR } : undefined}
+                      >
+                        {cat}
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                            active ? 'bg-white/20' : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                      <Link
+                        to={`/learn/pediatrics?category=${encodeURIComponent(cat)}`}
+                        aria-label={`Abrir ${cat} na biblioteca completa`}
+                        className={`px-2 py-1.5 rounded-r-full text-xs border-y border-r transition-all ${
+                          active
+                            ? 'text-white border-transparent'
+                            : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
+                        }`}
+                        style={active ? { backgroundColor: PEDIA_COLOR } : undefined}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+              {activeCategory !== 'all' && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  Mostrando <span className="font-medium text-foreground">{filteredPediatric.length}</span>{' '}
+                  publicações em <span className="font-medium text-foreground">{activeCategory}</span>.
+                </p>
+              )}
+            </div>
+          )}
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-48 rounded-xl" />
