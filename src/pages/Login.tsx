@@ -11,6 +11,7 @@ import { TrustBadge } from '@/components/brand/TrustBadges';
 import { Loader2, Shield, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { safeRedirect } from '@/lib/safeRedirect';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -23,7 +24,10 @@ export default function Login() {
   const { signIn, resetPassword } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get('redirect') || '/dashboard';
+  // Validated: only same-origin root-relative paths are accepted; anything
+  // suspicious (absolute URLs, protocol-relative, encoded tricks) falls back
+  // to /dashboard to prevent open-redirect attacks.
+  const redirectTo = safeRedirect(searchParams.get('redirect'));
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,13 +61,6 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Persist the intended redirect so it survives the OAuth round trip
-      // even if the provider strips/normalizes the callback query string.
-      try {
-        sessionStorage.setItem('uhs_post_login_redirect', redirectTo);
-      } catch {
-        /* sessionStorage may be unavailable in some embeds */
-      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

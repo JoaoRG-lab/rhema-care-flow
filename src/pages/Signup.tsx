@@ -10,6 +10,7 @@ import { TrustBadge } from '@/components/brand/TrustBadges';
 import { Loader2, Shield, Lock, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { safeRedirect, buildRedirectQuery } from '@/lib/safeRedirect';
 
 export default function Signup() {
   const [fullName, setFullName] = useState('');
@@ -20,10 +21,10 @@ export default function Signup() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get('redirect') || '/dashboard';
-  const loginHref = redirectTo !== '/dashboard'
-    ? `/login?redirect=${encodeURIComponent(redirectTo)}`
-    : '/login';
+  // Validated: only same-origin root-relative paths are accepted; anything
+  // suspicious falls back to /dashboard to prevent open-redirect attacks.
+  const redirectTo = safeRedirect(searchParams.get('redirect'));
+  const loginHref = `/login${buildRedirectQuery(redirectTo)}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,13 +44,6 @@ export default function Signup() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Persist the intended redirect so it survives the OAuth round trip
-      // even if the provider strips/normalizes the callback query string.
-      try {
-        sessionStorage.setItem('uhs_post_login_redirect', redirectTo);
-      } catch {
-        /* sessionStorage may be unavailable in some embeds */
-      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
