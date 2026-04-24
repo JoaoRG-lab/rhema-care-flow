@@ -92,6 +92,19 @@ const conditions = [
 ];
 
 export default function PediatriaPortal() {
+  const { content, loading } = usePublicEducationContent();
+  const pediatricContent = useMemo(
+    () =>
+      content
+        .filter(
+          (c) =>
+            c.specialty?.toLowerCase() === 'pediatrics' ||
+            c.specialty?.toLowerCase() === 'pediatria',
+        )
+        .slice(0, 9),
+    [content],
+  );
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
