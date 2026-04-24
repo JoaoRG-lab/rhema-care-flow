@@ -64,7 +64,7 @@ export async function sendEmail(
       text: params.text,
       // Resend SDK accepts these but its TS types are narrower than reality.
       attachments: params.attachments as never,
-      reply_to: params.reply_to as never,
+      replyTo: params.reply_to as never,
     });
 
     if (error) {
