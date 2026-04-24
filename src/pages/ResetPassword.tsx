@@ -7,7 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Lock, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Lock, Clock, CheckCircle2, AlertCircle, HelpCircle, Mail } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { toast } from 'sonner';
 
 type LinkStatus = 'validating' | 'ready' | 'expired';
