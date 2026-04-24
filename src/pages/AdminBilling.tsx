@@ -59,6 +59,12 @@ const statusVariant = (s: string): "default" | "secondary" | "destructive" | "ou
   return "destructive";
 };
 
+interface ProfileRow {
+  user_id: string;
+  full_name: string | null;
+  institution: string | null;
+}
+
 export default function AdminBilling() {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [tab, setTab] = useState("transactions");
@@ -67,6 +73,8 @@ export default function AdminBilling() {
   const [transactions, setTransactions] = useState<PaymentRow[]>([]);
   const [credits, setCredits] = useState<CreditsRow[]>([]);
   const [idem, setIdem] = useState<IdemRow[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string | null } | null>(null);
 
   const load = async () => {
     setLoading(true);
