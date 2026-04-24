@@ -59,9 +59,23 @@ serve(async (req) => {
     }
     const userId = userData.user.id;
 
-    // 2) Server-side credit/quota gate using service role (bypasses RLS, atomic)
+    // 2) Idempotency key — debit at most once per request id
+    const idempotencyKey =
+      req.headers.get("x-idempotency-key")?.trim().slice(0, 128) || crypto.randomUUID();
+
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Look up any existing record for this (user, key)
+    const { data: existing } = await admin
+      .from("ai_assistant_idempotency")
+      .select("debited, debit_source")
+      .eq("user_id", userId)
+      .eq("idempotency_key", idempotencyKey)
+      .maybeSingle();
+
+    const alreadyDebited = !!existing?.debited;
+
+    // 3) Server-side credit/quota gate
     const { data: row } = await admin
       .from("user_ai_credits")
       .select("credits_balance, free_quota_used, free_quota_limit")
@@ -71,12 +85,10 @@ serve(async (req) => {
     let useFreeQuota = false;
     let useCredits = false;
 
-    if (!row) {
-      // First-time user — initialize and consume 1 free use
-      await admin.from("user_ai_credits").insert({
-        user_id: userId,
-        free_quota_used: 1,
-      });
+    if (alreadyDebited) {
+      // Replay of a previously-debited request: skip gate + skip debit.
+      // (We still call the AI so the client gets a response.)
+    } else if (!row) {
       useFreeQuota = true;
     } else if (row.free_quota_used < row.free_quota_limit) {
       useFreeQuota = true;
@@ -92,7 +104,19 @@ serve(async (req) => {
       );
     }
 
-    // 3) Call AI gateway
+    // 4) Reserve the idempotency key BEFORE calling the AI.
+    // Insert with debited=false; UNIQUE(user_id, idempotency_key) prevents races.
+    if (!existing) {
+      const { error: reserveErr } = await admin
+        .from("ai_assistant_idempotency")
+        .insert({ user_id: userId, idempotency_key: idempotencyKey, debited: false });
+      // Ignore unique-violation (concurrent request with same key) — treat as in-flight replay
+      if (reserveErr && !`${reserveErr.message}`.toLowerCase().includes("duplicate")) {
+        console.error("Idempotency reserve error:", reserveErr);
+      }
+    }
+
+    // 5) Call AI gateway
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -114,7 +138,7 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      // AI call failed — do NOT consume the user's credit
+      // AI call failed — do NOT debit. Idempotency row stays debited=false so a retry can succeed.
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
@@ -135,23 +159,49 @@ serve(async (req) => {
       );
     }
 
-    // 4) AI call succeeded — deduct now (only existing users; new users already incremented)
-    if (row) {
-      if (useFreeQuota) {
-        await admin
-          .from("user_ai_credits")
-          .update({ free_quota_used: row.free_quota_used + 1 })
-          .eq("user_id", userId);
-      } else if (useCredits) {
-        await admin
-          .from("user_ai_credits")
-          .update({ credits_balance: row.credits_balance - 1 })
-          .eq("user_id", userId);
+    // 6) AI call succeeded — debit exactly once, gated by the idempotency row.
+    if (!alreadyDebited) {
+      // Atomically flip debited from false→true. If another concurrent request
+      // already flipped it, .eq("debited", false) matches 0 rows and we skip the debit.
+      const { data: claimed, error: claimErr } = await admin
+        .from("ai_assistant_idempotency")
+        .update({
+          debited: true,
+          debit_source: useFreeQuota ? "free_quota" : useCredits ? "credits" : "none",
+        })
+        .eq("user_id", userId)
+        .eq("idempotency_key", idempotencyKey)
+        .eq("debited", false)
+        .select("id")
+        .maybeSingle();
+
+      if (!claimErr && claimed) {
+        if (!row) {
+          // First-time user — create row with 1 free use already counted
+          await admin.from("user_ai_credits").insert({
+            user_id: userId,
+            free_quota_used: 1,
+          });
+        } else if (useFreeQuota) {
+          await admin
+            .from("user_ai_credits")
+            .update({ free_quota_used: row.free_quota_used + 1 })
+            .eq("user_id", userId);
+        } else if (useCredits) {
+          await admin
+            .from("user_ai_credits")
+            .update({ credits_balance: row.credits_balance - 1 })
+            .eq("user_id", userId);
+        }
       }
     }
 
     return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "x-idempotency-key": idempotencyKey,
+      },
     });
   } catch (error) {
     console.error("AI assistant error:", error);
