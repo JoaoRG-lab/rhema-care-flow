@@ -100,6 +100,12 @@ export default function LearnPediatrics() {
     if (match) setViewing(match);
   }, [searchParams, content]);
 
+  // Pre-select category from ?category=
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat) setSelectedCategory(cat);
+  }, [searchParams]);
+
   const pediatricContent = useMemo(
     () =>
       content.filter(
