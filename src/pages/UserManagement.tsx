@@ -6,7 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, Mail, Loader2, ShieldAlert } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Shield, Mail, Loader2, ShieldAlert, LogOut } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,7 +26,9 @@ export default function UserManagement() {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [email, setEmail] = useState('josegriloj@gmail.com');
   const [sending, setSending] = useState(false);
+  const [revoking, setRevoking] = useState(false);
   const [lastSentTo, setLastSentTo] = useState<string | null>(null);
+  const [lastRevokedFor, setLastRevokedFor] = useState<string | null>(null);
 
   if (roleLoading) {
     return (
@@ -31,33 +44,60 @@ export default function UserManagement() {
     return <Navigate to="/dashboard" replace />;
   }
 
+  const validateEmail = (raw: string): string | null => {
+    const trimmed = raw.trim().toLowerCase();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return null;
+    return trimmed;
+  };
+
   const handleSendReset = async () => {
-    const trimmed = email.trim().toLowerCase();
-    if (!trimmed || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(trimmed)) {
-      toast.error('Enter a valid email address');
-      return;
-    }
+    const target = validateEmail(email);
+    if (!target) return toast.error('Enter a valid email address');
 
     setSending(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      const { error } = await supabase.auth.resetPasswordForEmail(target, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-
-      // Note: Supabase intentionally does not reveal whether the account exists.
-      // We always show a generic confirmation to avoid account enumeration.
-      if (error && error.message && !/rate/i.test(error.message)) {
-        // Surface only non-sensitive errors (e.g. rate limit), keep details minimal
+      if (error && !/rate/i.test(error.message)) {
         console.error('Password reset error:', error);
       }
-
-      setLastSentTo(trimmed);
+      setLastSentTo(target);
       toast.success('Password reset email dispatched (if the account exists).');
     } catch (err) {
       console.error(err);
       toast.error('Could not dispatch reset email. Try again shortly.');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleRevokeSessions = async () => {
+    const target = validateEmail(email);
+    if (!target) return toast.error('Enter a valid email address');
+
+    setRevoking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'admin-signout-all-sessions',
+        { body: { email: target } }
+      );
+      if (error) {
+        console.error(error);
+        toast.error('Could not revoke sessions. Check your admin permissions.');
+        return;
+      }
+      if (data?.success) {
+        setLastRevokedFor(target);
+        toast.success('All sessions revoked (if the account exists).');
+      } else {
+        toast.error('Unexpected response from server.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Could not revoke sessions. Try again shortly.');
+    } finally {
+      setRevoking(false);
     }
   };
 
@@ -90,8 +130,8 @@ export default function UserManagement() {
               Send password reset email
             </CardTitle>
             <CardDescription>
-              Triggers Supabase's standard recovery email. The user must click
-              the link in their inbox to choose a new password.
+              Triggers the standard recovery email. The user must click the link
+              in their inbox to choose a new password.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -107,7 +147,7 @@ export default function UserManagement() {
               />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Button onClick={handleSendReset} disabled={sending}>
                 {sending ? (
                   <>
@@ -124,6 +164,77 @@ export default function UserManagement() {
               {lastSentTo && (
                 <span className="text-sm text-muted-foreground">
                   Last dispatch: {lastSentTo}
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-destructive/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LogOut className="h-5 w-5 text-destructive" />
+              Log out all sessions
+            </CardTitle>
+            <CardDescription>
+              Revokes every active session and refresh token for the user.
+              Recommended immediately after issuing a password reset to
+              minimize account-takeover risk if the old credentials were
+              compromised.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert variant="destructive">
+              <ShieldAlert className="h-4 w-4" />
+              <AlertDescription>
+                This will sign the user out of every device. They'll need to
+                log in again — and after a password reset, they'll only be
+                able to log in once they've set their new password.
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={revoking}>
+                    {revoking ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Revoking...
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Log out all sessions
+                      </>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Revoke all sessions?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will immediately sign <span className="font-medium">{email || 'this user'}</span>{' '}
+                      out of every device and invalidate all refresh tokens.
+                      This action cannot be undone and will be recorded in the
+                      audit log.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleRevokeSessions}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Yes, revoke all sessions
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              {lastRevokedFor && (
+                <span className="text-sm text-muted-foreground">
+                  Last revoke: {lastRevokedFor}
                 </span>
               )}
             </div>
