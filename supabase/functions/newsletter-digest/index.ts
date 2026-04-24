@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createResendClient, sendEmail } from "../_shared/resend.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -335,31 +336,23 @@ Deno.serve(async (req) => {
     let emailSent = false;
     if (RESEND_API_KEY) {
       try {
-        const emailRes = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            from: "UHS Health OS <onboarding@resend.dev>",
-            to: [recipientEmail],
-            subject,
-            html,
-            text,
-          }),
+        const emailResult = await sendEmail(createResendClient(), {
+          from: "UHS Health OS <onboarding@resend.dev>",
+          to: recipientEmail,
+          subject,
+          html,
+          text,
         });
 
-        if (emailRes.ok) {
+        if (emailResult.ok) {
           emailSent = true;
           await supabase
             .from("newsletter_digests")
             .update({ status: "sent", sent_at: new Date().toISOString() })
             .eq("id", digest.id);
-          console.log(`📧 Email sent to ${recipientEmail}`);
+          console.log(`📧 Email sent to ${recipientEmail} (id=${emailResult.id})`);
         } else {
-          const errBody = await emailRes.text();
-          console.error(`Email send failed [${emailRes.status}]:`, errBody);
+          console.error(`Email send failed:`, emailResult.error, emailResult.details);
           await supabase
             .from("newsletter_digests")
             .update({ status: "failed" })
