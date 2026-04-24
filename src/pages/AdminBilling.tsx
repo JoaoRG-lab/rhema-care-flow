@@ -371,7 +371,19 @@ export default function AdminBilling() {
                         <TableCell className="text-xs whitespace-nowrap">
                           {fmtDate(t.created_at)}
                         </TableCell>
-                        <TableCell className="font-mono text-xs">{short(t.user_id)}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <button
+                            onClick={() =>
+                              setSelectedUser({
+                                id: t.user_id,
+                                name: profiles[t.user_id]?.full_name ?? null,
+                              })
+                            }
+                            className="hover:text-primary hover:underline"
+                          >
+                            {short(t.user_id)}
+                          </button>
+                        </TableCell>
                         <TableCell className="text-sm">{t.package_label ?? "—"}</TableCell>
                         <TableCell className="text-right font-medium">
                           {brl(Number(t.amount_brl))}
