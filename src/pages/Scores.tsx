@@ -144,10 +144,18 @@ import { toast } from 'sonner';
         return <WHOGrowthCalculator />;
       case 'pedi-dose':
         return <PediatricDoseCalculator />;
+      case 'bishop':
+        return <BishopScoreCalculator />;
+      case 'gestational-age':
+        return <GestationalAgeCalculator />;
+      case 'preeclampsia-risk':
+        return <PreeclampsiaRiskCalculator />;
+      case 'pregnancy-bmi':
+        return <PregnancyBMICalculator />;
       default:
         return null;
     }
-   };
+  };
  
    const selectedCalc = selectedCalculator ? CALCULATORS.find(c => c.id === selectedCalculator) : null;
  
