@@ -37,6 +37,7 @@ import { cn } from '@/lib/utils';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PersonaSwitcher } from './PersonaSwitcher';
+import { SpecialtyQuickSwitcher } from './SpecialtyQuickSwitcher';
 import { UHSLogoMark } from '@/components/brand/UHSLogo';
 import { TrustBadge } from '@/components/brand/TrustBadges';
 import {
@@ -141,6 +142,11 @@ export function AppSidebar() {
       {/* Persona Switcher */}
       <div className="border-b border-sidebar-border">
         <PersonaSwitcher variant="sidebar" />
+      </div>
+
+      {/* Specialty Quick Switcher */}
+      <div className="px-3 py-3 border-b border-sidebar-border">
+        <SpecialtyQuickSwitcher />
       </div>
 
       {/* Navigation */}
