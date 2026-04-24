@@ -254,6 +254,47 @@ export default function AdminBilling() {
           </div>
         </div>
 
+        {/* User search results */}
+        {userSearchResults.length > 0 && (
+          <Card className="p-3">
+            <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5" />
+              Resultados de usuários ({userSearchResults.length})
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {userSearchResults.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() =>
+                    setSelectedUser({ id: u.id, name: u.profile?.full_name ?? null })
+                  }
+                  className="flex items-center justify-between gap-3 rounded-md border p-2.5 text-left transition-colors hover:bg-accent"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">
+                      {u.profile?.full_name ?? "(sem nome)"}
+                    </div>
+                    <div className="font-mono text-xs text-muted-foreground truncate">
+                      {short(u.id)}
+                    </div>
+                    {u.profile?.institution && (
+                      <div className="text-xs text-muted-foreground truncate">
+                        {u.profile.institution}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right text-xs shrink-0">
+                    <div className="font-bold text-primary">{u.balance} créd.</div>
+                    <div className="text-muted-foreground">
+                      {u.txCount} pag · {u.reqCount} req
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card className="p-4">
