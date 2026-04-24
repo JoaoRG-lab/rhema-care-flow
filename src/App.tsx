@@ -126,6 +126,9 @@ const queryClient = new QueryClient();
                     <Route path="/urv" element={<UrvPage />} />
                     <Route path="/reumato" element={<ReumatoPortal />} />
                     <Route path="/pediatria" element={<PediatriaPortal />} />
+                    <Route path="/ginecologia" element={<GinecologiaPortal />} />
+                    <Route path="/gineco-obstetricia" element={<Navigate to="/ginecologia" replace />} />
+                    <Route path="/obstetricia" element={<Navigate to="/ginecologia" replace />} />
                     <Route path="/especialidades" element={<SpecialtyPortal />} />
                     <Route path="/specialty/:specialtyId" element={<SpecialtyPortal />} />
                     <Route path="/ai-research" element={<ProtectedRoute><AIResearch /></ProtectedRoute>} />
