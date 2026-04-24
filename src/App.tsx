@@ -118,6 +118,7 @@ const queryClient = new QueryClient();
                     <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
                     <Route path="/knowledge" element={<ProtectedRoute><KnowledgeLibrary /></ProtectedRoute>} />
                     <Route path="/learn" element={<PatientEducationLibrary />} />
+                    <Route path="/learn/pediatrics" element={<LearnPediatrics />} />
                     <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                     <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
                     <Route path="/blockchain" element={<ProtectedRoute><BlockchainRegistry /></ProtectedRoute>} />
