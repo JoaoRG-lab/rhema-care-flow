@@ -220,6 +220,8 @@ export default function ForgotPassword() {
                   onClick={() => {
                     setStatus('idle');
                     setSentAt(null);
+                    setCooldown(0);
+                    try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
                   }}
                 >
                   Use a different email
