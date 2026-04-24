@@ -20,6 +20,7 @@ interface SpecialtyPortalTemplateProps {
 
 export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplateProps) {
   const Icon = specialty.icon;
+  const redirectParam = `?redirect=${encodeURIComponent(`/specialty/${specialty.id}`)}`;
 
   return (
     <div className="min-h-screen bg-background">
