@@ -32,7 +32,21 @@ import {
   Search,
   Tag,
   X,
+  FileText,
+  Video,
+  Image as ImageIcon,
+  HelpCircle,
+  Sparkles,
 } from 'lucide-react';
+import type { ContentType } from '@/types/education';
+
+const TYPE_ICONS: Record<ContentType, typeof FileText> = {
+  article: FileText,
+  video: Video,
+  infographic: ImageIcon,
+  guide: BookOpen,
+  faq: HelpCircle,
+};
 
 const PEDIA_COLOR = 'hsl(195 75% 55%)';
 const PEDIA_GRADIENT = 'from-[hsl(195_75%_55%)] to-[hsl(210_70%_60%)]';
@@ -527,7 +541,9 @@ export default function PediatriaPortal() {
           ) : (
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pediatricContent.map((item) => (
+                {pediatricContent.map((item) => {
+                  const TypeIcon = TYPE_ICONS[item.content_type as ContentType] || FileText;
+                  return (
                   <Link
                     key={item.id}
                     to="/learn/pediatrics"
@@ -542,13 +558,17 @@ export default function PediatriaPortal() {
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <Badge
                             variant="secondary"
-                            className="text-xs"
+                            className="text-xs gap-1"
                             style={{ backgroundColor: `${PEDIA_COLOR}15`, color: PEDIA_COLOR }}
                           >
+                            <TypeIcon className="h-3 w-3" />
                             {item.category}
                           </Badge>
                           {item.is_featured && (
-                            <Badge variant="default" className="text-xs">Destaque</Badge>
+                            <Badge variant="default" className="text-xs gap-1">
+                              <Sparkles className="h-3 w-3" />
+                              Destaque
+                            </Badge>
                           )}
                         </div>
                         <CardTitle className="text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
@@ -589,7 +609,8 @@ export default function PediatriaPortal() {
                       </CardContent>
                     </Card>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="text-center mt-10">
