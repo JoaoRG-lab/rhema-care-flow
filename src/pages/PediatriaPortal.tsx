@@ -32,7 +32,21 @@ import {
   Search,
   Tag,
   X,
+  FileText,
+  Video,
+  Image as ImageIcon,
+  HelpCircle,
+  Sparkles,
 } from 'lucide-react';
+import type { ContentType } from '@/types/education';
+
+const TYPE_ICONS: Record<ContentType, typeof FileText> = {
+  article: FileText,
+  video: Video,
+  infographic: ImageIcon,
+  guide: BookOpen,
+  faq: HelpCircle,
+};
 
 const PEDIA_COLOR = 'hsl(195 75% 55%)';
 const PEDIA_GRADIENT = 'from-[hsl(195_75%_55%)] to-[hsl(210_70%_60%)]';
