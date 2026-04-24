@@ -29,7 +29,8 @@ export function isSafeInternalPath(value: unknown): value is string {
 
   // Reject any control characters or whitespace anywhere in the string.
   // \u0000-\u001F (controls), \u007F (DEL), and ASCII whitespace.
-  if (/[\u0000-\u001F\u007F\s]/.test(value)) return false;
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001F\u007F]/.test(value) || /\s/.test(value)) return false;
 
   // Decode common percent-encoded variants so attackers can't bypass the
   // structural checks below (e.g. "%2F%2Fevil.com" → "//evil.com").
@@ -53,7 +54,7 @@ export function isSafeInternalPath(value: unknown): value is string {
 
   // Reject any scheme-like prefix and any embedded scheme separator
   // (covers "/x?next=https://evil" attempts at downstream re-redirects too).
-  if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(decoded)) return false;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(decoded)) return false;
   if (decoded.includes('://')) return false;
 
   // Disallow embedded credentials or hostnames smuggled via "@".

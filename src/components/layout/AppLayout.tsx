@@ -4,6 +4,7 @@ import { MobileHeader } from './MobileHeader';
 import { MobileSidebar } from './MobileSidebar';
 import { BottomNavBar } from './BottomNavBar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAccountType } from '@/contexts/AccountTypeContext';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -12,6 +13,8 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isClinician } = useAccountType();
+  const mobilePt = isClinician ? 'pt-[6.5rem]' : 'pt-16';
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,7 +33,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <main
         className={
           isMobile
-            ? 'pt-[6.5rem] pb-20 min-h-screen'   /* top: header + specialty bar; bottom: BottomNavBar */
+            ? `${mobilePt} pb-20 min-h-screen`   /* top: header + specialty bar; bottom: BottomNavBar */
             : 'ml-64 min-h-screen'
         }
       >

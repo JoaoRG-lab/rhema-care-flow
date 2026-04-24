@@ -116,7 +116,7 @@ export function PEEarlyRiskCalculator() {
               <div key={id as string} className="space-y-1">
                 <Label className="text-xs">{label as string}</Label>
                 <Input type="number" step="0.01" placeholder={hint as string} value={val as string}
-                  onChange={e => (setter as Function)(e.target.value)} />
+                  onChange={e => (setter as (v: string) => void)(e.target.value)} />
                 <p className="text-[10px] text-muted-foreground">{hint as string}</p>
               </div>
             ))}

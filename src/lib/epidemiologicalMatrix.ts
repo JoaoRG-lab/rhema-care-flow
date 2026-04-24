@@ -131,7 +131,7 @@ export function encodeFeatureVector(
         break;
 
       case 'numeric':
-      default:
+      default: {
         const numVal = typeof raw === 'string' ? parseFloat(raw) : raw as number;
         if (isNaN(numVal)) continue;
         encoded = normalizeNumeric(
@@ -140,6 +140,7 @@ export function encodeFeatureVector(
           range?.max ?? 100
         );
         break;
+      }
     }
 
     values.push(encoded);

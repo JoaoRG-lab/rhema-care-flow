@@ -36,8 +36,8 @@ export default function Signup() {
       toast.error(error.message);
       setLoading(false);
     } else {
-      toast.success('Account created! Please check your email to verify.');
-      navigate(loginHref);
+      toast.success('Conta criada! Escolha seu perfil para continuar.');
+      navigate('/onboarding', { replace: true });
     }
   };
 

@@ -137,7 +137,7 @@ export function useAIAssistant() {
 
       // Flush remaining buffer
       if (buffer.trim()) {
-        for (let raw of buffer.split('\n')) {
+        for (const raw of buffer.split('\n')) {
           if (!raw || raw.startsWith(':') || !raw.startsWith('data: ')) continue;
           const jsonStr = raw.slice(6).trim();
           if (jsonStr === '[DONE]') continue;
@@ -145,7 +145,7 @@ export function useAIAssistant() {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) updateAssistant(content);
-          } catch {}
+          } catch { /* no-op */ }
         }
       }
     } catch (error) {

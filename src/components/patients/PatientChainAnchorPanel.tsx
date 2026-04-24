@@ -56,7 +56,7 @@ export function PatientChainAnchorPanel({ patientCardId, patientCode }: Props) {
   });
   const setAck = (v: boolean) => {
     setAcknowledged(v);
-    try { v ? localStorage.setItem(ackKey, "1") : localStorage.removeItem(ackKey); } catch {}
+    try { void (v ? localStorage.setItem(ackKey, "1") : localStorage.removeItem(ackKey)); } catch { /* no-op */ }
     if (!v) setDetailsOpen(false);
   };
 

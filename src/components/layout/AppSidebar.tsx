@@ -33,6 +33,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
 import { usePersona } from '@/contexts/PersonaContext';
+import { useAccountType } from '@/contexts/AccountTypeContext';
 import { cn } from '@/lib/utils';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -91,13 +92,10 @@ export function AppSidebar() {
   const { isAdmin } = useUserRole();
   const { tier, fullName, contributorType } = useVerificationStatus();
   const { persona } = usePersona();
+  const { isClinician, isPatient } = useAccountType();
 
   // Select nav items based on persona
-  const currentNavItems = persona === 'academic' 
-    ? academicNavItems 
-    : persona === 'patient' 
-      ? patientNavItems 
-      : navItems;
+  const currentNavItems = isPatient ? patientNavItems : persona === 'academic' ? academicNavItems : navItems;
 
   // Get initials from name or email
   const getInitials = () => {
@@ -134,7 +132,7 @@ export function AppSidebar() {
         <div>
           <h1 className="font-semibold text-lg text-sidebar-foreground">UHS Health OS</h1>
           <p className="text-xs text-sidebar-foreground/60">
-            {persona === 'academic' ? 'Research Mode' : persona === 'patient' ? 'Patient Portal' : 'Clinical'}
+            {isPatient ? 'Portal do Paciente' : persona === 'academic' ? 'Research Mode' : 'Clinical'}
           </p>
         </div>
       </div>

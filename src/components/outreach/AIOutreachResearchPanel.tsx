@@ -188,7 +188,7 @@ export function AIOutreachResearchPanel({ onComplete }: AIOutreachResearchPanelP
       if (!session) throw new Error('Not authenticated');
 
       const totalCategories = selectedCategories.length;
-      let allResults: ResearchResult = { found: 0, saved: 0, contacts: [], errors: [] };
+      const allResults: ResearchResult = { found: 0, saved: 0, contacts: [], errors: [] };
 
       for (let i = 0; i < selectedCategories.length; i++) {
         const category = selectedCategories[i];

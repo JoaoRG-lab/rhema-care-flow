@@ -17,7 +17,7 @@ function loadState(): ManuscriptState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch { /* no-op */ }
   return {
     title: '',
     articleType: 'original',

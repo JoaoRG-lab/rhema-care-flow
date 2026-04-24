@@ -5,7 +5,9 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
-import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe, Stethoscope, Coins, ChevronRight } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe, Stethoscope, Coins, ChevronRight, Users, HeartPulse } from 'lucide-react';
+import { useAccountType } from '@/contexts/AccountTypeContext';
+import { toast } from 'sonner';
 import { VerifiedBadge, VerificationStatusBadge } from '@/components/ui/VerifiedBadge';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { SpecialtyQuickSwitcher } from '@/components/layout/SpecialtyQuickSwitcher';
@@ -14,6 +16,7 @@ export default function Settings() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { status: verificationStatusValue, tier, loading } = useVerificationStatus();
+  const { setAccountType, isClinician, isPatient } = useAccountType();
 
   return (
     <AppLayout>
@@ -64,6 +67,34 @@ export default function Settings() {
             </CardHeader>
             <CardContent>
               <LanguageSelector variant="full" />
+            </CardContent>
+          </Card>
+
+
+          {/* Account Type */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Tipo de Conta
+              </CardTitle>
+              <CardDescription>Alterne entre perfil de Profissional de Saúde e Paciente.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={async () => { await setAccountType('clinician'); toast.success('Perfil: Profissional de Saúde'); }}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isClinician ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/30'}`}>
+                  <Stethoscope className={`h-6 w-6 ${isClinician ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <span className={`text-sm font-medium ${isClinician ? 'text-primary' : 'text-muted-foreground'}`}>Profissional</span>
+                  {isClinician && <span className="text-xs text-primary">Ativo</span>}
+                </button>
+                <button onClick={async () => { await setAccountType('patient'); toast.success('Perfil: Paciente'); }}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isPatient ? 'border-[hsl(335_65%_55%)] bg-[hsl(335_65%_55%)]/5' : 'border-border hover:bg-accent/30'}`}>
+                  <HeartPulse className={`h-6 w-6 ${isPatient ? 'text-[hsl(335_65%_55%)]' : 'text-muted-foreground'}`} />
+                  <span className={`text-sm font-medium ${isPatient ? 'text-[hsl(335_65%_55%)]' : 'text-muted-foreground'}`}>Paciente</span>
+                  {isPatient && <span className="text-xs text-[hsl(335_65%_55%)]">Ativo</span>}
+                </button>
+              </div>
             </CardContent>
           </Card>
 

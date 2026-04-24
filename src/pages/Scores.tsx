@@ -173,7 +173,7 @@ import { toast } from 'sonner';
         return <WHOGrowthCalculator />;
       case 'pedi-dose':
         return <PediatricDoseCalculator />;
-      case 'bishop':
+      case 'bishop-score':
         return <BishopScoreCalculator />;
       case 'gestational-age':
         return <GestationalAgeCalculator />;
@@ -201,8 +201,7 @@ import { toast } from 'sonner';
         return <MCHATCalculator />;
       case 'bishop':
         return <BishopCalculator />;
-      case 'gestational-age':
-        return <GestationalAgeCalculator />;
+
       case 'preeclampsia':
         return <PreeclampsiaCalculator />;
       case 'pe-early-risk':

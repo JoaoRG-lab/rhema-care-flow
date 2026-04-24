@@ -107,7 +107,7 @@ export default function SolanaChainDemo() {
 
     setSteps(allSteps);
     const total = allSteps.length;
-    let localChain = { ...chainState, initialized: false, lastScoreHash: new Uint8Array(32), lastScoreU32: 0, updates: [] as ChainState["updates"], records: [] as ChainState["records"] };
+    const localChain = { ...chainState, initialized: false, lastScoreHash: new Uint8Array(32), lastScoreU32: 0, updates: [] as ChainState["updates"], records: [] as ChainState["records"] };
 
     const runStep = async (id: string, fn: () => Promise<{ details: string; hash?: string }>) => {
       updateStep(id, { status: "running" });

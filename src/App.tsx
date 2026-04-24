@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PersonaProvider } from "@/contexts/PersonaContext";
 import { SpecialtyProvider } from "@/contexts/SpecialtyContext";
+import { AccountTypeProvider, useAccountType } from "@/contexts/AccountTypeContext";
 import { useActivityTracker } from "@/hooks/useActivityTracker";
 import { useSiteTracker } from "@/hooks/useSiteTracker";
 
@@ -66,6 +67,7 @@ const CaseStudies = lazy(() => import("./pages/CaseStudies"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const AccountTypeSelect = lazy(() => import("./pages/AccountTypeSelect"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -75,18 +77,40 @@ const queryClient = new QueryClient();
  );
  
  function ProtectedRoute({ children }: { children: React.ReactNode }) {
-   const { user, loading } = useAuth();
-   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-   if (!user) return <Navigate to="/login" replace />;
-   return <>{children}</>;
- }
- 
- function PublicRoute({ children }: { children: React.ReactNode }) {
-   const { user, loading } = useAuth();
-   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-   if (user) return <Navigate to="/dashboard" replace />;
-   return <>{children}</>;
- }
+  const { user, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function ClinicianRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const { accountType, loading: typeLoading } = useAccountType();
+  if (authLoading || typeLoading) return <PageLoader />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!accountType) return <Navigate to="/onboarding" replace />;
+  if (accountType !== 'clinician') return <Navigate to="/patient-portal" replace />;
+  return <>{children}</>;
+}
+
+function PatientRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const { accountType, loading: typeLoading } = useAccountType();
+  if (authLoading || typeLoading) return <PageLoader />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!accountType) return <Navigate to="/onboarding" replace />;
+  if (accountType !== 'patient') return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const { accountType, loading: typeLoading } = useAccountType();
+  if (authLoading || typeLoading) return <PageLoader />;
+  if (!user) return <>{children}</>;
+  if (!accountType) return <Navigate to="/onboarding" replace />;
+  return <Navigate to={accountType === 'patient' ? '/patient-portal' : '/dashboard'} replace />;
+}
  
  const App = () => (
    <QueryClientProvider client={queryClient}>
@@ -95,6 +119,7 @@ const queryClient = new QueryClient();
        <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <AccountTypeProvider>
             <SpecialtyProvider>
             <PersonaProvider>
               <ActivityTracker>
@@ -157,6 +182,7 @@ const queryClient = new QueryClient();
               </ActivityTracker>
             </PersonaProvider>
             </SpecialtyProvider>
+            </AccountTypeProvider>
           </AuthProvider>
         </BrowserRouter>
      </TooltipProvider>

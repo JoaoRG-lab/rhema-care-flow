@@ -40,6 +40,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PersonaSwitcher } from './PersonaSwitcher';
+import { useAccountType } from '@/contexts/AccountTypeContext';
 import { SpecialtyQuickSwitcher } from './SpecialtyQuickSwitcher';
 import { TrustBadge } from '@/components/brand/TrustBadges';
 import { UHSLogoMark } from '@/components/brand/UHSLogo';
@@ -99,13 +100,9 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const { isAdmin } = useUserRole();
   const { tier, fullName, contributorType } = useVerificationStatus();
   const { persona } = usePersona();
+  const { isClinician, isPatient } = useAccountType();
 
-  const currentNavItems =
-    persona === 'academic'
-      ? academicNavItems
-      : persona === 'patient'
-        ? patientNavItems
-        : navItems;
+  const currentNavItems = isPatient ? patientNavItems : persona === 'academic' ? academicNavItems : navItems;
 
   const getInitials = () => {
     if (fullName) return fullName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);

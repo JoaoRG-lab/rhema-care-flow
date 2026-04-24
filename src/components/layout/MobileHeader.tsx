@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { UHSLogoMark } from '@/components/brand/UHSLogo';
 import { SpecialtyQuickSwitcher } from './SpecialtyQuickSwitcher';
 import { usePersona } from '@/contexts/PersonaContext';
+import { useAccountType } from '@/contexts/AccountTypeContext';
 import { Link } from 'react-router-dom';
 
 interface MobileHeaderProps {
@@ -11,9 +12,9 @@ interface MobileHeaderProps {
 
 export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
   const { persona } = usePersona();
+  const { isClinician, isPatient } = useAccountType();
 
-  const modeLabel =
-    persona === 'academic' ? 'Research' : persona === 'patient' ? 'Patient' : 'Clinical';
+  const modeLabel = isPatient ? 'Portal do Paciente' : persona === 'academic' ? 'Research' : 'Clinical';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-sidebar text-sidebar-foreground border-b border-sidebar-border md:hidden">
@@ -58,10 +59,11 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         </div>
       </div>
 
-      {/* Specialty switcher bar — full width below top bar */}
-      <div className="border-t border-sidebar-border/60 px-4 py-2 overflow-x-auto scrollbar-none">
-        <SpecialtyQuickSwitcher compact />
-      </div>
+      {isClinician && (
+        <div className="border-t border-sidebar-border/60 px-4 py-2 overflow-x-auto scrollbar-none">
+          <SpecialtyQuickSwitcher compact />
+        </div>
+      )}
     </header>
   );
 }

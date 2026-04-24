@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePersona } from '@/contexts/PersonaContext';
+import { useAccountType } from '@/contexts/AccountTypeContext';
 
 // ── Tab sets per persona ───────────────────────────────────────────────────────
 const clinicalTabs = [
@@ -36,13 +37,9 @@ const patientTabs = [
 export function BottomNavBar() {
   const location = useLocation();
   const { persona } = usePersona();
+  const { isPatient } = useAccountType();
 
-  const tabs =
-    persona === 'academic'
-      ? academicTabs
-      : persona === 'patient'
-        ? patientTabs
-        : clinicalTabs;
+  const tabs = isPatient ? patientTabs : persona === 'academic' ? academicTabs : clinicalTabs;
 
   return (
     <nav

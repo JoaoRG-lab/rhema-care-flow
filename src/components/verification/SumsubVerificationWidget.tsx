@@ -72,7 +72,7 @@ export function SumsubVerificationWidget({
 
     setStep('widget');
 
-    // @ts-ignore - Sumsub SDK loaded globally
+    // @ts-expect-error - Sumsub SDK loaded globally
     const snsWebSdk = window.snsWebSdk;
     if (!snsWebSdk) {
       setError('Verification service not available');

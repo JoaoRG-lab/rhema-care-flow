@@ -56,7 +56,7 @@ export function useSumsubVerification(): UseSumsubVerificationReturn {
     script.async = true;
     
     script.onload = () => {
-      // @ts-ignore - Sumsub SDK loaded globally
+      // @ts-expect-error - Sumsub SDK loaded globally
       const snsWebSdkInstance = window.snsWebSdk
         .init(tokenData.token, () => getAccessToken(levelName).then(t => t?.token || ''))
         .withConf({
