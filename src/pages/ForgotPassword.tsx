@@ -288,6 +288,7 @@ export default function ForgotPassword() {
               </Alert>
             )}
 
+            {status === 'error' && errorMsg && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" aria-hidden="true" />
                 <AlertTitle>Couldn't send email</AlertTitle>
