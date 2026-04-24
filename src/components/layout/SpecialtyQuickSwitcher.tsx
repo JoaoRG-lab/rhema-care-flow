@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Stethoscope, Check } from 'lucide-react';
 import {
@@ -11,6 +12,26 @@ import {
 import { SPECIALTIES } from '@/config/specialties';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+const STORAGE_KEY = 'uhs:lastSpecialtyId';
+
+/** Read the persisted specialty id (safe in SSR / private mode). */
+function readStoredSpecialty(): string | null {
+  try {
+    return typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Persist the selected specialty id; ignored if storage is unavailable. */
+function writeStoredSpecialty(id: string) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, id);
+  } catch {
+    /* storage disabled — fine, we just won't remember */
+  }
+}
 
 export function SpecialtyQuickSwitcher() {
   const navigate = useNavigate();
@@ -27,9 +48,25 @@ export function SpecialtyQuickSwitcher() {
         ? 'pediatrics'
         : null;
 
-  const current = activeSpecialties.find((s) => s.id === currentId);
+  // Last persisted choice — used as a fallback label so the sidebar "remembers"
+  // the previous specialty after refresh / login even when the user is on a
+  // non-specialty page.
+  const [storedId, setStoredId] = useState<string | null>(() => readStoredSpecialty());
+
+  // Whenever the URL reflects a specialty, treat that as the new last choice.
+  useEffect(() => {
+    if (currentId && currentId !== storedId) {
+      writeStoredSpecialty(currentId);
+      setStoredId(currentId);
+    }
+  }, [currentId, storedId]);
+
+  const displayedId = currentId ?? storedId;
+  const displayed = activeSpecialties.find((s) => s.id === displayedId);
 
   const handleSwitch = (specialtyId: string) => {
+    writeStoredSpecialty(specialtyId);
+    setStoredId(specialtyId);
     const target =
       specialtyId === 'rheumatology'
         ? '/reumato'
@@ -54,7 +91,7 @@ export function SpecialtyQuickSwitcher() {
               Specialty
             </p>
             <p className="text-sm font-medium truncate">
-              {current?.namePt ?? 'Choose specialty'}
+              {displayed?.namePt ?? 'Choose specialty'}
             </p>
           </div>
         </button>
@@ -69,7 +106,7 @@ export function SpecialtyQuickSwitcher() {
         <DropdownMenuSeparator />
         {activeSpecialties.map((sp) => {
           const Icon = sp.icon;
-          const isCurrent = sp.id === currentId;
+          const isCurrent = sp.id === displayedId;
           return (
             <DropdownMenuItem
               key={sp.id}
