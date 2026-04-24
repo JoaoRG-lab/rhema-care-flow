@@ -73,19 +73,21 @@ export function AlphaInvite({ open, onOpenChange }: AlphaInviteProps) {
     setLoading(true);
 
     try {
-      // For now, just simulate success - in production this would go to a dedicated table or email service
-      // The alpha invite data is: formData
-      console.log('Alpha invite request:', formData);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.from('alpha_invites').insert({
+        name: formData.name,
+        email: formData.email,
+        society: formData.society,
+        role: formData.role,
+        institution: formData.institution || null,
+        message: formData.message || null,
+      });
+
+      if (error) throw error;
 
       setSubmitted(true);
       toast.success('Thank you! Your request has been submitted.');
     } catch (err) {
-      console.error('Submit error:', err);
-      toast.success('Thank you! Your request has been submitted.');
-      setSubmitted(true);
+      toast.error('Erro ao enviar — tente novamente');
     } finally {
       setLoading(false);
     }

@@ -21,23 +21,37 @@
    const [loading, setLoading] = useState(true);
  
    useEffect(() => {
-     // Set up auth state listener FIRST
+     let mounted = true;
+     let initialized = false;
+
      const { data: { subscription } } = supabase.auth.onAuthStateChange(
        (_event, session) => {
+         if (!mounted) return;
+         initialized = true;
          setSession(session);
          setUser(session?.user ?? null);
          setLoading(false);
        }
      );
- 
-     // Then get initial session
-     supabase.auth.getSession().then(({ data: { session } }) => {
-       setSession(session);
-       setUser(session?.user ?? null);
-       setLoading(false);
-     });
- 
-     return () => subscription.unsubscribe();
+
+     supabase.auth.getSession()
+       .then(({ data: { session } }) => {
+         if (!mounted || initialized) return;
+         initialized = true;
+         setSession(session);
+         setUser(session?.user ?? null);
+         setLoading(false);
+       })
+       .catch((err) => {
+         console.error('Failed to load initial session:', err);
+         if (!mounted) return;
+         setLoading(false);
+       });
+
+     return () => {
+       mounted = false;
+       subscription.unsubscribe();
+     };
    }, []);
  
    const signUp = async (email: string, password: string, fullName?: string) => {
