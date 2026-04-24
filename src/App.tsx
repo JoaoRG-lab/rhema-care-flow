@@ -58,6 +58,7 @@ const AboutManifest = lazy(() => import("./pages/AboutManifest"));
 const SiteAnalytics = lazy(() => import("./pages/SiteAnalytics"));
 const CaseStudies = lazy(() => import("./pages/CaseStudies"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -109,6 +110,7 @@ const queryClient = new QueryClient();
                     <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/academic" element={<ProtectedRoute><AcademicWorkspace /></ProtectedRoute>} />
                     <Route path="/patient-portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
                     <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
