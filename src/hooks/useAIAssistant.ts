@@ -18,43 +18,11 @@ export function useAIAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
 
-  const consumeCredit = useCallback(async (): Promise<boolean> => {
-    if (!user) return true; // public/unauth flows handled elsewhere
-    const { data: row } = await supabase
-      .from('user_ai_credits')
-      .select('credits_balance, free_quota_used, free_quota_limit')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (!row) {
-      await supabase.from('user_ai_credits').insert({ user_id: user.id, free_quota_used: 1 });
-      return true;
-    }
-    if (row.free_quota_used < row.free_quota_limit) {
-      await supabase
-        .from('user_ai_credits')
-        .update({ free_quota_used: row.free_quota_used + 1 })
-        .eq('user_id', user.id);
-      return true;
-    }
-    if (row.credits_balance > 0) {
-      await supabase
-        .from('user_ai_credits')
-        .update({ credits_balance: row.credits_balance - 1 })
-        .eq('user_id', user.id);
-      return true;
-    }
-    return false;
-  }, [user]);
-
   const sendMessage = useCallback(async (input: string) => {
     if (!input.trim() || isLoading) return;
 
-    // Quota / credits check
-    const allowed = await consumeCredit();
-    if (!allowed) {
-      setPaywallOpen(true);
-      toast.error('Cota grátis esgotada. Compre créditos via PIX para continuar.');
+    if (!user) {
+      toast.error('Faça login para usar o assistente.');
       return;
     }
 
@@ -97,11 +65,20 @@ export function useAIAssistant() {
         content: m.content,
       }));
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch(AI_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({ messages: conversationHistory }),
       });
@@ -109,11 +86,14 @@ export function useAIAssistant() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         if (response.status === 429) {
-          toast.error('Rate limit exceeded. Please wait a moment and try again.');
+          toast.error('Limite de requisições. Aguarde um momento.');
         } else if (response.status === 402) {
-          toast.error('AI credits exhausted. Please add credits to continue.');
+          setPaywallOpen(true);
+          toast.error(errorData.error || 'Cota grátis esgotada. Compre créditos via PIX.');
+        } else if (response.status === 401) {
+          toast.error('Faça login para usar o assistente.');
         } else {
-          toast.error(errorData.error || 'Failed to get AI response');
+          toast.error(errorData.error || 'Falha ao obter resposta da IA');
         }
         setIsLoading(false);
         return;
@@ -173,7 +153,7 @@ export function useAIAssistant() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading, consumeCredit]);
+  }, [messages, isLoading, user]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
