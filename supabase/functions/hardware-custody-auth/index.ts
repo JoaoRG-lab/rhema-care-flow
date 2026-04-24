@@ -70,7 +70,7 @@ async function verifyEd25519Signature(
 
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      publicKeyBytes,
+      publicKeyBytes as BufferSource,
       { name: 'Ed25519' },
       false,
       ['verify']
