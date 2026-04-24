@@ -40,23 +40,24 @@ export function isSafeInternalPath(value: unknown): value is string {
     return false;
   }
 
-  // Normalize backslashes to forward slashes (mirrors browser behavior on
-  // some platforms where "\\evil.com" is treated as "//evil.com").
-  const normalized = decoded.replace(/\\/g, '/');
+  // Reject any backslash anywhere — some browsers normalize "\" to "/", which
+  // would let "\evil.com" or "/\evil.com" become a protocol-relative URL.
+  // Legitimate internal paths never contain backslashes.
+  if (decoded.includes('\\')) return false;
 
   // Must be a single root-relative path.
-  if (!normalized.startsWith('/')) return false;
+  if (!decoded.startsWith('/')) return false;
 
-  // Reject protocol-relative ("//host") and any scheme-like prefix.
-  if (normalized.startsWith('//')) return false;
+  // Reject protocol-relative ("//host") forms.
+  if (decoded.startsWith('//')) return false;
 
-  // Reject anything that contains a scheme separator anywhere
+  // Reject any scheme-like prefix and any embedded scheme separator
   // (covers "/x?next=https://evil" attempts at downstream re-redirects too).
-  if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(normalized)) return false;
-  if (normalized.includes('://')) return false;
+  if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(decoded)) return false;
+  if (decoded.includes('://')) return false;
 
   // Disallow embedded credentials or hostnames smuggled via "@".
-  if (normalized.includes('@')) return false;
+  if (decoded.includes('@')) return false;
 
   return true;
 }
