@@ -65,11 +65,20 @@ export function useAIAssistant() {
         content: m.content,
       }));
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch(AI_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({ messages: conversationHistory }),
       });
@@ -77,11 +86,14 @@ export function useAIAssistant() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         if (response.status === 429) {
-          toast.error('Rate limit exceeded. Please wait a moment and try again.');
+          toast.error('Limite de requisições. Aguarde um momento.');
         } else if (response.status === 402) {
-          toast.error('AI credits exhausted. Please add credits to continue.');
+          setPaywallOpen(true);
+          toast.error(errorData.error || 'Cota grátis esgotada. Compre créditos via PIX.');
+        } else if (response.status === 401) {
+          toast.error('Faça login para usar o assistente.');
         } else {
-          toast.error(errorData.error || 'Failed to get AI response');
+          toast.error(errorData.error || 'Falha ao obter resposta da IA');
         }
         setIsLoading(false);
         return;
