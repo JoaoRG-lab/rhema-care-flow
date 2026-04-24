@@ -609,7 +609,8 @@ export default function PediatriaPortal() {
                       </CardContent>
                     </Card>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="text-center mt-10">
