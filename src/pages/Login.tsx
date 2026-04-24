@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,8 @@ export default function Login() {
   const [resetLoading, setResetLoading] = useState(false);
   const { signIn, resetPassword } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +50,7 @@ export default function Login() {
       setLoading(false);
     } else {
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      navigate(redirectTo);
     }
   };
 
@@ -56,7 +58,7 @@ export default function Login() {
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}${redirectTo}`,
       });
       if (error) {
         toast.error(error.message);

@@ -100,19 +100,25 @@ export function SpecialtyQuickSwitcher() {
   const handleSwitch = (specialtyId: string) => {
     writeStoredSpecialty(specialtyId);
     setStoredId(specialtyId);
-    if (user) {
-      supabase
-        .from('profiles')
-        .update({ preferred_specialty: specialtyId })
-        .eq('user_id', user.id)
-        .then(() => {});
-    }
     const target =
       specialtyId === 'rheumatology'
         ? '/reumato'
         : specialtyId === 'pediatrics'
           ? '/pediatria'
           : `/specialty/${specialtyId}`;
+
+    // If not authenticated, send to login and continue to the specialty after sign-in.
+    if (!user) {
+      toast.info('Please sign in to continue to your specialty');
+      navigate(`/login?redirect=${encodeURIComponent(target)}`);
+      return;
+    }
+
+    supabase
+      .from('profiles')
+      .update({ preferred_specialty: specialtyId })
+      .eq('user_id', user.id)
+      .then(() => {});
     navigate(target);
     const sp = activeSpecialties.find((s) => s.id === specialtyId);
     if (sp) toast.success(`Switched to ${sp.namePt}`);
