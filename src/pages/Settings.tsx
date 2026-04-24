@@ -49,6 +49,22 @@ export default function Settings() {
             </CardContent>
           </Card>
 
+          {/* Specialty Switcher */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Stethoscope className="h-4 w-4" />
+                Specialty
+              </CardTitle>
+              <CardDescription>
+                Switch instantly between your active medical specialty workspaces
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SpecialtyQuickSwitcher />
+            </CardContent>
+          </Card>
+
           {/* Verification Status Card */}
           <Card>
             <CardHeader>
