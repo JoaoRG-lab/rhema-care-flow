@@ -3,6 +3,12 @@ import { Button } from '@/components/ui/button';
 import { UHSLogo } from '@/components/brand/UHSLogo';
 import { TrustBadge } from '@/components/brand/TrustBadges';
 import { FeatureCard, FeatureGrid } from '@/components/brand/FeatureCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { usePublicEducationContent } from '@/hooks/usePublicEducationContent';
+import { useMemo } from 'react';
+import { format } from 'date-fns';
 import {
   Calculator,
   Users,
@@ -18,6 +24,9 @@ import {
   Ruler,
   HeartPulse,
   Thermometer,
+  BookOpen,
+  Clock,
+  ExternalLink,
 } from 'lucide-react';
 
 const PEDIA_COLOR = 'hsl(195 75% 55%)';
