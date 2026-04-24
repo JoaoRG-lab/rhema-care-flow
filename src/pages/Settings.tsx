@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
-import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe, Stethoscope } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe, Stethoscope, Coins, ChevronRight } from 'lucide-react';
 import { VerifiedBadge, VerificationStatusBadge } from '@/components/ui/VerifiedBadge';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { SpecialtyQuickSwitcher } from '@/components/layout/SpecialtyQuickSwitcher';
@@ -31,6 +31,24 @@ export default function Settings() {
                 {tier && <VerifiedBadge tier={tier} size="sm" />}
               </div>
             </CardContent>
+          </Card>
+
+          {/* Credits & AI Balance */}
+          <Card className="hover:border-primary/40 transition-colors">
+            <Link to="/settings/credits" className="block">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Coins className="h-4 w-4 text-primary" />
+                    Credits & AI Balance
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    AI gateway balance, plan limits, and billing status
+                  </CardDescription>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+            </Link>
           </Card>
 
           {/* Language Settings */}
