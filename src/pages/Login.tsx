@@ -57,6 +57,13 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
+      // Persist the intended redirect so it survives the OAuth round trip
+      // even if the provider strips/normalizes the callback query string.
+      try {
+        sessionStorage.setItem('uhs_post_login_redirect', redirectTo);
+      } catch {
+        /* sessionStorage may be unavailable in some embeds */
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
