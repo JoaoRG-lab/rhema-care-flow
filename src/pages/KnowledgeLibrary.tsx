@@ -91,10 +91,10 @@ export default function KnowledgeLibrary() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   
-  // Get disease areas based on specialty or default
-  const diseaseAreas = useMemo(() => {
+  // Get disease areas based on specialty or default. Always returns string[]
+  const diseaseAreas = useMemo<string[]>(() => {
     if (currentSpecialty) {
-      return ['All', ...currentSpecialty.conditions.slice(0, 10)];
+      return ['All', ...currentSpecialty.conditions.slice(0, 10).map(c => c.name)];
     }
     return DISEASE_AREAS;
   }, [currentSpecialty]);
@@ -208,12 +208,9 @@ export default function KnowledgeLibrary() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {diseaseAreas.map(area => {
-              const areaName = typeof area === 'string' ? area : area.name;
-              return (
-                <SelectItem key={areaName} value={areaName}>{areaName}</SelectItem>
-              );
-            })}
+            {diseaseAreas.map(area => (
+              <SelectItem key={area} value={area}>{area}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
