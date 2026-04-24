@@ -6,7 +6,7 @@
  * All functions should import from here instead of pinning their own version
  * or hand-rolling fetch calls so request/response handling stays consistent.
  */
-import { Resend } from "npm:resend@4.0.1";
+import { Resend } from "https://esm.sh/resend@4.0.1";
 
 export { Resend };
 
