@@ -320,8 +320,12 @@ export function AddVisitDialog({ patientId, open, onOpenChange, onVisitAdded }: 
              </div>
            </div>
  
-           <Button type="submit" className="w-full" disabled={saving}>
-             {saving ? 'Saving...' : 'Add Visit'}
+           <Button type="submit" className="w-full" disabled={!canSubmit}>
+             {saving
+               ? 'Saving...'
+               : pediatric && !pediReady
+                 ? `Complete checklist (${pediPassed}/${pediChecks.length})`
+                 : 'Add Visit'}
            </Button>
          </form>
        </DialogContent>
