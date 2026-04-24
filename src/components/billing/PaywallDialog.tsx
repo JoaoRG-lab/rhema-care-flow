@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Copy, Check, QrCode, Zap, Clock, CheckCircle2, XCircle, Wallet, Gift } from "lucide-react";
+import { Loader2, Copy, Check, QrCode, Zap, Clock, CheckCircle2, XCircle, Wallet, Gift, Receipt, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -40,6 +40,8 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid" | "failed" | "expired">("pending");
+  const [paidAt, setPaidAt] = useState<string | null>(null);
+  const [balanceAfter, setBalanceAfter] = useState<number | null>(null);
 
   const freeUsed = credits?.free_quota_used ?? 0;
   const freeLimit = credits?.free_quota_limit ?? 0;
@@ -52,6 +54,8 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
       setCopied(false);
       setPolling(false);
       setPaymentStatus("pending");
+      setPaidAt(null);
+      setBalanceAfter(null);
     }
   }, [open]);
 
@@ -69,17 +73,26 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
       }
       const { data } = await supabase
         .from("payment_transactions")
-        .select("status")
+        .select("status, paid_at, user_id")
         .eq("id", pix.transactionId)
         .maybeSingle();
       const status = data?.status;
       if (status === "paid") {
         setPaymentStatus("paid");
+        setPaidAt(data?.paid_at ?? new Date().toISOString());
+        // Fetch updated balance for the receipt
+        if (data?.user_id) {
+          const { data: bal } = await supabase
+            .from("user_ai_credits")
+            .select("credits_balance")
+            .eq("user_id", data.user_id)
+            .maybeSingle();
+          if (bal) setBalanceAfter(bal.credits_balance);
+        }
         clearInterval(interval);
         setPolling(false);
         toast.success(`${pix.credits} créditos adicionados!`);
         onSuccess?.();
-        setTimeout(() => onOpenChange(false), 1500);
       } else if (status === "failed" || status === "rejected" || status === "cancelled") {
         setPaymentStatus("failed");
         clearInterval(interval);
@@ -203,6 +216,69 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
               </Card>
             ))}
           </div>
+        ) : paymentStatus === "paid" ? (
+          <div className="space-y-4">
+            <div className="flex flex-col items-center text-center p-6 rounded-lg border border-green-500/40 bg-gradient-to-b from-green-500/10 to-transparent">
+              <div className="relative">
+                <CheckCircle2 className="h-14 w-14 text-green-600 dark:text-green-400" />
+                <Sparkles className="h-5 w-5 text-primary absolute -top-1 -right-2 animate-pulse" />
+              </div>
+              <div className="mt-3 text-lg font-bold text-green-700 dark:text-green-400">
+                Pagamento confirmado!
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Seus créditos já estão disponíveis.
+              </div>
+            </div>
+
+            <Card className="p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Receipt className="h-4 w-4 text-primary" />
+                Recibo da transação
+              </div>
+              <div className="grid grid-cols-2 gap-y-2 text-sm">
+                <span className="text-muted-foreground">Pacote</span>
+                <span className="text-right font-medium">{pix.label}</span>
+
+                <span className="text-muted-foreground">Valor pago</span>
+                <span className="text-right font-medium">
+                  R$ {pix.amount.toFixed(2).replace(".", ",")}
+                </span>
+
+                <span className="text-muted-foreground">Créditos adicionados</span>
+                <span className="text-right font-bold text-primary">+{pix.credits}</span>
+
+                {balanceAfter !== null && (
+                  <>
+                    <span className="text-muted-foreground">Saldo atual</span>
+                    <span className="text-right font-medium">{balanceAfter} créditos</span>
+                  </>
+                )}
+
+                <span className="text-muted-foreground">Confirmado em</span>
+                <span className="text-right font-medium">
+                  {paidAt ? new Date(paidAt).toLocaleString("pt-BR") : "—"}
+                </span>
+
+                <span className="text-muted-foreground">ID da transação</span>
+                <span className="text-right font-mono text-xs break-all">
+                  {pix.transactionId.slice(0, 8)}…{pix.transactionId.slice(-6)}
+                </span>
+
+                <span className="text-muted-foreground">Status</span>
+                <span className="text-right">
+                  <Badge className="bg-green-600 hover:bg-green-600">Confirmado</Badge>
+                </span>
+              </div>
+            </Card>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={() => setPix(null)}>
+                Comprar mais
+              </Button>
+              <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+            </div>
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
@@ -242,9 +318,7 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
 
             <div
               className={`flex items-center gap-3 p-3 rounded-lg border ${
-                paymentStatus === "paid"
-                  ? "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400"
-                  : paymentStatus === "failed"
+                paymentStatus === "failed"
                   ? "border-destructive/40 bg-destructive/10 text-destructive"
                   : paymentStatus === "expired"
                   ? "border-muted bg-muted text-muted-foreground"
@@ -253,9 +327,7 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
               role="status"
               aria-live="polite"
             >
-              {paymentStatus === "paid" ? (
-                <CheckCircle2 className="h-5 w-5 shrink-0" />
-              ) : paymentStatus === "failed" ? (
+              {paymentStatus === "failed" ? (
                 <XCircle className="h-5 w-5 shrink-0" />
               ) : paymentStatus === "expired" ? (
                 <Clock className="h-5 w-5 shrink-0" />
@@ -266,18 +338,14 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
               )}
               <div className="flex-1 text-sm">
                 <div className="font-semibold">
-                  {paymentStatus === "paid"
-                    ? "Pagamento confirmado"
-                    : paymentStatus === "failed"
+                  {paymentStatus === "failed"
                     ? "Pagamento recusado"
                     : paymentStatus === "expired"
                     ? "PIX expirado"
                     : "Pagamento pendente"}
                 </div>
                 <div className="text-xs opacity-80">
-                  {paymentStatus === "paid"
-                    ? `${pix.credits} créditos liberados na sua conta.`
-                    : paymentStatus === "failed"
+                  {paymentStatus === "failed"
                     ? "O pagamento não foi aprovado. Gere um novo PIX para tentar novamente."
                     : paymentStatus === "expired"
                     ? "O prazo de 30 minutos terminou. Gere um novo PIX."
@@ -285,9 +353,7 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
                 </div>
               </div>
               <Badge variant="outline" className="shrink-0 capitalize">
-                {paymentStatus === "paid"
-                  ? "Confirmado"
-                  : paymentStatus === "failed"
+                {paymentStatus === "failed"
                   ? "Falhou"
                   : paymentStatus === "expired"
                   ? "Expirado"
@@ -295,13 +361,11 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
               </Badge>
             </div>
 
-            {paymentStatus !== "paid" && (
-              <Button variant="ghost" className="w-full" onClick={() => setPix(null)}>
-                {paymentStatus === "failed" || paymentStatus === "expired"
-                  ? "Gerar novo PIX"
-                  : "Escolher outro pacote"}
-              </Button>
-            )}
+            <Button variant="ghost" className="w-full" onClick={() => setPix(null)}>
+              {paymentStatus === "failed" || paymentStatus === "expired"
+                ? "Gerar novo PIX"
+                : "Escolher outro pacote"}
+            </Button>
           </div>
         )}
       </DialogContent>
