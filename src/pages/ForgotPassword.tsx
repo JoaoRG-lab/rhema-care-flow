@@ -69,6 +69,7 @@ export default function ForgotPassword() {
     persisted ? Math.max(0, Math.ceil((persisted.cooldownUntil - Date.now()) / 1000)) : 0,
   );
   const [now, setNow] = useState(Date.now());
+  const [retryIn, setRetryIn] = useState(0);
 
   // Tick every second so the "sent X min ago" + expiry banner update live.
   useEffect(() => {
