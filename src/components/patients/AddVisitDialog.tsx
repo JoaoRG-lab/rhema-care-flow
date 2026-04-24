@@ -7,7 +7,8 @@
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
- import { Plus } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
  import { toast } from 'sonner';
  import { ACTION_OPTIONS, LAB_OPTIONS, IMAGING_OPTIONS } from '@/config/clinical';
  
