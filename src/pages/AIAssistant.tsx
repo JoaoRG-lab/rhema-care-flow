@@ -83,13 +83,30 @@ export default function AIAssistant() {
               Your intelligent helper for configuring and optimizing RheumaFlow
             </p>
           </div>
-          {messages.length > 0 && (
-            <Button variant="outline" size="sm" onClick={clearMessages}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear Chat
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className="cursor-pointer hover:bg-primary/10 transition-colors"
+              onClick={() => setPaywallOpen(true)}
+              title="Comprar mais créditos via PIX"
+            >
+              <Sparkles className="h-3 w-3 mr-1 text-primary" />
+              {credits ? `${credits.credits_balance} créditos · ${remainingFree} grátis` : '...'}
+            </Badge>
+            {messages.length > 0 && (
+              <Button variant="outline" size="sm" onClick={clearMessages}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear Chat
+              </Button>
+            )}
+          </div>
         </div>
+
+        <PaywallDialog
+          open={paywallOpen}
+          onOpenChange={setPaywallOpen}
+          onSuccess={refreshCredits}
+        />
 
         {/* Main Chat Area */}
         <Card className="flex flex-col h-[calc(100vh-220px)] min-h-[500px]">
