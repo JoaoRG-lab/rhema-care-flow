@@ -31,15 +31,39 @@ const emailSchema = z
 // banner after this window so the user can resend without confusion.
 const LINK_TTL_MS = 60 * 60 * 1000;
 const RESEND_COOLDOWN_S = 30;
+const STORAGE_KEY = 'uhs:forgot-password:state';
+
+type PersistedState = {
+  email: string;
+  sentAt: number;
+  cooldownUntil: number;
+};
+
+const loadPersisted = (): PersistedState | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedState;
+    if (!parsed?.email || !parsed?.sentAt) return null;
+    // Drop if link already expired beyond TTL.
+    if (Date.now() - parsed.sentAt >= LINK_TTL_MS) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
 
 export default function ForgotPassword() {
   const { resetPassword } = useAuth();
-  const [email, setEmail] = useState('');
+  const persisted = typeof window !== 'undefined' ? loadPersisted() : null;
+  const [email, setEmail] = useState(persisted?.email ?? '');
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [status, setStatus] = useState<ResetStatus>('idle');
-  const [sentAt, setSentAt] = useState<number | null>(null);
-  const [cooldown, setCooldown] = useState(0);
+  const [status, setStatus] = useState<ResetStatus>(persisted ? 'sent' : 'idle');
+  const [sentAt, setSentAt] = useState<number | null>(persisted?.sentAt ?? null);
+  const [cooldown, setCooldown] = useState(
+    persisted ? Math.max(0, Math.ceil((persisted.cooldownUntil - Date.now()) / 1000)) : 0,
+  );
   const [now, setNow] = useState(Date.now());
 
   // Tick every second so the "sent X min ago" + expiry banner update live.
@@ -76,9 +100,19 @@ export default function ForgotPassword() {
         }
         // Treat other errors as success to prevent account enumeration.
       }
-      setSentAt(Date.now());
+      const sentTimestamp = Date.now();
+      const cooldownUntil = sentTimestamp + RESEND_COOLDOWN_S * 1000;
+      setSentAt(sentTimestamp);
       setStatus('sent');
       setCooldown(RESEND_COOLDOWN_S);
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ email: target, sentAt: sentTimestamp, cooldownUntil }),
+        );
+      } catch {
+        // Storage unavailable — cooldown will reset on reload, acceptable fallback.
+      }
     } catch {
       setStatus('error');
       setErrorMsg('Something went wrong. Please try again shortly.');
@@ -186,6 +220,8 @@ export default function ForgotPassword() {
                   onClick={() => {
                     setStatus('idle');
                     setSentAt(null);
+                    setCooldown(0);
+                    try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
                   }}
                 >
                   Use a different email
