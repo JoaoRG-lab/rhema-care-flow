@@ -53,17 +53,34 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
     if (!pix || !open) return;
     setPolling(true);
     const interval = setInterval(async () => {
+      // Auto-expire client-side once expiresAt passes
+      if (pix.expiresAt && new Date(pix.expiresAt).getTime() < Date.now()) {
+        setPaymentStatus("expired");
+        clearInterval(interval);
+        setPolling(false);
+        return;
+      }
       const { data } = await supabase
         .from("payment_transactions")
         .select("status")
         .eq("id", pix.transactionId)
         .maybeSingle();
-      if (data?.status === "paid") {
+      const status = data?.status;
+      if (status === "paid") {
+        setPaymentStatus("paid");
         clearInterval(interval);
         setPolling(false);
         toast.success(`${pix.credits} créditos adicionados!`);
         onSuccess?.();
-        onOpenChange(false);
+        setTimeout(() => onOpenChange(false), 1500);
+      } else if (status === "failed" || status === "rejected" || status === "cancelled") {
+        setPaymentStatus("failed");
+        clearInterval(interval);
+        setPolling(false);
+      } else if (status === "expired") {
+        setPaymentStatus("expired");
+        clearInterval(interval);
+        setPolling(false);
       }
     }, 3000);
     return () => {
