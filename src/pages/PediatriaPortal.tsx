@@ -118,17 +118,37 @@ function CardImage({ src, alt }: { src: string; alt: string }) {
 
 export default function PediatriaPortal() {
   const { content, loading } = usePublicEducationContent();
-  const pediatricContent = useMemo(
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+
+  const allPediatric = useMemo(
     () =>
-      content
-        .filter(
-          (c) =>
-            c.specialty?.toLowerCase() === 'pediatrics' ||
-            c.specialty?.toLowerCase() === 'pediatria',
-        )
-        .slice(0, 9),
+      content.filter(
+        (c) =>
+          c.specialty?.toLowerCase() === 'pediatrics' ||
+          c.specialty?.toLowerCase() === 'pediatria',
+      ),
     [content],
   );
+
+  const categoryCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    allPediatric.forEach((c) => {
+      if (!c.category) return;
+      map.set(c.category, (map.get(c.category) ?? 0) + 1);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1]);
+  }, [allPediatric]);
+
+  const filteredPediatric = useMemo(
+    () =>
+      activeCategory === 'all'
+        ? allPediatric
+        : allPediatric.filter((c) => c.category === activeCategory),
+    [allPediatric, activeCategory],
+  );
+
+  const pediatricContent = filteredPediatric.slice(0, 9);
 
   return (
     <div className="min-h-screen bg-background">
