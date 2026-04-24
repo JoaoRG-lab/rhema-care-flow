@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Shield, Mail, Loader2, ShieldAlert, LogOut } from 'lucide-react';
+import { Shield, Mail, Loader2, ShieldAlert, LogOut, History, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -29,6 +30,39 @@ export default function UserManagement() {
   const [revoking, setRevoking] = useState(false);
   const [lastSentTo, setLastSentTo] = useState<string | null>(null);
   const [lastRevokedFor, setLastRevokedFor] = useState<string | null>(null);
+
+  type ResetAuditRow = {
+    id: string;
+    created_at: string;
+    metadata: {
+      target_email_hash?: string;
+      dispatched_at?: string;
+      dispatch_error?: string | null;
+    } | null;
+  };
+  const [history, setHistory] = useState<ResetAuditRow[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .select('id, created_at, metadata')
+      .eq('action', 'admin_password_reset_email_sent')
+      .order('created_at', { ascending: false })
+      .limit(25);
+    if (error) {
+      console.error('Failed to load reset audit history:', error);
+      toast.error('Could not load reset history.');
+    } else {
+      setHistory((data ?? []) as ResetAuditRow[]);
+    }
+    setHistoryLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!roleLoading && isAdmin) loadHistory();
+  }, [roleLoading, isAdmin, loadHistory]);
 
   if (roleLoading) {
     return (
@@ -93,6 +127,7 @@ export default function UserManagement() {
 
       setLastSentTo(target);
       toast.success('Password reset email dispatched (if the account exists).');
+      loadHistory();
     } catch (err) {
       console.error(err);
       toast.error('Could not dispatch reset email. Try again shortly.');
@@ -267,6 +302,75 @@ export default function UserManagement() {
                 </span>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Reset email history
+              </CardTitle>
+              <CardDescription>
+                Recent admin-initiated password reset dispatches. Email
+                addresses are stored as one-way hashes — only the first 8
+                characters of the hash are shown.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadHistory}
+              disabled={historyLoading}
+            >
+              {historyLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {history.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                {historyLoading ? 'Loading…' : 'No reset emails dispatched yet.'}
+              </p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {history.map((row) => {
+                  const failed = !!row.metadata?.dispatch_error;
+                  const hash = row.metadata?.target_email_hash;
+                  const shortHash = hash ? `${hash.slice(0, 8)}…` : '—';
+                  const ts = new Date(row.created_at);
+                  return (
+                    <li
+                      key={row.id}
+                      className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {failed ? (
+                          <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                        ) : (
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-mono text-xs truncate">
+                            recipient: {shortHash}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {ts.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant={failed ? 'destructive' : 'secondary'}>
+                        {failed ? 'failed / rate-limited' : 'dispatched'}
+                      </Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>
