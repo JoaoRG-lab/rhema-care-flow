@@ -64,6 +64,7 @@ const AboutManifest = lazy(() => import("./pages/AboutManifest"));
 const SiteAnalytics = lazy(() => import("./pages/SiteAnalytics"));
 const CaseStudies = lazy(() => import("./pages/CaseStudies"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
+const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const queryClient = new QueryClient();
 
