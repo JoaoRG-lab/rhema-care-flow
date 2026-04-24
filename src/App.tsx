@@ -29,6 +29,7 @@ function ActivityTracker({ children }: { children: React.ReactNode }) {
  const Tasks = lazy(() => import("./pages/Tasks"));
  const Focus = lazy(() => import("./pages/Focus"));
  const Settings = lazy(() => import("./pages/Settings"));
+ const SettingsCredits = lazy(() => import("./pages/SettingsCredits"));
  const NotFound = lazy(() => import("./pages/NotFound"));
  const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide"));
@@ -111,6 +112,7 @@ const queryClient = new QueryClient();
                     <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
                     <Route path="/focus" element={<ProtectedRoute><Focus /></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                    <Route path="/settings/credits" element={<ProtectedRoute><SettingsCredits /></ProtectedRoute>} />
                     <Route path="/style-guide" element={<StyleGuide />} />
                     <Route path="/verification-request" element={<ProtectedRoute><VerificationRequest /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
