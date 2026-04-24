@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePublicEducationContent } from '@/hooks/usePublicEducationContent';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import {
   Calculator,
@@ -90,6 +90,30 @@ const conditions = [
   { name: 'Imunizações', color: 'bg-[hsl(168_55%_42%)]' },
   { name: 'Neonatologia', color: 'bg-[hsl(320_50%_55%)]' },
 ];
+
+function CardImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+  return (
+    <div className="aspect-video overflow-hidden rounded-t-xl relative bg-muted">
+      {!loaded && !errored && (
+        <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+      )}
+      {!errored && (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
+          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+            loaded ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function PediatriaPortal() {
   const { content, loading } = usePublicEducationContent();
@@ -261,65 +285,61 @@ export default function PediatriaPortal() {
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {pediatricContent.map((item) => (
-                  <Card
+                  <Link
                     key={item.id}
-                    className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 flex flex-col"
+                    to="/learn?specialty=pediatrics"
+                    className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
+                    aria-label={`Ler: ${item.title}`}
                   >
-                    {item.featured_image_url && (
-                      <div className="aspect-video overflow-hidden rounded-t-xl">
-                        <img
-                          src={item.featured_image_url}
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <Badge
-                          variant="secondary"
-                          className="text-xs"
-                          style={{ backgroundColor: `${PEDIA_COLOR}15`, color: PEDIA_COLOR }}
-                        >
-                          {item.category}
-                        </Badge>
-                        {item.is_featured && (
-                          <Badge variant="default" className="text-xs">Destaque</Badge>
-                        )}
-                      </div>
-                      <CardTitle className="text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                        {item.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col justify-between">
-                      {item.summary && (
-                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                          {item.summary}
-                        </p>
+                    <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 flex flex-col h-full cursor-pointer">
+                      {item.featured_image_url && (
+                        <CardImage src={item.featured_image_url} alt={item.title} />
                       )}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
-                        <div className="flex items-center gap-3">
-                          {item.reading_time_minutes && (
-                            <span className="inline-flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {item.reading_time_minutes} min
-                            </span>
-                          )}
-                          {item.published_at && (
-                            <span>{format(new Date(item.published_at), 'dd MMM yyyy')}</span>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs"
+                            style={{ backgroundColor: `${PEDIA_COLOR}15`, color: PEDIA_COLOR }}
+                          >
+                            {item.category}
+                          </Badge>
+                          {item.is_featured && (
+                            <Badge variant="default" className="text-xs">Destaque</Badge>
                           )}
                         </div>
-                        <Link
-                          to={`/learn?specialty=pediatrics&content=${item.slug}`}
-                          className="inline-flex items-center gap-1 font-medium hover:underline"
-                          style={{ color: PEDIA_COLOR }}
-                        >
-                          Ler <ExternalLink className="h-3 w-3" />
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <CardTitle className="text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                          {item.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-1 flex flex-col justify-between">
+                        {item.summary && (
+                          <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                            {item.summary}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
+                          <div className="flex items-center gap-3">
+                            {item.reading_time_minutes && (
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {item.reading_time_minutes} min
+                              </span>
+                            )}
+                            {item.published_at && (
+                              <span>{format(new Date(item.published_at), 'dd MMM yyyy')}</span>
+                            )}
+                          </div>
+                          <span
+                            className="inline-flex items-center gap-1 font-medium group-hover:underline"
+                            style={{ color: PEDIA_COLOR }}
+                          >
+                            Ler <ExternalLink className="h-3 w-3" />
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
 
