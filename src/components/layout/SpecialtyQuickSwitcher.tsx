@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Stethoscope, Check } from 'lucide-react';
+import { Stethoscope, Check, RotateCcw } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,6 +118,23 @@ export function SpecialtyQuickSwitcher() {
     if (sp) toast.success(`Switched to ${sp.namePt}`);
   };
 
+  const handleReset = () => {
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* storage disabled — ignore */
+    }
+    setStoredId(null);
+    if (user) {
+      supabase
+        .from('profiles')
+        .update({ preferred_specialty: null })
+        .eq('user_id', user.id)
+        .then(() => {});
+    }
+    toast.success('Specialty preference cleared');
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -159,6 +176,15 @@ export function SpecialtyQuickSwitcher() {
             </DropdownMenuItem>
           );
         })}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={handleReset}
+          disabled={!storedId}
+          className="cursor-pointer text-muted-foreground focus:text-foreground"
+        >
+          <RotateCcw className="mr-2 h-4 w-4" />
+          <span className="flex-1">Reset specialty preference</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
