@@ -46,9 +46,30 @@ export function AddVisitDialog({ patientId, open, onOpenChange, onVisitAdded }: 
      }
    };
  
+  // Pediatric readiness checklist — gates submission when pediatric mode is enabled
+  const num = (s: string) => (s === '' ? NaN : Number(s));
+  const inRange = (v: number, lo: number, hi: number) => Number.isFinite(v) && v >= lo && v <= hi;
+  const pediChecks = [
+    { key: 'age', label: 'Age in months (0–240)', passed: inRange(num(ageMonths), 0, 240) },
+    { key: 'weight', label: 'Weight in kg (0.3–150)', passed: inRange(num(weightKg), 0.3, 150) },
+    { key: 'height', label: 'Height/length in cm (20–220)', passed: inRange(num(heightCm), 20, 220) },
+    { key: 'temp', label: 'Temperature in °C (30–43)', passed: inRange(num(tempC), 30, 43) },
+    { key: 'hr', label: 'Heart rate in bpm (30–250)', passed: inRange(num(heartRate), 30, 250) },
+    { key: 'rr', label: 'Respiratory rate in rpm (5–90)', passed: inRange(num(respRate), 5, 90) },
+    { key: 'plan', label: 'Next steps / follow-up plan documented', passed: nextSteps.replace(/<[^>]*>/g, '').trim().length >= 5 },
+    { key: 'action', label: 'At least one clinical action selected', passed: actions.length > 0 },
+  ];
+  const pediPassed = pediChecks.filter((c) => c.passed).length;
+  const pediReady = pediPassed === pediChecks.length;
+  const canSubmit = !saving && (!pediatric || pediReady);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (pediatric && !pediReady) {
+      toast.error('Complete the pediatric checklist before saving');
+      return;
+    }
 
     setSaving(true);
     const diseaseActivity: Record<string, unknown> = {};
