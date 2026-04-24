@@ -484,6 +484,12 @@ export default function AdminBilling() {
           </TabsContent>
         </Tabs>
       </div>
+      <UserBillingDrilldownDialog
+        userId={selectedUser?.id ?? null}
+        displayName={selectedUser?.name ?? null}
+        open={!!selectedUser}
+        onOpenChange={(o) => !o && setSelectedUser(null)}
+      />
     </AppLayout>
   );
 }
