@@ -3,6 +3,12 @@ import { Button } from '@/components/ui/button';
 import { UHSLogo } from '@/components/brand/UHSLogo';
 import { TrustBadge } from '@/components/brand/TrustBadges';
 import { FeatureCard, FeatureGrid } from '@/components/brand/FeatureCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { usePublicEducationContent } from '@/hooks/usePublicEducationContent';
+import { useMemo } from 'react';
+import { format } from 'date-fns';
 import {
   Calculator,
   Users,
@@ -18,6 +24,9 @@ import {
   Ruler,
   HeartPulse,
   Thermometer,
+  BookOpen,
+  Clock,
+  ExternalLink,
 } from 'lucide-react';
 
 const PEDIA_COLOR = 'hsl(195 75% 55%)';
@@ -83,6 +92,19 @@ const conditions = [
 ];
 
 export default function PediatriaPortal() {
+  const { content, loading } = usePublicEducationContent();
+  const pediatricContent = useMemo(
+    () =>
+      content
+        .filter(
+          (c) =>
+            c.specialty?.toLowerCase() === 'pediatrics' ||
+            c.specialty?.toLowerCase() === 'pediatria',
+        )
+        .slice(0, 9),
+    [content],
+  );
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -192,6 +214,129 @@ export default function PediatriaPortal() {
         </div>
       </section>
 
+      {/* Pediatric Knowledge */}
+      <section id="knowledge" className="py-20 px-6 bg-card/40 border-y border-border">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4"
+              style={{ backgroundColor: `${PEDIA_COLOR}20`, color: PEDIA_COLOR }}
+            >
+              <BookOpen className="h-4 w-4" />
+              Conhecimento Pediátrico
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">
+              Biblioteca <span style={{ color: PEDIA_COLOR }}>Pedia</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Artigos, diretrizes e revisões publicadas pela comunidade clínica, alinhadas com SBP e AAP.
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-48 rounded-xl" />
+              ))}
+            </div>
+          ) : pediatricContent.length === 0 ? (
+            <Card className="text-center py-12">
+              <CardContent>
+                <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground mb-2">
+                  Nenhum conteúdo pediátrico publicado ainda.
+                </p>
+                <p className="text-sm text-muted-foreground mb-6">
+                  A biblioteca completa está disponível para usuários registrados.
+                </p>
+                <Link to="/learn?specialty=pediatrics">
+                  <Button className={`gap-2 bg-gradient-to-r ${PEDIA_GRADIENT} hover:opacity-90`}>
+                    <BookOpen className="h-4 w-4" />
+                    Explorar Biblioteca Completa
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pediatricContent.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 flex flex-col"
+                  >
+                    {item.featured_image_url && (
+                      <div className="aspect-video overflow-hidden rounded-t-xl">
+                        <img
+                          src={item.featured_image_url}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <Badge
+                          variant="secondary"
+                          className="text-xs"
+                          style={{ backgroundColor: `${PEDIA_COLOR}15`, color: PEDIA_COLOR }}
+                        >
+                          {item.category}
+                        </Badge>
+                        {item.is_featured && (
+                          <Badge variant="default" className="text-xs">Destaque</Badge>
+                        )}
+                      </div>
+                      <CardTitle className="text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                        {item.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col justify-between">
+                      {item.summary && (
+                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                          {item.summary}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
+                        <div className="flex items-center gap-3">
+                          {item.reading_time_minutes && (
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {item.reading_time_minutes} min
+                            </span>
+                          )}
+                          {item.published_at && (
+                            <span>{format(new Date(item.published_at), 'dd MMM yyyy')}</span>
+                          )}
+                        </div>
+                        <Link
+                          to={`/learn?specialty=pediatrics&content=${item.slug}`}
+                          className="inline-flex items-center gap-1 font-medium hover:underline"
+                          style={{ color: PEDIA_COLOR }}
+                        >
+                          Ler <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="text-center mt-10">
+                <Link to="/learn?specialty=pediatrics">
+                  <Button size="lg" variant="outline" className="gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Ver toda a biblioteca pediátrica
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
       {/* Quick Access */}
       <section className="py-16 px-6 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
@@ -215,12 +360,12 @@ export default function PediatriaPortal() {
                 <span>Monitorização</span>
               </Button>
             </Link>
-            <Link to="/knowledge?specialty=pediatrics">
+            <a href="#knowledge">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:border-primary/50">
                 <Brain className="h-6 w-6" style={{ color: PEDIA_COLOR }} />
                 <span>Conhecimento</span>
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>
