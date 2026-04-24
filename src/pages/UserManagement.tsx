@@ -50,6 +50,14 @@ export default function UserManagement() {
     return trimmed;
   };
 
+  const hashEmail = async (value: string): Promise<string> => {
+    const buf = new TextEncoder().encode(value);
+    const digest = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  };
+
   const handleSendReset = async () => {
     const target = validateEmail(email);
     if (!target) return toast.error('Enter a valid email address');
@@ -62,6 +70,27 @@ export default function UserManagement() {
       if (error && !/rate/i.test(error.message)) {
         console.error('Password reset error:', error);
       }
+
+      // Audit log — admin identity + timestamp, hashed target email (no PII, no password)
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const adminId = userData.user?.id;
+        if (adminId) {
+          await supabase.from('audit_logs').insert({
+            user_id: adminId,
+            action: 'admin_password_reset_email_sent',
+            resource_type: 'auth_user',
+            metadata: {
+              target_email_hash: await hashEmail(target),
+              dispatched_at: new Date().toISOString(),
+              dispatch_error: error ? 'rate_limited_or_failed' : null,
+            },
+          });
+        }
+      } catch (logErr) {
+        console.error('Audit log insert failed:', logErr);
+      }
+
       setLastSentTo(target);
       toast.success('Password reset email dispatched (if the account exists).');
     } catch (err) {
