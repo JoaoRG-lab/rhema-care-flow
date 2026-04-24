@@ -17,6 +17,7 @@
    | 'fm'
   | 'gout'
   | 'pediatric'
+  | 'obgyn'
   | 'general';
  
  export interface Calculator {
