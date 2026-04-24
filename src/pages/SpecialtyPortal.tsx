@@ -21,6 +21,7 @@ import {
   ACTIVE_SPECIALTIES,
 } from '@/config/specialties';
 import { SpecialtyPortalTemplate } from '@/components/specialty/SpecialtyPortalTemplate';
+import PediatriaPortal from '@/pages/PediatriaPortal';
 
 export default function SpecialtyPortal() {
   const { specialtyId } = useParams<{ specialtyId?: string }>();
@@ -47,12 +48,17 @@ export default function SpecialtyPortal() {
   // If we have a specialty ID, show that specialty's portal
   if (specialtyId) {
     const specialty = getSpecialtyById(specialtyId);
-    
+
     // If specialty not found or not active, redirect to main portal
     if (!specialty || !specialty.isActive) {
       return <Navigate to="/especialidades" replace />;
     }
-    
+
+    // Pediatrics has a dedicated, full portal (parity with /reumato)
+    if (specialty.id === 'pediatrics') {
+      return <PediatriaPortal />;
+    }
+
     return <SpecialtyPortalTemplate specialty={specialty} />;
   }
 
