@@ -59,6 +59,10 @@ export default function SpecialtyPortal() {
     if (specialty.id === 'pediatrics') {
       return <PediatriaPortal />;
     }
+    // Obstetrics & Gynecology has a dedicated PT-BR portal at /ginecologia
+    if (specialty.id === 'obstetrics') {
+      return <GinecologiaPortal />;
+    }
 
     return <SpecialtyPortalTemplate specialty={specialty} />;
   }
