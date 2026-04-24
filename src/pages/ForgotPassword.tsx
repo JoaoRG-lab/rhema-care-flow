@@ -100,9 +100,19 @@ export default function ForgotPassword() {
         }
         // Treat other errors as success to prevent account enumeration.
       }
-      setSentAt(Date.now());
+      const sentTimestamp = Date.now();
+      const cooldownUntil = sentTimestamp + RESEND_COOLDOWN_S * 1000;
+      setSentAt(sentTimestamp);
       setStatus('sent');
       setCooldown(RESEND_COOLDOWN_S);
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ email: target, sentAt: sentTimestamp, cooldownUntil }),
+        );
+      } catch {
+        // Storage unavailable — cooldown will reset on reload, acceptable fallback.
+      }
     } catch {
       setStatus('error');
       setErrorMsg('Something went wrong. Please try again shortly.');
