@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePublicEducationContent } from '@/hooks/usePublicEducationContent';
+import { ContentVoteButtons } from '@/components/education/ContentVoteButtons';
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import {
