@@ -1,5 +1,6 @@
- import { useState, useMemo, useEffect } from 'react';
- import { AppLayout } from '@/components/layout/AppLayout';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { AppLayout } from '@/components/layout/AppLayout';
  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
@@ -44,6 +45,10 @@ import { APGARCalculator } from '@/components/scores/APGARCalculator';
 import { PEWSCalculator } from '@/components/scores/PEWSCalculator';
 import { WHOGrowthCalculator } from '@/components/scores/WHOGrowthCalculator';
 import { PediatricDoseCalculator } from '@/components/scores/PediatricDoseCalculator';
+import { BishopScoreCalculator } from '@/components/scores/BishopScoreCalculator';
+import { GestationalAgeCalculator } from '@/components/scores/GestationalAgeCalculator';
+import { PreeclampsiaRiskCalculator } from '@/components/scores/PreeclampsiaRiskCalculator';
+import { PregnancyBMICalculator } from '@/components/scores/PregnancyBMICalculator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
  
@@ -62,11 +67,20 @@ import { toast } from 'sonner';
    const [favorites, setFavorites] = useState<string[]>([]);
    const [historyCount, setHistoryCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
- 
-   useEffect(() => {
-     setFavorites(getFavorites());
-     setHistoryCount(getHistory().length);
-   }, []);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    setFavorites(getFavorites());
+    setHistoryCount(getHistory().length);
+  }, []);
+
+  // Deep-link: open a specific calculator from query, e.g. /scores?calc=bishop
+  useEffect(() => {
+    const calc = searchParams.get('calc');
+    if (calc && CALCULATORS.some((c) => c.id === calc && c.implemented)) {
+      setSelectedCalculator(calc);
+    }
+  }, [searchParams]);
  
    const filteredCalculators = useMemo(() => {
      return CALCULATORS.filter((calc) => {
@@ -140,10 +154,18 @@ import { toast } from 'sonner';
         return <WHOGrowthCalculator />;
       case 'pedi-dose':
         return <PediatricDoseCalculator />;
+      case 'bishop':
+        return <BishopScoreCalculator />;
+      case 'gestational-age':
+        return <GestationalAgeCalculator />;
+      case 'preeclampsia-risk':
+        return <PreeclampsiaRiskCalculator />;
+      case 'pregnancy-bmi':
+        return <PregnancyBMICalculator />;
       default:
         return null;
     }
-   };
+  };
  
    const selectedCalc = selectedCalculator ? CALCULATORS.find(c => c.id === selectedCalculator) : null;
  
