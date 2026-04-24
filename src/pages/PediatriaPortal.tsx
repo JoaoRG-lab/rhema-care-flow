@@ -360,12 +360,12 @@ export default function PediatriaPortal() {
                 <span>Monitorização</span>
               </Button>
             </Link>
-            <Link to="/knowledge?specialty=pediatrics">
+            <a href="#knowledge">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:border-primary/50">
                 <Brain className="h-6 w-6" style={{ color: PEDIA_COLOR }} />
                 <span>Conhecimento</span>
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>
