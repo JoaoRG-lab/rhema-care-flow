@@ -137,6 +137,33 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
           </DialogDescription>
         </DialogHeader>
 
+        {/* Current balance summary */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="p-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+              <Wallet className="h-3.5 w-3.5" />
+              Saldo de créditos
+            </div>
+            <div className="text-2xl font-bold text-primary">
+              {creditsLoading ? "—" : credits?.credits_balance ?? 0}
+            </div>
+            <div className="text-xs text-muted-foreground">créditos pagos disponíveis</div>
+          </Card>
+          <Card className="p-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+              <Gift className="h-3.5 w-3.5" />
+              Cota grátis
+            </div>
+            <div className="text-2xl font-bold">
+              {creditsLoading ? "—" : `${remainingFree}/${freeLimit}`}
+            </div>
+            <Progress value={freePct} className="h-1.5 mt-2" />
+            <div className="text-xs text-muted-foreground mt-1">
+              {freeUsed} de {freeLimit} usadas
+            </div>
+          </Card>
+        </div>
+
         {!pix ? (
           <div className="grid gap-3 sm:grid-cols-3">
             {PACKAGES.map((pkg) => (
