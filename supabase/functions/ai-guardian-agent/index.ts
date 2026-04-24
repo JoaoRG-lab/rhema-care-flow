@@ -298,9 +298,6 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('AI Guardian Agent error:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse(error, { status: 500, code: "INTERNAL_ERROR", headers: corsHeaders });
   }
 });
