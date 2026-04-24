@@ -337,6 +337,12 @@ export default function PediatriaPortal() {
                             Ler <ExternalLink className="h-3 w-3" />
                           </span>
                         </div>
+                        <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between">
+                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            Foi útil?
+                          </span>
+                          <ContentVoteButtons contentId={item.id} accentColor={PEDIA_COLOR} />
+                        </div>
                       </CardContent>
                     </Card>
                   </Link>
