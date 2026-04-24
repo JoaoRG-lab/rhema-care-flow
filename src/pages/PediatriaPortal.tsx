@@ -551,13 +551,20 @@ export default function PediatriaPortal() {
                 {pediatricContent.map((item) => {
                   const TypeIcon = TYPE_ICONS[item.content_type as ContentType] || FileText;
                   return (
-                  <Link
+                  <Card
                     key={item.id}
-                    to="/learn/pediatrics"
-                    className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
+                    onClick={() => setViewing(item)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setViewing(item);
+                      }
+                    }}
                     aria-label={`Ler: ${item.title}`}
+                    className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 flex flex-col h-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
-                    <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 flex flex-col h-full cursor-pointer">
                       {item.featured_image_url && (
                         <CardImage src={item.featured_image_url} alt={item.title} />
                       )}
@@ -607,7 +614,10 @@ export default function PediatriaPortal() {
                             Ler <ExternalLink className="h-3 w-3" />
                           </span>
                         </div>
-                        <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between">
+                        <div
+                          className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
                             Foi útil?
                           </span>
@@ -615,7 +625,6 @@ export default function PediatriaPortal() {
                         </div>
                       </CardContent>
                     </Card>
-                  </Link>
                   );
                 })}
               </div>
