@@ -274,7 +274,7 @@ export default function PediatriaPortal() {
                 <p className="text-sm text-muted-foreground mb-6">
                   A biblioteca completa está disponível para usuários registrados.
                 </p>
-                <Link to="/learn?specialty=pediatrics">
+                <Link to="/learn/pediatrics">
                   <Button className={`gap-2 bg-gradient-to-r ${PEDIA_GRADIENT} hover:opacity-90`}>
                     <BookOpen className="h-4 w-4" />
                     Explorar Biblioteca Completa
@@ -288,7 +288,7 @@ export default function PediatriaPortal() {
                 {pediatricContent.map((item) => (
                   <Link
                     key={item.id}
-                    to="/learn?specialty=pediatrics"
+                    to="/learn/pediatrics"
                     className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
                     aria-label={`Ler: ${item.title}`}
                   >
@@ -351,7 +351,7 @@ export default function PediatriaPortal() {
               </div>
 
               <div className="text-center mt-10">
-                <Link to="/learn?specialty=pediatrics">
+                <Link to="/learn/pediatrics">
                   <Button size="lg" variant="outline" className="gap-2">
                     <BookOpen className="h-4 w-4" />
                     Ver toda a biblioteca pediátrica
