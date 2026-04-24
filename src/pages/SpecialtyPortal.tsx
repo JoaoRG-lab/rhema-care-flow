@@ -22,6 +22,7 @@ import {
 } from '@/config/specialties';
 import { SpecialtyPortalTemplate } from '@/components/specialty/SpecialtyPortalTemplate';
 import PediatriaPortal from '@/pages/PediatriaPortal';
+import GinecologiaPortal from '@/pages/GinecologiaPortal';
 
 export default function SpecialtyPortal() {
   const { specialtyId } = useParams<{ specialtyId?: string }>();
