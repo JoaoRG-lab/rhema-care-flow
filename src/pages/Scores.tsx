@@ -40,6 +40,10 @@ import { ACRResponseCalculator } from '@/components/scores/ACRResponseCalculator
 import { EULARResponseCalculator } from '@/components/scores/EULARResponseCalculator';
 import { ASASResponseCalculator } from '@/components/scores/ASASResponseCalculator';
 import { TreatmentResponseComparison } from '@/components/scores/TreatmentResponseComparison';
+import { APGARCalculator } from '@/components/scores/APGARCalculator';
+import { PEWSCalculator } from '@/components/scores/PEWSCalculator';
+import { WHOGrowthCalculator } from '@/components/scores/WHOGrowthCalculator';
+import { PediatricDoseCalculator } from '@/components/scores/PediatricDoseCalculator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
  
@@ -128,6 +132,14 @@ import { toast } from 'sonner';
         return <ASASResponseCalculator />;
       case 'treatment-response-comparison':
         return <TreatmentResponseComparison />;
+      case 'apgar':
+        return <APGARCalculator />;
+      case 'pews':
+        return <PEWSCalculator />;
+      case 'who-growth':
+        return <WHOGrowthCalculator />;
+      case 'pedi-dose':
+        return <PediatricDoseCalculator />;
       default:
         return null;
     }

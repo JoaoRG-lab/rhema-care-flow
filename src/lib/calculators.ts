@@ -15,8 +15,9 @@
    | 'vasculitis'
    | 'oa'
    | 'fm'
-   | 'gout'
-   | 'general';
+  | 'gout'
+  | 'pediatric'
+  | 'general';
  
  export interface Calculator {
    id: string;
@@ -46,9 +47,10 @@
    vasculitis: { label: 'Vasculitis', color: 'tag-vasculitis' },
    oa: { label: 'OA', color: 'bg-amber-100 text-amber-800 border-amber-300' },
    fm: { label: 'FM', color: 'tag-fm' },
-   gout: { label: 'Gout', color: 'bg-orange-100 text-orange-800 border-orange-300' },
-   general: { label: 'General', color: 'bg-slate-100 text-slate-700 border-slate-300' },
- };
+  gout: { label: 'Gout', color: 'bg-orange-100 text-orange-800 border-orange-300' },
+  pediatric: { label: 'Pediatric', color: 'bg-sky-100 text-sky-800 border-sky-300' },
+  general: { label: 'General', color: 'bg-slate-100 text-slate-700 border-slate-300' },
+};
  
  export const CALCULATORS: Calculator[] = [
    // Disease Activity Scores
@@ -362,12 +364,56 @@
      shortName: 'SRI',
      description: 'Composite response measure for SLE trials',
      category: 'monitoring',
-     diseases: ['sle'],
-     implemented: false,
-   },
- ];
- 
- // Favorites management
+    diseases: ['sle'],
+    implemented: false,
+  },
+
+  // ===== Pediatric calculators =====
+  {
+    id: 'apgar',
+    name: 'APGAR Score',
+    shortName: 'APGAR',
+    description: 'Newborn vitality assessment at 1 and 5 minutes (0–10).',
+    category: 'disease-activity',
+    diseases: ['pediatric'],
+    formula: 'Appearance + Pulse + Grimace + Activity + Respiration',
+    reference: 'Apgar V. 1953',
+    implemented: true,
+  },
+  {
+    id: 'pews',
+    name: 'PEWS — Pediatric Early Warning Score',
+    shortName: 'PEWS',
+    description: 'Detects clinical deterioration in hospitalized children.',
+    category: 'monitoring',
+    diseases: ['pediatric'],
+    formula: 'Behavior + Cardiovascular + Respiratory (each 0–3)',
+    reference: 'Monaghan A. 2005',
+    implemented: true,
+  },
+  {
+    id: 'who-growth',
+    name: 'WHO Growth — Weight & Height for Age',
+    shortName: 'Growth',
+    description: 'Approximate z-score and percentile for weight/height by age (0–19y).',
+    category: 'monitoring',
+    diseases: ['pediatric'],
+    reference: 'WHO Child Growth Standards (LMS, simplified)',
+    implemented: true,
+  },
+  {
+    id: 'pedi-dose',
+    name: 'Pediatric Weight-Based Dose',
+    shortName: 'Pedi Dose',
+    description: 'mg/kg dose calculator with safety cap (max single dose).',
+    category: 'monitoring',
+    diseases: ['pediatric'],
+    formula: 'dose = min(weight × mg/kg, max_single_dose)',
+    implemented: true,
+  },
+];
+
+// Favorites management
  const FAVORITES_KEY = 'rheumaflow_calculator_favorites';
  
  export function getFavorites(): string[] {
