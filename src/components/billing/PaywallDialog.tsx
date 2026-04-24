@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Copy, Check, QrCode, Zap } from "lucide-react";
+import { Loader2, Copy, Check, QrCode, Zap, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
   const [pix, setPix] = useState<PixData | null>(null);
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid" | "failed" | "expired">("pending");
 
   useEffect(() => {
     if (!open) {
@@ -43,6 +44,7 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
       setSelectedPkg(null);
       setCopied(false);
       setPolling(false);
+      setPaymentStatus("pending");
     }
   }, [open]);
 
@@ -51,17 +53,34 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
     if (!pix || !open) return;
     setPolling(true);
     const interval = setInterval(async () => {
+      // Auto-expire client-side once expiresAt passes
+      if (pix.expiresAt && new Date(pix.expiresAt).getTime() < Date.now()) {
+        setPaymentStatus("expired");
+        clearInterval(interval);
+        setPolling(false);
+        return;
+      }
       const { data } = await supabase
         .from("payment_transactions")
         .select("status")
         .eq("id", pix.transactionId)
         .maybeSingle();
-      if (data?.status === "paid") {
+      const status = data?.status;
+      if (status === "paid") {
+        setPaymentStatus("paid");
         clearInterval(interval);
         setPolling(false);
         toast.success(`${pix.credits} créditos adicionados!`);
         onSuccess?.();
-        onOpenChange(false);
+        setTimeout(() => onOpenChange(false), 1500);
+      } else if (status === "failed" || status === "rejected" || status === "cancelled") {
+        setPaymentStatus("failed");
+        clearInterval(interval);
+        setPolling(false);
+      } else if (status === "expired") {
+        setPaymentStatus("expired");
+        clearInterval(interval);
+        setPolling(false);
       }
     }, 3000);
     return () => {
@@ -187,14 +206,68 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
-              {polling && <Loader2 className="h-4 w-4 animate-spin" />}
-              Aguardando confirmação do pagamento...
+            <div
+              className={`flex items-center gap-3 p-3 rounded-lg border ${
+                paymentStatus === "paid"
+                  ? "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400"
+                  : paymentStatus === "failed"
+                  ? "border-destructive/40 bg-destructive/10 text-destructive"
+                  : paymentStatus === "expired"
+                  ? "border-muted bg-muted text-muted-foreground"
+                  : "border-primary/30 bg-primary/5 text-foreground"
+              }`}
+              role="status"
+              aria-live="polite"
+            >
+              {paymentStatus === "paid" ? (
+                <CheckCircle2 className="h-5 w-5 shrink-0" />
+              ) : paymentStatus === "failed" ? (
+                <XCircle className="h-5 w-5 shrink-0" />
+              ) : paymentStatus === "expired" ? (
+                <Clock className="h-5 w-5 shrink-0" />
+              ) : polling ? (
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
+              ) : (
+                <Clock className="h-5 w-5 shrink-0" />
+              )}
+              <div className="flex-1 text-sm">
+                <div className="font-semibold">
+                  {paymentStatus === "paid"
+                    ? "Pagamento confirmado"
+                    : paymentStatus === "failed"
+                    ? "Pagamento recusado"
+                    : paymentStatus === "expired"
+                    ? "PIX expirado"
+                    : "Pagamento pendente"}
+                </div>
+                <div className="text-xs opacity-80">
+                  {paymentStatus === "paid"
+                    ? `${pix.credits} créditos liberados na sua conta.`
+                    : paymentStatus === "failed"
+                    ? "O pagamento não foi aprovado. Gere um novo PIX para tentar novamente."
+                    : paymentStatus === "expired"
+                    ? "O prazo de 30 minutos terminou. Gere um novo PIX."
+                    : "Aguardando confirmação do banco. Atualizamos automaticamente."}
+                </div>
+              </div>
+              <Badge variant="outline" className="shrink-0 capitalize">
+                {paymentStatus === "paid"
+                  ? "Confirmado"
+                  : paymentStatus === "failed"
+                  ? "Falhou"
+                  : paymentStatus === "expired"
+                  ? "Expirado"
+                  : "Pendente"}
+              </Badge>
             </div>
 
-            <Button variant="ghost" className="w-full" onClick={() => setPix(null)}>
-              Escolher outro pacote
-            </Button>
+            {paymentStatus !== "paid" && (
+              <Button variant="ghost" className="w-full" onClick={() => setPix(null)}>
+                {paymentStatus === "failed" || paymentStatus === "expired"
+                  ? "Gerar novo PIX"
+                  : "Escolher outro pacote"}
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>
