@@ -64,6 +64,7 @@ const AboutManifest = lazy(() => import("./pages/AboutManifest"));
 const SiteAnalytics = lazy(() => import("./pages/SiteAnalytics"));
 const CaseStudies = lazy(() => import("./pages/CaseStudies"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
+const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const queryClient = new QueryClient();
 
@@ -149,6 +150,7 @@ const queryClient = new QueryClient();
                     <Route path="/site-analytics" element={<ProtectedRoute><SiteAnalytics /></ProtectedRoute>} />
                     <Route path="/case-studies" element={<CaseStudies />} />
                     <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+                    <Route path="/admin/billing" element={<ProtectedRoute><AdminBilling /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
