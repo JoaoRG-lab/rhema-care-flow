@@ -91,6 +91,30 @@ const conditions = [
   { name: 'Neonatologia', color: 'bg-[hsl(320_50%_55%)]' },
 ];
 
+function CardImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+  return (
+    <div className="aspect-video overflow-hidden rounded-t-xl relative bg-muted">
+      {!loaded && !errored && (
+        <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+      )}
+      {!errored && (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
+          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+            loaded ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function PediatriaPortal() {
   const { content, loading } = usePublicEducationContent();
   const pediatricContent = useMemo(
