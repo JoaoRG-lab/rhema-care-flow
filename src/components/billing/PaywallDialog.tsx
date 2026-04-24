@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Copy, Check, QrCode, Zap, Clock, CheckCircle2, XCircle, Wallet, Gift } from "lucide-react";
+import { Loader2, Copy, Check, QrCode, Zap, Clock, CheckCircle2, XCircle, Wallet, Gift, Receipt, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
