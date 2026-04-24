@@ -44,6 +44,15 @@ import { APGARCalculator } from '@/components/scores/APGARCalculator';
 import { PEWSCalculator } from '@/components/scores/PEWSCalculator';
 import { WHOGrowthCalculator } from '@/components/scores/WHOGrowthCalculator';
 import { PediatricDoseCalculator } from '@/components/scores/PediatricDoseCalculator';
+import { BallardCalculator } from '@/components/scores/BallardCalculator';
+import { CapurroCalculator } from '@/components/scores/CapurroCalculator';
+import { SilvermanCalculator } from '@/components/scores/SilvermanCalculator';
+import { WoodDownesCalculator } from '@/components/scores/WoodDownesCalculator';
+import { PulmonaryScoreCalculator } from '@/components/scores/PulmonaryScoreCalculator';
+import { DehydrationCalculator } from '@/components/scores/DehydrationCalculator';
+import { HollidaySegarCalculator } from '@/components/scores/HollidaySegarCalculator';
+import { RochesterCalculator } from '@/components/scores/RochesterCalculator';
+import { MCHATCalculator } from '@/components/scores/MCHATCalculator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
  
@@ -140,6 +149,24 @@ import { toast } from 'sonner';
         return <WHOGrowthCalculator />;
       case 'pedi-dose':
         return <PediatricDoseCalculator />;
+      case 'ballard':
+        return <BallardCalculator />;
+      case 'capurro':
+        return <CapurroCalculator />;
+      case 'silverman':
+        return <SilvermanCalculator />;
+      case 'wood-downes':
+        return <WoodDownesCalculator />;
+      case 'pulmonary-score':
+        return <PulmonaryScoreCalculator />;
+      case 'dehydration':
+        return <DehydrationCalculator />;
+      case 'holliday-segar':
+        return <HollidaySegarCalculator />;
+      case 'rochester':
+        return <RochesterCalculator />;
+      case 'mchat':
+        return <MCHATCalculator />;
       default:
         return null;
     }
