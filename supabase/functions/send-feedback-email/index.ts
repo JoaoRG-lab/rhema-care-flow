@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createResendClient, sendEmail } from "../_shared/resend.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,26 +55,17 @@ serve(async (req) => {
       </div>
     `;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "UHS Feedback <onboarding@resend.dev>",
-        to: ["novvsoriens@gmail.com"],
-        subject,
-        html: htmlBody,
-      }),
+    const result = await sendEmail(createResendClient(), {
+      from: "UHS Feedback <onboarding@resend.dev>",
+      to: "novvsoriens@gmail.com",
+      subject,
+      html: htmlBody,
     });
 
-    const result = await res.json();
-
-    if (!res.ok) {
-      console.error("Resend error:", result);
+    if (!result.ok) {
+      console.error("Resend error:", result.error, result.details);
       return new Response(
-        JSON.stringify({ error: "Failed to send email", details: result }),
+        JSON.stringify({ error: "Failed to send email", details: result.error }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
