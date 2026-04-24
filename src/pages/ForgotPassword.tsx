@@ -92,6 +92,19 @@ export default function ForgotPassword() {
     return () => clearInterval(id);
   }, [cooldown]);
 
+  // Rate-limit retry countdown — flips status back to idle when it hits 0.
+  useEffect(() => {
+    if (retryIn <= 0) return;
+    const id = setInterval(() => {
+      setRetryIn((r) => {
+        const next = Math.max(0, r - 1);
+        if (next === 0) setStatus((s) => (s === 'rate_limited' ? 'idle' : s));
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [retryIn]);
+
   // Refs for keyboard-friendly focus transitions on status change.
   const statusRegionRef = useRef<HTMLDivElement>(null);
   const resendButtonRef = useRef<HTMLButtonElement>(null);
