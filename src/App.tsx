@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PersonaProvider } from "@/contexts/PersonaContext";
+import { SpecialtyProvider } from "@/contexts/SpecialtyContext";
 import { useActivityTracker } from "@/hooks/useActivityTracker";
 import { useSiteTracker } from "@/hooks/useSiteTracker";
 
@@ -89,6 +90,7 @@ const queryClient = new QueryClient();
        <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <SpecialtyProvider>
             <PersonaProvider>
               <ActivityTracker>
                 <Suspense fallback={<PageLoader />}>
@@ -142,6 +144,7 @@ const queryClient = new QueryClient();
                 </Suspense>
               </ActivityTracker>
             </PersonaProvider>
+            </SpecialtyProvider>
           </AuthProvider>
         </BrowserRouter>
      </TooltipProvider>
