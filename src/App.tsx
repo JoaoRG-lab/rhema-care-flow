@@ -122,6 +122,7 @@ const queryClient = new QueryClient();
                     <Route path="/blockchain" element={<ProtectedRoute><BlockchainRegistry /></ProtectedRoute>} />
                     <Route path="/urv" element={<UrvPage />} />
                     <Route path="/reumato" element={<ReumatoPortal />} />
+                    <Route path="/pediatria" element={<PediatriaPortal />} />
                     <Route path="/especialidades" element={<SpecialtyPortal />} />
                     <Route path="/specialty/:specialtyId" element={<SpecialtyPortal />} />
                     <Route path="/ai-research" element={<ProtectedRoute><AIResearch /></ProtectedRoute>} />
