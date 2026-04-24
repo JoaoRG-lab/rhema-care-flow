@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
+import { useAICredits } from '@/hooks/useAICredits';
+import { PaywallDialog } from '@/components/billing/PaywallDialog';
 
 interface AgentRun {
   agent_name: string;
@@ -30,9 +32,22 @@ interface AgentRun {
 const FREE_AI_BALANCE_USD = 1; // Lovable AI free monthly balance
 const FREE_CLOUD_BALANCE_USD = 25; // Lovable Cloud free monthly balance
 
+interface PaymentTx {
+  id: string;
+  amount_brl: number;
+  credits_amount: number;
+  package_label: string | null;
+  status: string;
+  created_at: string;
+  paid_at: string | null;
+}
+
 export default function SettingsCredits() {
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [transactions, setTransactions] = useState<PaymentTx[]>([]);
+  const { credits, remainingFree, refresh } = useAICredits();
 
   useEffect(() => {
     const since = subDays(new Date(), 30).toISOString();
@@ -45,6 +60,15 @@ export default function SettingsCredits() {
       .then(({ data, error }) => {
         if (!error && data) setRuns(data as AgentRun[]);
         setLoading(false);
+      });
+
+    supabase
+      .from('payment_transactions')
+      .select('id,amount_brl,credits_amount,package_label,status,created_at,paid_at')
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => {
+        if (data) setTransactions(data as PaymentTx[]);
       });
   }, []);
 
