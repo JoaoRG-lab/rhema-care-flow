@@ -153,7 +153,7 @@ export function useAIAssistant() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading, consumeCredit]);
+  }, [messages, isLoading, user]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
