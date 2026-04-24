@@ -76,10 +76,10 @@ export default function ReumatoPortal() {
             </div>
           </Link>
           <div className="flex items-center gap-4">
-            <Link to="/login">
+            <Link to="/login?redirect=%2Freumato">
               <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/signup?redirect=%2Freumato">
               <Button size="sm" className="gap-2 bg-gradient-to-r from-primary to-[hsl(165_60%_48%)] hover:opacity-90">
                 Get Started <ArrowRight className="h-4 w-4" />
               </Button>
