@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { Resend, sendEmail } from "../_shared/resend.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,19 +71,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Test mode - send to single email
     if (testMode && testEmail) {
-      const result = await resend.emails.send({
+      const result = await sendEmail(resend, {
         from: `${campaign.sender_name} <${campaign.sender_email}>`,
-        to: [testEmail],
+        to: testEmail,
         subject: `[TEST] ${campaign.email_subject}`,
         html: campaign.email_body,
       });
 
-      return new Response(JSON.stringify({ 
-        success: true, 
+      return new Response(JSON.stringify({
+        success: result.ok,
         testMode: true,
-        messageId: result.data?.id 
+        messageId: result.id,
+        error: result.error,
       }), {
-        status: 200,
+        status: result.ok ? 200 : 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -149,12 +150,14 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Send email
-        const emailResult = await resend.emails.send({
+        const emailResult = await sendEmail(resend, {
           from: `${campaign.sender_name} <${campaign.sender_email}>`,
-          to: [contact.email],
+          to: contact.email,
           subject: emailSubject,
           html: emailBody,
         });
+
+        if (!emailResult.ok) throw new Error(emailResult.error ?? "send failed");
 
         // Create send record
         await supabase.from("outreach_sends").insert({
@@ -162,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
           contact_id: contact.id,
           status: "sent",
           sent_at: new Date().toISOString(),
-          resend_message_id: emailResult.data?.id,
+          resend_message_id: emailResult.id,
         });
 
         results.sent++;
