@@ -54,19 +54,37 @@ export function useSiteTracker() {
     const ua = navigator.userAgent;
     const { browser, os, deviceType } = parseUserAgent(ua);
 
-    // Update duration for previous page
+    // Update duration for previous page — select the row first, then update by id
+    // so we never accidentally update every matching row.
     if (lastPath.current) {
       const duration = Math.round((Date.now() - startTime.current) / 1000);
-      // Fire and forget - update is best effort
-      supabase
-        .from('site_visits' as any)
-        .update({ duration_seconds: duration, is_bounce: false } as any)
-        .eq('visitor_id', visitorId)
-        .eq('page_path', lastPath.current)
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .then(() => {});
+      const previousPath = lastPath.current;
+      (async () => {
+        const { data, error: selectError } = await supabase
+          .from('site_visits')
+          .select('id')
+          .eq('visitor_id', visitorId)
+          .eq('page_path', previousPath)
+          .eq('session_id', sessionId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (selectError) {
+          console.error('[useSiteTracker] failed to find previous visit:', selectError);
+          return;
+        }
+        if (!data) return;
+
+        const { error: updateError } = await supabase
+          .from('site_visits')
+          .update({ duration_seconds: duration, is_bounce: false })
+          .eq('id', data.id);
+
+        if (updateError) {
+          console.error('[useSiteTracker] failed to update visit duration:', updateError);
+        }
+      })();
     }
 
     startTime.current = Date.now();
@@ -74,7 +92,7 @@ export function useSiteTracker() {
 
     // Record new page visit
     supabase
-      .from('site_visits' as any)
+      .from('site_visits')
       .insert({
         visitor_id: visitorId,
         session_id: sessionId,
@@ -87,7 +105,9 @@ export function useSiteTracker() {
         device_type: deviceType,
         browser,
         os,
-      } as any)
-      .then(() => {});
+      })
+      .then(({ error }) => {
+        if (error) console.error('[useSiteTracker] failed to insert visit:', error);
+      });
   }, [location.pathname]);
 }

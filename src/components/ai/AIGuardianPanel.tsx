@@ -22,6 +22,7 @@ import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
 
 interface Standards {
   identity: {
@@ -348,7 +349,7 @@ export function AIGuardianPanel() {
                           </div>
                         </div>
                         <div className="prose prose-sm dark:prose-invert max-w-none">
-                          <ReactMarkdown>{conf.confirmation}</ReactMarkdown>
+                          <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{conf.confirmation}</ReactMarkdown>
                         </div>
                         <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs text-muted-foreground">
                           <span>Issued by: {conf.issued_by}</span>
@@ -397,7 +398,7 @@ export function AIGuardianPanel() {
                       >
                         {msg.role === 'assistant' ? (
                           <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
                           <p className="text-sm">{msg.content}</p>

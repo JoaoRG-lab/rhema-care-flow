@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, ExternalLink, Calendar, Star, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
 import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
 import { exportContentAsPdf } from '@/lib/contentPdfExport';
 import type { EducationContent } from '@/types/education';
@@ -77,7 +78,7 @@ export function ContentViewer({ content, open, onOpenChange }: ContentViewerProp
         
         <div className="flex-1 min-h-0 overflow-y-auto mt-4 pr-2">
           <article className="prose prose-sm dark:prose-invert max-w-none">
-            <ReactMarkdown>{content.content}</ReactMarkdown>
+            <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{content.content}</ReactMarkdown>
           </article>
         </div>
         
