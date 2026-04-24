@@ -173,6 +173,51 @@ export default function ResetPassword() {
             </form>
           )}
         </CardContent>
+
+          {/* Help section — common causes + one-click route to request a fresh email */}
+          <div className="pt-2 border-t">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="help" className="border-none">
+                <AccordionTrigger className="text-sm hover:no-underline py-2">
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <HelpCircle className="h-4 w-4" />
+                    Why isn't my reset link working?
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground space-y-3">
+                  <ul className="list-disc list-inside space-y-1.5">
+                    <li>
+                      <span className="font-medium text-foreground">Link expired.</span>{' '}
+                      Reset links are valid for ~1 hour for your security.
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">Already used.</span>{' '}
+                      Each link works only once — opening it twice invalidates it.
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">Opened in a different browser.</span>{' '}
+                      Some email clients pre-fetch links, consuming the token.
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">Newer email requested.</span>{' '}
+                      Sending a new reset email invalidates earlier ones.
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">Copy-paste truncation.</span>{' '}
+                      Make sure the full URL was pasted, including everything after <code>#</code>.
+                    </li>
+                  </ul>
+                  <Button asChild size="sm" className="w-full">
+                    <Link to="/forgot-password">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send me a new reset email
+                    </Link>
+                  </Button>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
