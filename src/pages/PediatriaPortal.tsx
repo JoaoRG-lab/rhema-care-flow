@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePublicEducationContent } from '@/hooks/usePublicEducationContent';
+import { ContentVoteButtons } from '@/components/education/ContentVoteButtons';
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -336,6 +337,12 @@ export default function PediatriaPortal() {
                           >
                             Ler <ExternalLink className="h-3 w-3" />
                           </span>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between">
+                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            Foi útil?
+                          </span>
+                          <ContentVoteButtons contentId={item.id} accentColor={PEDIA_COLOR} />
                         </div>
                       </CardContent>
                     </Card>

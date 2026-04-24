@@ -595,6 +595,44 @@ export type Database = {
         }
         Relationships: []
       }
+      education_content_votes: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          is_helpful: boolean
+          updated_at: string
+          user_id: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          is_helpful: boolean
+          updated_at?: string
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          is_helpful?: boolean
+          updated_at?: string
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_content_votes_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "education_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_aggregated_stats: {
         Row: {
           cohort_key: string
