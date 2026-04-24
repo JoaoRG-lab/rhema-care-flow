@@ -643,6 +643,109 @@ export default function PediatriaPortal() {
         </div>
       </section>
 
+      {/* Reader (matches /learn/pediatrics dialog) */}
+      <Dialog open={!!viewing} onOpenChange={(open) => !open && closeViewer()}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {viewing && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <Badge
+                    variant="secondary"
+                    style={{ backgroundColor: `${PEDIA_COLOR}15`, color: PEDIA_COLOR }}
+                  >
+                    {viewing.category}
+                  </Badge>
+                  {viewing.is_featured && (
+                    <Badge variant="default" className="gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      Destaque
+                    </Badge>
+                  )}
+                  {viewing.diagnosis_tags?.slice(0, 3).map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                <DialogTitle className="text-2xl">{viewing.title}</DialogTitle>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2">
+                  {viewing.reading_time_minutes && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {viewing.reading_time_minutes} min de leitura
+                    </span>
+                  )}
+                  {viewing.published_at && (
+                    <span>{format(new Date(viewing.published_at), 'dd MMMM yyyy')}</span>
+                  )}
+                </div>
+              </DialogHeader>
+
+              {viewing.featured_image_url && (
+                <img
+                  src={viewing.featured_image_url}
+                  alt={viewing.title}
+                  className="w-full rounded-lg my-4"
+                />
+              )}
+
+              {viewing.summary && (
+                <p className="text-base text-muted-foreground italic border-l-2 border-primary pl-4 my-4">
+                  {viewing.summary}
+                </p>
+              )}
+
+              <article className="prose prose-sm md:prose-base max-w-none dark:prose-invert">
+                <ReactMarkdown>{viewing.content}</ReactMarkdown>
+              </article>
+
+              {viewing.external_url && (
+                <a
+                  href={viewing.external_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-4"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Recurso externo
+                </a>
+              )}
+
+              <div className="flex flex-wrap items-center justify-between gap-3 mt-6 pt-6 border-t">
+                <ContentVoteButtons contentId={viewing.id} accentColor={PEDIA_COLOR} />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() =>
+                      exportContentAsPdf(viewing.title, viewing.content, {
+                        category: viewing.category,
+                        date: viewing.published_at
+                          ? format(new Date(viewing.published_at), 'MMMM d, yyyy')
+                          : undefined,
+                        tags: viewing.diagnosis_tags,
+                      })
+                    }
+                  >
+                    <Download className="h-4 w-4" />
+                    PDF
+                  </Button>
+                  <Button
+                    size="sm"
+                    className={`gap-2 bg-gradient-to-r ${PEDIA_GRADIENT} hover:opacity-90`}
+                    onClick={closeViewer}
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Quick Access */}
       <section className="py-16 px-6 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
