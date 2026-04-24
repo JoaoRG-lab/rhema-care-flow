@@ -133,7 +133,7 @@ export default function ReumatoPortal() {
                   Open Calculators
                 </Button>
               </Link>
-              <Link to="/signup">
+              <Link to="/signup?redirect=%2Freumato">
                 <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base">
                   <Users className="h-5 w-5" />
                   Create Free Account
