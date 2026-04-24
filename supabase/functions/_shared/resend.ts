@@ -56,16 +56,19 @@ export async function sendEmail(
   params: SendEmailParams,
 ): Promise<SendEmailResult> {
   try {
-    const { data, error } = await client.emails.send({
+    // Resend's TS types are strict (e.g. require either html or text and use
+    // camelCase keys), but the runtime accepts our flexible shape. Cast to
+    // `never` so callers can keep a single ergonomic interface.
+    const payload = {
       from: params.from,
       to: Array.isArray(params.to) ? params.to : [params.to],
       subject: params.subject,
       html: params.html,
       text: params.text,
-      // Resend SDK accepts these but its TS types are narrower than reality.
-      attachments: params.attachments as never,
-      replyTo: params.reply_to as never,
-    });
+      attachments: params.attachments,
+      replyTo: params.reply_to,
+    };
+    const { data, error } = await client.emails.send(payload as never);
 
     if (error) {
       return { ok: false, error: error.message ?? "Unknown Resend error", details: error };
