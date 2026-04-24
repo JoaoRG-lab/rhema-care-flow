@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PersonaProvider } from "@/contexts/PersonaContext";
+import { SpecialtyProvider } from "@/contexts/SpecialtyContext";
 import { useActivityTracker } from "@/hooks/useActivityTracker";
 import { useSiteTracker } from "@/hooks/useSiteTracker";
 
@@ -48,6 +49,7 @@ const UrvPage = lazy(() => import("./pages/UrvPage"));
 const ReumatoPortal = lazy(() => import("./pages/ReumatoPortal"));
 const PediatriaPortal = lazy(() => import("./pages/PediatriaPortal"));
 const GinecologiaPortal = lazy(() => import("./pages/GinecologiaPortal"));
+const ObstetriciaPortal = lazy(() => import("./pages/ObstetriciaPortal"));
 const SpecialtyPortal = lazy(() => import("./pages/SpecialtyPortal"));
 const AIResearch = lazy(() => import("./pages/AIResearch"));
 const OutreachCRM = lazy(() => import("./pages/OutreachCRM"));
@@ -91,6 +93,7 @@ const queryClient = new QueryClient();
        <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <SpecialtyProvider>
             <PersonaProvider>
               <ActivityTracker>
                 <Suspense fallback={<PageLoader />}>
@@ -127,6 +130,7 @@ const queryClient = new QueryClient();
                     <Route path="/reumato" element={<ReumatoPortal />} />
                     <Route path="/pediatria" element={<PediatriaPortal />} />
                     <Route path="/ginecologia" element={<GinecologiaPortal />} />
+                    <Route path="/obstetrics" element={<ObstetriciaPortal />} />
                     <Route path="/gineco-obstetricia" element={<Navigate to="/ginecologia" replace />} />
                     <Route path="/obstetricia" element={<Navigate to="/ginecologia" replace />} />
                     <Route path="/especialidades" element={<SpecialtyPortal />} />
@@ -148,6 +152,7 @@ const queryClient = new QueryClient();
                 </Suspense>
               </ActivityTracker>
             </PersonaProvider>
+            </SpecialtyProvider>
           </AuthProvider>
         </BrowserRouter>
      </TooltipProvider>

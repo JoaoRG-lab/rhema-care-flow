@@ -23,6 +23,7 @@ import {
 import { SpecialtyPortalTemplate } from '@/components/specialty/SpecialtyPortalTemplate';
 import PediatriaPortal from '@/pages/PediatriaPortal';
 import GinecologiaPortal from '@/pages/GinecologiaPortal';
+import ObstetriciaPortal from '@/pages/ObstetriciaPortal';
 
 export default function SpecialtyPortal() {
   const { specialtyId } = useParams<{ specialtyId?: string }>();
@@ -62,6 +63,11 @@ export default function SpecialtyPortal() {
     // Obstetrics & Gynecology has a dedicated PT-BR portal at /ginecologia
     if (specialty.id === 'obstetrics') {
       return <GinecologiaPortal />;
+    }
+
+    // Obstetrics has a dedicated, full portal
+    if (specialty.id === 'obstetrics') {
+      return <ObstetriciaPortal />;
     }
 
     return <SpecialtyPortalTemplate specialty={specialty} />;
@@ -142,13 +148,10 @@ export default function SpecialtyPortal() {
               {activeSpecialties.map((specialty) => {
                 const Icon = specialty.icon;
                 const href =
-                  specialty.id === 'rheumatology'
-                    ? '/reumato'
-                    : specialty.id === 'pediatrics'
-                      ? '/pediatria'
-                      : specialty.id === 'obstetrics'
-                        ? '/ginecologia'
-                        : `/specialty/${specialty.id}`;
+                  specialty.id === 'rheumatology' ? '/reumato'
+                  : specialty.id === 'pediatrics'  ? '/pediatria'
+                  : specialty.id === 'obstetrics'  ? '/ginecologia'
+                  : `/specialty/${specialty.id}`;
                 
                 return (
                   <Link key={specialty.id} to={href}>
