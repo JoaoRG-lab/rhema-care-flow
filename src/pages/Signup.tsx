@@ -19,6 +19,11 @@ export default function Signup() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
+  const loginHref = redirectTo !== '/dashboard'
+    ? `/login?redirect=${encodeURIComponent(redirectTo)}`
+    : '/login';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
