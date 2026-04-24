@@ -150,6 +150,7 @@ const queryClient = new QueryClient();
                     <Route path="/site-analytics" element={<ProtectedRoute><SiteAnalytics /></ProtectedRoute>} />
                     <Route path="/case-studies" element={<CaseStudies />} />
                     <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+                    <Route path="/admin/billing" element={<ProtectedRoute><AdminBilling /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
