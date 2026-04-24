@@ -177,32 +177,58 @@ export default function AIAssistant() {
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-4 border-t bg-muted/30">
+            <div className="p-4 border-t bg-muted/30 space-y-3">
+              {isLocked && credits && (
+                <Alert variant="destructive" className="border-destructive/40">
+                  <Lock className="h-4 w-4" />
+                  <AlertTitle>Sem créditos disponíveis</AlertTitle>
+                  <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <span>
+                      Sua cota grátis acabou. Compre créditos via PIX para continuar usando o assistente.
+                    </span>
+                    <Button
+                      size="sm"
+                      onClick={() => setPaywallOpen(true)}
+                      className="shrink-0"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Comprar via PIX
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <Textarea
                   ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask about configuration, features, or best practices..."
+                  placeholder={
+                    isLocked
+                      ? 'Compre créditos via PIX para enviar mensagens...'
+                      : 'Ask about configuration, features, or best practices...'
+                  }
                   className="min-h-[44px] max-h-[120px] resize-none"
                   rows={1}
-                  disabled={isLoading}
+                  disabled={isLoading || isLocked}
                 />
                 <Button
                   type="submit"
                   size="icon"
-                  disabled={!input.trim() || isLoading}
+                  disabled={!input.trim() || isLoading || isLocked}
                   className="shrink-0"
+                  title={isLocked ? 'Compre créditos para enviar' : 'Enviar'}
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isLocked ? (
+                    <Lock className="h-4 w-4" />
                   ) : (
                     <Send className="h-4 w-4" />
                   )}
                 </Button>
               </form>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 Press Enter to send, Shift+Enter for new line
               </p>
             </div>
