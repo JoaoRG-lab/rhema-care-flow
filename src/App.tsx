@@ -40,6 +40,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Education = lazy(() => import("./pages/Education"));
 const KnowledgeLibrary = lazy(() => import("./pages/KnowledgeLibrary"));
 const PatientEducationLibrary = lazy(() => import("./pages/PatientEducationLibrary"));
+const LearnPediatrics = lazy(() => import("./pages/LearnPediatrics"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const AIAssistant = lazy(() => import("./pages/AIAssistant"));
 const BlockchainRegistry = lazy(() => import("./pages/BlockchainRegistry"));
