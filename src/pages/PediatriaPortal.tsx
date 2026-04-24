@@ -500,6 +500,7 @@ export default function PediatriaPortal() {
             </div>
           )}
 
+          {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-48 rounded-xl" />
