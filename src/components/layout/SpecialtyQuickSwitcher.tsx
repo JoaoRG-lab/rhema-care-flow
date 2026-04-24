@@ -61,7 +61,7 @@ export function SpecialtyQuickSwitcher() {
     }
   }, [currentId, storedId]);
 
-  const displayedId = currentId ?? storedId;
+  const displayedId = currentId;
   const displayed = activeSpecialties.find((s) => s.id === displayedId);
 
   const handleSwitch = (specialtyId: string) => {
