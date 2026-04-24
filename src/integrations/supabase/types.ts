@@ -208,39 +208,6 @@ export type Database = {
           },
         ]
       }
-      alpha_invites: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          institution: string | null
-          message: string | null
-          name: string
-          role: string
-          society: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          institution?: string | null
-          message?: string | null
-          name: string
-          role: string
-          society: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          institution?: string | null
-          message?: string | null
-          name?: string
-          role?: string
-          society?: string
-        }
-        Relationships: []
-      }
       audit_logs: {
         Row: {
           action: string

@@ -33,7 +33,7 @@ interface SpecialtyQuickSwitcherProps {
 
 export function SpecialtyQuickSwitcher({ compact = false }: SpecialtyQuickSwitcherProps) {
   const navigate = useNavigate();
-  const { specialty: specialtyId, setSpecialty } = useSpecialty();
+  const { specialtyId, setSpecialty } = useSpecialty();
   const { user } = useAuth();
 
   // local mirror for reset-button disable state

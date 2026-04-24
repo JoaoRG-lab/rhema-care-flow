@@ -564,11 +564,6 @@
     category: 'monitoring',
     diseases: ['obgyn'],
     reference: 'Institute of Medicine, 2009',
-    description: 'Avaliação do colo uterino para indução do trabalho de parto (0–13).',
-    category: 'disease-activity',
-    diseases: ['general'],
-    formula: 'Dilatação + Apagamento + Estação + Consistência + Posição',
-    reference: 'Bishop EH. Obstet Gynecol. 1964',
     implemented: true,
   },
   {
