@@ -36,6 +36,7 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
   const [pix, setPix] = useState<PixData | null>(null);
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid" | "failed" | "expired">("pending");
 
   useEffect(() => {
     if (!open) {
