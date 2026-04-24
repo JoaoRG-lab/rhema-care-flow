@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
@@ -6,6 +6,8 @@ import {
   ArrowLeft,
   Baby,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Download,
   ExternalLink,
