@@ -6,10 +6,12 @@
    user: User | null;
    session: Session | null;
    loading: boolean;
-   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
-   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-   signOut: () => Promise<void>;
- }
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
+}
  
  const AuthContext = createContext<AuthContextType | undefined>(undefined);
  
@@ -58,16 +60,28 @@
      return { error };
    };
  
-   const signOut = async () => {
-     await supabase.auth.signOut();
-   };
- 
-   return (
-     <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
-       {children}
-     </AuthContext.Provider>
-   );
- }
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error };
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, resetPassword, updatePassword }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
  
  export function useAuth() {
    const context = useContext(AuthContext);
