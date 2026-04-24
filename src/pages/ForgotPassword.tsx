@@ -18,7 +18,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-type ResetStatus = 'idle' | 'requested' | 'sent' | 'expired' | 'error';
+type ResetStatus = 'idle' | 'requested' | 'sent' | 'expired' | 'error' | 'rate_limited';
+
+// Default backoff window when the auth service rate-limits us. Supabase
+// typically allows another attempt after ~60s.
+const RATE_LIMIT_WAIT_S = 60;
 
 const emailSchema = z
   .string()
@@ -65,6 +69,7 @@ export default function ForgotPassword() {
     persisted ? Math.max(0, Math.ceil((persisted.cooldownUntil - Date.now()) / 1000)) : 0,
   );
   const [now, setNow] = useState(Date.now());
+  const [retryIn, setRetryIn] = useState(0);
 
   // Tick every second so the "sent X min ago" + expiry banner update live.
   useEffect(() => {
@@ -86,6 +91,19 @@ export default function ForgotPassword() {
     const id = setInterval(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
     return () => clearInterval(id);
   }, [cooldown]);
+
+  // Rate-limit retry countdown — flips status back to idle when it hits 0.
+  useEffect(() => {
+    if (retryIn <= 0) return;
+    const id = setInterval(() => {
+      setRetryIn((r) => {
+        const next = Math.max(0, r - 1);
+        if (next === 0) setStatus((s) => (s === 'rate_limited' ? 'idle' : s));
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [retryIn]);
 
   // Refs for keyboard-friendly focus transitions on status change.
   const statusRegionRef = useRef<HTMLDivElement>(null);
@@ -112,9 +130,16 @@ export default function ForgotPassword() {
     try {
       const { error } = await resetPassword(target);
       if (error) {
-        if (/rate|too many/i.test(error.message)) {
-          setStatus('error');
-          setErrorMsg('Too many requests. Please wait a minute and try again.');
+        if (/rate|too many|429/i.test(error.message)) {
+          // Try to extract a wait hint like "after 42 seconds" from the
+          // upstream error; otherwise fall back to a sensible default.
+          const match = error.message.match(/(\d+)\s*(second|minute)/i);
+          const waitSeconds = match
+            ? Number(match[1]) * (match[2].toLowerCase().startsWith('m') ? 60 : 1)
+            : RATE_LIMIT_WAIT_S;
+          setStatus('rate_limited');
+          setRetryIn(waitSeconds);
+          setErrorMsg(null);
           return;
         }
         // Treat other errors as success to prevent account enumeration.
@@ -219,6 +244,46 @@ export default function ForgotPassword() {
                 <AlertTitle>Link expired</AlertTitle>
                 <AlertDescription>
                   Your previous reset link has expired. Send a new one to continue.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {status === 'rate_limited' && (
+              <Alert variant="destructive">
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                <AlertTitle>Too many attempts</AlertTitle>
+                <AlertDescription className="space-y-3">
+                  <p>
+                    Our authentication service is temporarily limiting reset
+                    requests for this address to protect your account.
+                  </p>
+                  <p className="text-sm">
+                    {retryIn > 0 ? (
+                      <>
+                        You can try again in{' '}
+                        <span className="font-semibold tabular-nums">
+                          {Math.floor(retryIn / 60) > 0
+                            ? `${Math.floor(retryIn / 60)}m ${retryIn % 60}s`
+                            : `${retryIn}s`}
+                        </span>
+                        .
+                      </>
+                    ) : (
+                      <>You can try again now.</>
+                    )}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={retryIn > 0 || !email}
+                    onClick={() => {
+                      if (retryIn > 0 || !email) return;
+                      void sendReset(email.trim().toLowerCase());
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {retryIn > 0 ? `Retry in ${retryIn}s` : 'Retry now'}
+                  </Button>
                 </AlertDescription>
               </Alert>
             )}
