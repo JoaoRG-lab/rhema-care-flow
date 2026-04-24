@@ -44,6 +44,7 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
       setSelectedPkg(null);
       setCopied(false);
       setPolling(false);
+      setPaymentStatus("pending");
     }
   }, [open]);
 
