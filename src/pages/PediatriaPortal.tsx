@@ -274,7 +274,7 @@ export default function PediatriaPortal() {
                   Abrir Calculadoras Pediátricas
                 </Button>
               </Link>
-              <Link to="/signup">
+              <Link to="/signup?redirect=%2Fpediatria">
                 <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base">
                   <Users className="h-5 w-5" />
                   Criar Conta Grátis
