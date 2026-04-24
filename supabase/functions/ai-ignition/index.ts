@@ -765,8 +765,6 @@ Respond in JSON:
 
   } catch (error) {
     console.error('Ignition error:', error);
-    return new Response(JSON.stringify({
-      error: String(error)
-    }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return errorResponse(error, { status: 500, code: "INTERNAL_ERROR", headers: corsHeaders });
   }
 });
