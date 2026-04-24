@@ -14,10 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Search, RefreshCw, Wallet, Receipt, Repeat, Shield } from "lucide-react";
+import { Loader2, Search, RefreshCw, Wallet, Receipt, Repeat, Shield, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
+import { UserBillingDrilldownDialog } from "@/components/admin/UserBillingDrilldownDialog";
 
 interface PaymentRow {
   id: string;
@@ -58,6 +59,12 @@ const statusVariant = (s: string): "default" | "secondary" | "destructive" | "ou
   return "destructive";
 };
 
+interface ProfileRow {
+  user_id: string;
+  full_name: string | null;
+  institution: string | null;
+}
+
 export default function AdminBilling() {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [tab, setTab] = useState("transactions");
@@ -66,6 +73,8 @@ export default function AdminBilling() {
   const [transactions, setTransactions] = useState<PaymentRow[]>([]);
   const [credits, setCredits] = useState<CreditsRow[]>([]);
   const [idem, setIdem] = useState<IdemRow[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string | null } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -92,6 +101,28 @@ export default function AdminBilling() {
       setTransactions((tx as PaymentRow[]) ?? []);
       setCredits((cr as CreditsRow[]) ?? []);
       setIdem((id as IdemRow[]) ?? []);
+
+      // Load profiles for displayed user_ids
+      const ids = Array.from(
+        new Set([
+          ...((tx as PaymentRow[]) ?? []).map((t) => t.user_id),
+          ...((cr as CreditsRow[]) ?? []).map((c) => c.user_id),
+          ...((id as IdemRow[]) ?? []).map((i) => i.user_id),
+        ])
+      );
+      if (ids.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id,full_name,institution")
+          .in("user_id", ids);
+        const map: Record<string, ProfileRow> = {};
+        (profs ?? []).forEach((p) => {
+          map[p.user_id] = p as ProfileRow;
+        });
+        setProfiles(map);
+      } else {
+        setProfiles({});
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao carregar dados");
     } finally {
@@ -132,6 +163,32 @@ export default function AdminBilling() {
           ),
     [idem, f]
   );
+
+  // User search across all loaded data + profiles
+  const userSearchResults = useMemo(() => {
+    if (!f) return [];
+    const ids = new Set<string>();
+    const matchProfile = (uid: string) => {
+      const p = profiles[uid];
+      return (
+        uid.toLowerCase().includes(f) ||
+        (p?.full_name ?? "").toLowerCase().includes(f) ||
+        (p?.institution ?? "").toLowerCase().includes(f)
+      );
+    };
+    transactions.forEach((t) => matchProfile(t.user_id) && ids.add(t.user_id));
+    credits.forEach((c) => matchProfile(c.user_id) && ids.add(c.user_id));
+    idem.forEach((i) => matchProfile(i.user_id) && ids.add(i.user_id));
+    return Array.from(ids)
+      .slice(0, 10)
+      .map((id) => ({
+        id,
+        profile: profiles[id],
+        txCount: transactions.filter((t) => t.user_id === id).length,
+        reqCount: idem.filter((i) => i.user_id === id).length,
+        balance: credits.find((c) => c.user_id === id)?.credits_balance ?? 0,
+      }));
+  }, [f, transactions, credits, idem, profiles]);
 
   const totals = useMemo(() => {
     const paid = transactions.filter((t) => t.status === "paid");
@@ -196,6 +253,47 @@ export default function AdminBilling() {
             </Button>
           </div>
         </div>
+
+        {/* User search results */}
+        {userSearchResults.length > 0 && (
+          <Card className="p-3">
+            <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5" />
+              Resultados de usuários ({userSearchResults.length})
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {userSearchResults.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() =>
+                    setSelectedUser({ id: u.id, name: u.profile?.full_name ?? null })
+                  }
+                  className="flex items-center justify-between gap-3 rounded-md border p-2.5 text-left transition-colors hover:bg-accent"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">
+                      {u.profile?.full_name ?? "(sem nome)"}
+                    </div>
+                    <div className="font-mono text-xs text-muted-foreground truncate">
+                      {short(u.id)}
+                    </div>
+                    {u.profile?.institution && (
+                      <div className="text-xs text-muted-foreground truncate">
+                        {u.profile.institution}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right text-xs shrink-0">
+                    <div className="font-bold text-primary">{u.balance} créd.</div>
+                    <div className="text-muted-foreground">
+                      {u.txCount} pag · {u.reqCount} req
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -273,7 +371,19 @@ export default function AdminBilling() {
                         <TableCell className="text-xs whitespace-nowrap">
                           {fmtDate(t.created_at)}
                         </TableCell>
-                        <TableCell className="font-mono text-xs">{short(t.user_id)}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <button
+                            onClick={() =>
+                              setSelectedUser({
+                                id: t.user_id,
+                                name: profiles[t.user_id]?.full_name ?? null,
+                              })
+                            }
+                            className="hover:text-primary hover:underline"
+                          >
+                            {short(t.user_id)}
+                          </button>
+                        </TableCell>
                         <TableCell className="text-sm">{t.package_label ?? "—"}</TableCell>
                         <TableCell className="text-right font-medium">
                           {brl(Number(t.amount_brl))}
@@ -322,7 +432,19 @@ export default function AdminBilling() {
                   ) : (
                     filteredCredits.map((c) => (
                       <TableRow key={c.user_id}>
-                        <TableCell className="font-mono text-xs">{short(c.user_id)}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <button
+                            onClick={() =>
+                              setSelectedUser({
+                                id: c.user_id,
+                                name: profiles[c.user_id]?.full_name ?? null,
+                              })
+                            }
+                            className="hover:text-primary hover:underline"
+                          >
+                            {short(c.user_id)}
+                          </button>
+                        </TableCell>
                         <TableCell className="text-right font-bold text-primary">
                           {c.credits_balance}
                         </TableCell>
@@ -365,7 +487,19 @@ export default function AdminBilling() {
                         <TableCell className="text-xs whitespace-nowrap">
                           {fmtDate(i.created_at)}
                         </TableCell>
-                        <TableCell className="font-mono text-xs">{short(i.user_id)}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <button
+                            onClick={() =>
+                              setSelectedUser({
+                                id: i.user_id,
+                                name: profiles[i.user_id]?.full_name ?? null,
+                              })
+                            }
+                            className="hover:text-primary hover:underline"
+                          >
+                            {short(i.user_id)}
+                          </button>
+                        </TableCell>
                         <TableCell className="font-mono text-xs">
                           {short(i.idempotency_key, 10, 6)}
                         </TableCell>
@@ -386,6 +520,12 @@ export default function AdminBilling() {
           </TabsContent>
         </Tabs>
       </div>
+      <UserBillingDrilldownDialog
+        userId={selectedUser?.id ?? null}
+        displayName={selectedUser?.name ?? null}
+        open={!!selectedUser}
+        onOpenChange={(o) => !o && setSelectedUser(null)}
+      />
     </AppLayout>
   );
 }
