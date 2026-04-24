@@ -39,8 +39,9 @@ const QUICK_PROMPTS = [
 
 export default function AIAssistant() {
   const { messages, isLoading, sendMessage, clearMessages, paywallOpen, setPaywallOpen } = useAIAssistant();
-  const { credits, remainingFree, refresh: refreshCredits } = useAICredits();
+  const { credits, remainingFree, hasAccess, refresh: refreshCredits } = useAICredits();
   const [input, setInput] = useState('');
+  const isLocked = !hasAccess;
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
