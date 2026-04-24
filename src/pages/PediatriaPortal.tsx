@@ -6,6 +6,7 @@ import { FeatureCard, FeatureGrid } from '@/components/brand/FeatureCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { usePublicEducationContent } from '@/hooks/usePublicEducationContent';
 import { ContentVoteButtons } from '@/components/education/ContentVoteButtons';
 import { useMemo, useState } from 'react';
@@ -28,6 +29,9 @@ import {
   BookOpen,
   Clock,
   ExternalLink,
+  Search,
+  Tag,
+  X,
 } from 'lucide-react';
 
 const PEDIA_COLOR = 'hsl(195 75% 55%)';
@@ -119,6 +123,8 @@ function CardImage({ src, alt }: { src: string; alt: string }) {
 export default function PediatriaPortal() {
   const { content, loading } = usePublicEducationContent();
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTags, setActiveTags] = useState<string[]>([]);
 
   const allPediatric = useMemo(
     () =>
@@ -136,19 +142,60 @@ export default function PediatriaPortal() {
       if (!c.category) return;
       map.set(c.category, (map.get(c.category) ?? 0) + 1);
     });
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1]);
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [allPediatric]);
 
-  const filteredPediatric = useMemo(
-    () =>
-      activeCategory === 'all'
-        ? allPediatric
-        : allPediatric.filter((c) => c.category === activeCategory),
-    [allPediatric, activeCategory],
-  );
+  const tagCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    allPediatric.forEach((c) => {
+      c.diagnosis_tags?.forEach((t) => {
+        if (!t) return;
+        map.set(t, (map.get(t) ?? 0) + 1);
+      });
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 18);
+  }, [allPediatric]);
+
+  const filteredPediatric = useMemo(() => {
+    let list = allPediatric;
+    if (activeCategory !== 'all') {
+      list = list.filter((c) => c.category === activeCategory);
+    }
+    if (activeTags.length > 0) {
+      list = list.filter((c) =>
+        activeTags.every((t) => c.diagnosis_tags?.includes(t)),
+      );
+    }
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (c) =>
+          c.title.toLowerCase().includes(q) ||
+          c.summary?.toLowerCase().includes(q) ||
+          c.content.toLowerCase().includes(q) ||
+          c.diagnosis_tags?.some((t) => t.toLowerCase().includes(q)),
+      );
+    }
+    return list;
+  }, [allPediatric, activeCategory, activeTags, searchQuery]);
 
   const pediatricContent = filteredPediatric.slice(0, 9);
+  const hasActiveFilters =
+    activeCategory !== 'all' || activeTags.length > 0 || searchQuery.trim().length > 0;
+
+  const toggleTag = (tag: string) => {
+    setActiveTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
+  };
+
+  const clearAllFilters = () => {
+    setActiveCategory('all');
+    setActiveTags([]);
+    setSearchQuery('');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -363,6 +410,91 @@ export default function PediatriaPortal() {
                 <p className="text-xs text-muted-foreground mt-3">
                   Mostrando <span className="font-medium text-foreground">{filteredPediatric.length}</span>{' '}
                   publicações em <span className="font-medium text-foreground">{activeCategory}</span>.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Search + tag filters */}
+          {!loading && allPediatric.length > 0 && (
+            <div className="mb-8 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar por título, resumo ou diagnóstico..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10"
+                  />
+                </div>
+                {hasActiveFilters && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="gap-2 self-start md:self-auto"
+                  >
+                    <X className="h-4 w-4" />
+                    Limpar filtros
+                  </Button>
+                )}
+              </div>
+
+              {tagCounts.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                      Tags clínicas
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {tagCounts.map(([tag, count]) => {
+                      const active = activeTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleTag(tag)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all ${
+                            active
+                              ? 'border-transparent text-white shadow-sm'
+                              : 'bg-card border-border hover:border-primary/40'
+                          }`}
+                          style={active ? { backgroundColor: PEDIA_COLOR } : undefined}
+                        >
+                          {tag}
+                          <span
+                            className={`px-1 rounded-full text-[10px] font-semibold ${
+                              active ? 'bg-white/20' : 'bg-muted text-muted-foreground'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {hasActiveFilters && (
+                <p className="text-xs text-muted-foreground">
+                  Mostrando{' '}
+                  <span className="font-medium text-foreground">{filteredPediatric.length}</span>{' '}
+                  {filteredPediatric.length === 1 ? 'publicação' : 'publicações'}
+                  {activeTags.length > 0 && (
+                    <>
+                      {' '}com{' '}
+                      <span className="font-medium text-foreground">
+                        {activeTags.join(' + ')}
+                      </span>
+                    </>
+                  )}
+                  .
                 </p>
               )}
             </div>
