@@ -58,7 +58,7 @@ export default function Login() {
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}${redirectTo}`,
       });
       if (error) {
         toast.error(error.message);
