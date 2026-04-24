@@ -1,22 +1,41 @@
-name: Rust
+name: Rust (Anchor)
 
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'anchor/**'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'anchor/**'
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            anchor/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('anchor/Cargo.lock') }}
+
+      - name: Build
+        working-directory: anchor
+        run: cargo build --verbose
+
+      - name: Run tests
+        working-directory: anchor
+        run: cargo test --verbose
