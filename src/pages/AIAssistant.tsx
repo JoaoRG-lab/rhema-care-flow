@@ -18,7 +18,9 @@ import {
   Calendar,
   FileText,
   Lightbulb,
+  Lock,
 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import { useAIAssistant, Message } from '@/hooks/useAIAssistant';
@@ -37,8 +39,9 @@ const QUICK_PROMPTS = [
 
 export default function AIAssistant() {
   const { messages, isLoading, sendMessage, clearMessages, paywallOpen, setPaywallOpen } = useAIAssistant();
-  const { credits, remainingFree, refresh: refreshCredits } = useAICredits();
+  const { credits, remainingFree, hasAccess, refresh: refreshCredits } = useAICredits();
   const [input, setInput] = useState('');
+  const isLocked = !hasAccess;
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -143,7 +146,7 @@ export default function AIAssistant() {
                         size="sm"
                         className="h-auto py-3 px-3 flex flex-col items-start text-left"
                         onClick={() => handleQuickPrompt(item.prompt)}
-                        disabled={isLoading}
+                        disabled={isLoading || isLocked}
                       >
                         <item.icon className="h-4 w-4 mb-1 text-primary" />
                         <span className="text-xs font-medium">{item.label}</span>
@@ -174,32 +177,58 @@ export default function AIAssistant() {
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-4 border-t bg-muted/30">
+            <div className="p-4 border-t bg-muted/30 space-y-3">
+              {isLocked && credits && (
+                <Alert variant="destructive" className="border-destructive/40">
+                  <Lock className="h-4 w-4" />
+                  <AlertTitle>Sem créditos disponíveis</AlertTitle>
+                  <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <span>
+                      Sua cota grátis acabou. Compre créditos via PIX para continuar usando o assistente.
+                    </span>
+                    <Button
+                      size="sm"
+                      onClick={() => setPaywallOpen(true)}
+                      className="shrink-0"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Comprar via PIX
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <Textarea
                   ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask about configuration, features, or best practices..."
+                  placeholder={
+                    isLocked
+                      ? 'Compre créditos via PIX para enviar mensagens...'
+                      : 'Ask about configuration, features, or best practices...'
+                  }
                   className="min-h-[44px] max-h-[120px] resize-none"
                   rows={1}
-                  disabled={isLoading}
+                  disabled={isLoading || isLocked}
                 />
                 <Button
                   type="submit"
                   size="icon"
-                  disabled={!input.trim() || isLoading}
+                  disabled={!input.trim() || isLoading || isLocked}
                   className="shrink-0"
+                  title={isLocked ? 'Compre créditos para enviar' : 'Enviar'}
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isLocked ? (
+                    <Lock className="h-4 w-4" />
                   ) : (
                     <Send className="h-4 w-4" />
                   )}
                 </Button>
               </form>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 Press Enter to send, Shift+Enter for new line
               </p>
             </div>
