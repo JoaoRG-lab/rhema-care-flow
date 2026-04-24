@@ -22,6 +22,8 @@ export default function Login() {
   const [resetLoading, setResetLoading] = useState(false);
   const { signIn, resetPassword } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
