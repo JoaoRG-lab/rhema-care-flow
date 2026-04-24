@@ -415,7 +415,91 @@ export default function PediatriaPortal() {
             </div>
           )}
 
-          {loading ? (
+          {/* Search + tag filters */}
+          {!loading && allPediatric.length > 0 && (
+            <div className="mb-8 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar por título, resumo ou diagnóstico..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10"
+                  />
+                </div>
+                {hasActiveFilters && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="gap-2 self-start md:self-auto"
+                  >
+                    <X className="h-4 w-4" />
+                    Limpar filtros
+                  </Button>
+                )}
+              </div>
+
+              {tagCounts.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                      Tags clínicas
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {tagCounts.map(([tag, count]) => {
+                      const active = activeTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleTag(tag)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all ${
+                            active
+                              ? 'border-transparent text-white shadow-sm'
+                              : 'bg-card border-border hover:border-primary/40'
+                          }`}
+                          style={active ? { backgroundColor: PEDIA_COLOR } : undefined}
+                        >
+                          {tag}
+                          <span
+                            className={`px-1 rounded-full text-[10px] font-semibold ${
+                              active ? 'bg-white/20' : 'bg-muted text-muted-foreground'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {hasActiveFilters && (
+                <p className="text-xs text-muted-foreground">
+                  Mostrando{' '}
+                  <span className="font-medium text-foreground">{filteredPediatric.length}</span>{' '}
+                  {filteredPediatric.length === 1 ? 'publicação' : 'publicações'}
+                  {activeTags.length > 0 && (
+                    <>
+                      {' '}com{' '}
+                      <span className="font-medium text-foreground">
+                        {activeTags.join(' + ')}
+                      </span>
+                    </>
+                  )}
+                  .
+                </p>
+              )}
+            </div>
+          )}
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-48 rounded-xl" />
