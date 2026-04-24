@@ -7,10 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { usePublicEducationContent } from '@/hooks/usePublicEducationContent';
 import { ContentVoteButtons } from '@/components/education/ContentVoteButtons';
+import { exportContentAsPdf } from '@/lib/contentPdfExport';
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
+import ReactMarkdown from 'react-markdown';
+import type { EducationContent } from '@/types/education';
 import {
   Calculator,
   Users,
