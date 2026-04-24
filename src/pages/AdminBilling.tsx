@@ -14,10 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Search, RefreshCw, Wallet, Receipt, Repeat, Shield } from "lucide-react";
+import { Loader2, Search, RefreshCw, Wallet, Receipt, Repeat, Shield, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
+import { UserBillingDrilldownDialog } from "@/components/admin/UserBillingDrilldownDialog";
 
 interface PaymentRow {
   id: string;
