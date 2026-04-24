@@ -41,6 +41,7 @@ import {
   Image as ImageIcon,
   HelpCircle,
   Sparkles,
+  Download,
 } from 'lucide-react';
 import type { ContentType } from '@/types/education';
 
