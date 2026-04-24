@@ -173,51 +173,64 @@ export default function ForgotPassword() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Status banners */}
-          {status === 'requested' && (
-            <Alert>
-              <Send className="h-4 w-4 animate-pulse" />
-              <AlertTitle>Sending request…</AlertTitle>
-              <AlertDescription>
-                Contacting the authentication service.
-              </AlertDescription>
-            </Alert>
-          )}
+          {/*
+            Status banners — wrapped in a polite live region so screen readers
+            announce transitions (requested → sent → expired/error) without
+            stealing focus. Errors use assertive to interrupt.
+          */}
+          <div
+            ref={statusRegionRef}
+            tabIndex={-1}
+            role="status"
+            aria-live={status === 'error' ? 'assertive' : 'polite'}
+            aria-atomic="true"
+            className="outline-none"
+          >
+            {status === 'requested' && (
+              <Alert>
+                <Send className="h-4 w-4 animate-pulse" aria-hidden="true" />
+                <AlertTitle>Sending request…</AlertTitle>
+                <AlertDescription>
+                  Contacting the authentication service.
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {status === 'sent' && (
-            <Alert className="border-primary/30">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
-              <AlertTitle>Email sent</AlertTitle>
-              <AlertDescription className="space-y-1">
-                <p>
-                  If an account exists for <span className="font-medium">{email}</span>,
-                  a reset link is on its way. Check your inbox and spam folder.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Sent {minutesAgo === 0 ? 'just now' : `${minutesAgo} min ago`} ·
-                  Link expires in ~{minutesLeft} min
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
+            {status === 'sent' && (
+              <Alert className="border-primary/30">
+                <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden="true" />
+                <AlertTitle>Email sent</AlertTitle>
+                <AlertDescription className="space-y-1">
+                  <p>
+                    If an account exists for <span className="font-medium">{email}</span>,
+                    a reset link is on its way. Check your inbox and spam folder.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Sent {minutesAgo === 0 ? 'just now' : `${minutesAgo} min ago`} ·
+                    Link expires in ~{minutesLeft} min
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {status === 'expired' && (
-            <Alert variant="destructive">
-              <Clock className="h-4 w-4" />
-              <AlertTitle>Link expired</AlertTitle>
-              <AlertDescription>
-                Your previous reset link has expired. Send a new one to continue.
-              </AlertDescription>
-            </Alert>
-          )}
+            {status === 'expired' && (
+              <Alert variant="destructive">
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                <AlertTitle>Link expired</AlertTitle>
+                <AlertDescription>
+                  Your previous reset link has expired. Send a new one to continue.
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {status === 'error' && errorMsg && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Couldn't send email</AlertTitle>
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
-          )}
+            {status === 'error' && errorMsg && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                <AlertTitle>Couldn't send email</AlertTitle>
+                <AlertDescription>{errorMsg}</AlertDescription>
+              </Alert>
+            )}
+          </div>
 
           {/* Form / retry actions */}
           {status === 'sent' || status === 'expired' ? (
