@@ -240,6 +240,7 @@ export default function ForgotPassword() {
               </p>
               <div className="flex gap-2">
                 <Button
+                  ref={resendButtonRef}
                   onClick={handleResend}
                   disabled={cooldown > 0}
                   className="flex-1"
