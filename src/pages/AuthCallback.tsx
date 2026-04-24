@@ -5,23 +5,23 @@ import { Loader2, Stethoscope } from "lucide-react";
  
  export default function AuthCallback() {
    const navigate = useNavigate();
+   const [searchParams] = useSearchParams();
    const [error, setError] = useState<string | null>(null);
  
    useEffect(() => {
      const handleCallback = async () => {
        try {
-         // Get the session from URL hash (OAuth providers return tokens in hash)
          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
          
          if (sessionError) {
            throw sessionError;
          }
- 
+
+         const redirectTo = searchParams.get('redirect') || '/dashboard';
+
          if (session) {
-           // Successfully authenticated, redirect to dashboard
-           navigate("/dashboard", { replace: true });
+           navigate(redirectTo, { replace: true });
          } else {
-           // No session found, redirect to login
            navigate("/login", { replace: true });
          }
        } catch (err) {
