@@ -50,7 +50,7 @@ export default function Login() {
       setLoading(false);
     } else {
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      navigate(redirectTo);
     }
   };
 
