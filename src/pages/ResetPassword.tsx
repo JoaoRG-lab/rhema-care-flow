@@ -172,7 +172,6 @@ export default function ResetPassword() {
               </Button>
             </form>
           )}
-        </CardContent>
 
           {/* Help section — common causes + one-click route to request a fresh email */}
           <div className="pt-2 border-t">
