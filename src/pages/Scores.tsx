@@ -59,7 +59,6 @@ import { HollidaySegarCalculator } from '@/components/scores/HollidaySegarCalcul
 import { RochesterCalculator } from '@/components/scores/RochesterCalculator';
 import { MCHATCalculator } from '@/components/scores/MCHATCalculator';
 import { BishopCalculator } from '@/components/scores/BishopCalculator';
-import { GestationalAgeCalculator } from '@/components/scores/GestationalAgeCalculator';
 import { PreeclampsiaCalculator } from '@/components/scores/PreeclampsiaCalculator';
 import { PEEarlyRiskCalculator } from '@/components/scores/PEEarlyRiskCalculator';
 import { HPPCalculator } from '@/components/scores/HPPCalculator';

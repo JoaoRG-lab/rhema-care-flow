@@ -73,13 +73,11 @@ export function AlphaInvite({ open, onOpenChange }: AlphaInviteProps) {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('alpha_invites').insert({
+      const { error } = await supabase.from('feedback_submissions').insert({
+        category: 'alpha_invite',
         name: formData.name,
         email: formData.email,
-        society: formData.society,
-        role: formData.role,
-        institution: formData.institution || null,
-        message: formData.message || null,
+        message: `Society: ${formData.society}\nRole: ${formData.role}\nInstitution: ${formData.institution || '-'}\n\n${formData.message || ''}`,
       });
 
       if (error) throw error;
