@@ -33,12 +33,17 @@ interface PixData {
 }
 
 export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogProps) {
+  const { credits, remainingFree, loading: creditsLoading } = useAICredits();
   const [selectedPkg, setSelectedPkg] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [pix, setPix] = useState<PixData | null>(null);
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid" | "failed" | "expired">("pending");
+
+  const freeUsed = credits?.free_quota_used ?? 0;
+  const freeLimit = credits?.free_quota_limit ?? 0;
+  const freePct = freeLimit > 0 ? Math.min(100, (freeUsed / freeLimit) * 100) : 0;
 
   useEffect(() => {
     if (!open) {
