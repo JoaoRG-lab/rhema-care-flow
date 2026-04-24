@@ -146,7 +146,7 @@ export default function AIAssistant() {
                         size="sm"
                         className="h-auto py-3 px-3 flex flex-col items-start text-left"
                         onClick={() => handleQuickPrompt(item.prompt)}
-                        disabled={isLoading}
+                        disabled={isLoading || isLocked}
                       >
                         <item.icon className="h-4 w-4 mb-1 text-primary" />
                         <span className="text-xs font-medium">{item.label}</span>
