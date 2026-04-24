@@ -9,7 +9,7 @@ import { UHSLogo } from '@/components/brand/UHSLogo';
 import { TrustBadge } from '@/components/brand/TrustBadges';
 import { Loader2, Shield, Lock, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { lovable } from '@/integrations/lovable';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Signup() {
   const [fullName, setFullName] = useState('');
@@ -38,8 +38,11 @@ export default function Signup() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (error) {
         toast.error(error.message);
