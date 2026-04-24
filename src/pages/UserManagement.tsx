@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Shield, Mail, Loader2, ShieldAlert, LogOut } from 'lucide-react';
+import { Shield, Mail, Loader2, ShieldAlert, LogOut, History, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -29,6 +30,39 @@ export default function UserManagement() {
   const [revoking, setRevoking] = useState(false);
   const [lastSentTo, setLastSentTo] = useState<string | null>(null);
   const [lastRevokedFor, setLastRevokedFor] = useState<string | null>(null);
+
+  type ResetAuditRow = {
+    id: string;
+    created_at: string;
+    metadata: {
+      target_email_hash?: string;
+      dispatched_at?: string;
+      dispatch_error?: string | null;
+    } | null;
+  };
+  const [history, setHistory] = useState<ResetAuditRow[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .select('id, created_at, metadata')
+      .eq('action', 'admin_password_reset_email_sent')
+      .order('created_at', { ascending: false })
+      .limit(25);
+    if (error) {
+      console.error('Failed to load reset audit history:', error);
+      toast.error('Could not load reset history.');
+    } else {
+      setHistory((data ?? []) as ResetAuditRow[]);
+    }
+    setHistoryLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!roleLoading && isAdmin) loadHistory();
+  }, [roleLoading, isAdmin, loadHistory]);
 
   if (roleLoading) {
     return (
