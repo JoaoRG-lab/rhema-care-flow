@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("URVPr1vacy11111111111111111111111111111111"); // troque após deploy
+declare_id!("URVPr1vacy11111111111111111111111111111111");
 
 #[program]
 pub mod urv_privacy {
@@ -22,13 +22,13 @@ pub mod urv_privacy {
         uri: String,
         schema_version: u16,
     ) -> Result<()> {
-        require!(uri.len() <= 200, UError::UriTooLong);
+        require!(uri.len() <= Record::MAX_URI, UError::UriTooLong);
         let rec = &mut ctx.accounts.record;
         rec.owner = ctx.accounts.owner.key();
         rec.data_hash = data_hash;
-        rec.uri = uri;
         rec.schema_version = schema_version;
         rec.created_at = Clock::get()?.unix_timestamp;
+        rec.uri = uri;
         Ok(())
     }
 
@@ -42,16 +42,17 @@ pub mod urv_privacy {
         new_score_hash: [u8; 32],
     ) -> Result<()> {
         require!(confidence_bps <= 10_000, UError::BadConfidence);
+
         let st = &mut ctx.accounts.state;
         require!(ctx.accounts.oracle.key() == st.oracle, UError::NotOracle);
         require!(prev_score_hash == st.last_score_hash, UError::BadPrevHash);
 
-        // step limiter ±5%
-        let last = st.last_score_u32;
-        let step = (last / 20).max(1);
-        let max_up = last.saturating_add(step);
-        let min_dn = last.saturating_sub(step);
-        require!(score_u32 >= min_dn && score_u32 <= max_up, UError::DeltaTooLarge);
+        let delta = if score_u32 >= st.last_score_u32 {
+            score_u32 - st.last_score_u32
+        } else {
+            st.last_score_u32 - score_u32
+        };
+        require!(delta <= 2_000, UError::DeltaTooLarge);
 
         let up = &mut ctx.accounts.update;
         up.oracle = ctx.accounts.oracle.key();
@@ -90,6 +91,11 @@ pub struct InitState<'info> {
 pub struct CreateRecord<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
+    #[account(
+        seeds = [b"state", state.admin.as_ref()],
+        bump
+    )]
+    pub state: Account<'info, UrvState>,
     #[account(
         init,
         payer = owner,

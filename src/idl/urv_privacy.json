@@ -9,7 +9,7 @@
   "instructions": [
     {
       "name": "init_state",
-      "discriminator": [0, 0, 0, 0, 0, 0, 0, 1],
+      "discriminator": [124, 213, 73, 136, 80, 37, 141, 54],
       "accounts": [
         { "name": "admin", "writable": true, "signer": true },
         { "name": "state", "writable": true, "pda": { "seeds": [{ "kind": "const", "value": [115, 116, 97, 116, 101] }, { "kind": "account", "path": "admin" }] } },
@@ -21,10 +21,10 @@
     },
     {
       "name": "create_record",
-      "discriminator": [0, 0, 0, 0, 0, 0, 0, 2],
+      "discriminator": [116, 124, 63, 58, 126, 204, 178, 10],
       "accounts": [
         { "name": "owner", "writable": true, "signer": true },
-        { "name": "state", "writable": false },
+        { "name": "state", "writable": false, "pda": { "seeds": [{ "kind": "const", "value": [115, 116, 97, 116, 101] }, { "kind": "account", "path": "state.admin" }] } },
         { "name": "record", "writable": true, "pda": { "seeds": [{ "kind": "const", "value": [114, 101, 99] }, { "kind": "account", "path": "owner" }, { "kind": "arg", "path": "data_hash" }] } },
         { "name": "system_program", "address": "11111111111111111111111111111111" }
       ],
@@ -36,7 +36,7 @@
     },
     {
       "name": "post_score_update",
-      "discriminator": [0, 0, 0, 0, 0, 0, 0, 3],
+      "discriminator": [45, 208, 165, 183, 203, 144, 182, 198],
       "accounts": [
         { "name": "oracle", "writable": true, "signer": true },
         { "name": "state", "writable": true, "pda": { "seeds": [{ "kind": "const", "value": [115, 116, 97, 116, 101] }, { "kind": "account", "path": "state.admin" }] } },
@@ -56,15 +56,15 @@
   "accounts": [
     {
       "name": "UrvState",
-      "discriminator": [0, 0, 0, 0, 0, 0, 1, 0]
+      "discriminator": [10, 124, 220, 17, 109, 198, 99, 28]
     },
     {
       "name": "Record",
-      "discriminator": [0, 0, 0, 0, 0, 0, 1, 1]
+      "discriminator": [254, 233, 117, 252, 76, 166, 146, 139]
     },
     {
       "name": "ScoreUpdate",
-      "discriminator": [0, 0, 0, 0, 0, 0, 1, 2]
+      "discriminator": [147, 137, 21, 55, 243, 197, 120, 7]
     }
   ],
   "errors": [
