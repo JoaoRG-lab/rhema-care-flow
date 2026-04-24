@@ -101,6 +101,28 @@ export default function AdminBilling() {
       setTransactions((tx as PaymentRow[]) ?? []);
       setCredits((cr as CreditsRow[]) ?? []);
       setIdem((id as IdemRow[]) ?? []);
+
+      // Load profiles for displayed user_ids
+      const ids = Array.from(
+        new Set([
+          ...((tx as PaymentRow[]) ?? []).map((t) => t.user_id),
+          ...((cr as CreditsRow[]) ?? []).map((c) => c.user_id),
+          ...((id as IdemRow[]) ?? []).map((i) => i.user_id),
+        ])
+      );
+      if (ids.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id,full_name,institution")
+          .in("user_id", ids);
+        const map: Record<string, ProfileRow> = {};
+        (profs ?? []).forEach((p) => {
+          map[p.user_id] = p as ProfileRow;
+        });
+        setProfiles(map);
+      } else {
+        setProfiles({});
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao carregar dados");
     } finally {
