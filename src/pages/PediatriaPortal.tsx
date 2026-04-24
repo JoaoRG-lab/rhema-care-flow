@@ -29,6 +29,9 @@ import {
   BookOpen,
   Clock,
   ExternalLink,
+  Search,
+  Tag,
+  X,
 } from 'lucide-react';
 
 const PEDIA_COLOR = 'hsl(195 75% 55%)';
