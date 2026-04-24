@@ -47,6 +47,7 @@ const BlockchainRegistry = lazy(() => import("./pages/BlockchainRegistry"));
 const UrvPage = lazy(() => import("./pages/UrvPage"));
 const ReumatoPortal = lazy(() => import("./pages/ReumatoPortal"));
 const PediatriaPortal = lazy(() => import("./pages/PediatriaPortal"));
+const GinecologiaPortal = lazy(() => import("./pages/GinecologiaPortal"));
 const SpecialtyPortal = lazy(() => import("./pages/SpecialtyPortal"));
 const AIResearch = lazy(() => import("./pages/AIResearch"));
 const OutreachCRM = lazy(() => import("./pages/OutreachCRM"));
