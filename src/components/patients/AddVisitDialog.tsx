@@ -169,84 +169,85 @@ export function AddVisitDialog({ patientId, open, onOpenChange, onVisitAdded }: 
              />
            </div>
  
-          <div className="rounded-lg border border-border p-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Pediatric / vitals</Label>
-              <Button
-                type="button"
-                variant={pediatric ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPediatric((v) => !v)}
-              >
-                {pediatric ? 'Enabled' : 'Add fields'}
-              </Button>
-            </div>
-            {pediatric && (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="ageMonths" className="text-xs">Age (months)</Label>
-                  <Input id="ageMonths" type="number" min={0} value={ageMonths} onChange={(e) => setAgeMonths(e.target.value)} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="weightKg" className="text-xs">Weight (kg)</Label>
-                  <Input id="weightKg" type="number" min={0} step={0.1} value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="heightCm" className="text-xs">Height (cm)</Label>
-                  <Input id="heightCm" type="number" min={0} step={0.1} value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="tempC" className="text-xs">Temp (°C)</Label>
-                  <Input id="tempC" type="number" min={0} step={0.1} value={tempC} onChange={(e) => setTempC(e.target.value)} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="heartRate" className="text-xs">HR (bpm)</Label>
-                  <Input id="heartRate" type="number" min={0} value={heartRate} onChange={(e) => setHeartRate(e.target.value)} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="respRate" className="text-xs">RR (rpm)</Label>
-                  <Input id="respRate" type="number" min={0} value={respRate} onChange={(e) => setRespRate(e.target.value)} className="mt-1" />
-                </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label>Pediatric / Vitals</Label>
+                <Button
+                  type="button"
+                  variant={pediatric ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPediatric((v) => !v)}
+                >
+                  {pediatric ? 'Enabled' : 'Add fields'}
+                </Button>
               </div>
-            )}
-            {pediatric && (
-              <div className="rounded-md bg-muted/50 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Pediatric readiness
-                  </span>
-                  <span
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
-                      pediReady ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
-                    )}
-                  >
-                    {pediReady ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                    {pediPassed}/{pediChecks.length}
-                  </span>
-                </div>
-                <ul className="space-y-1">
-                  {pediChecks.map((c) => (
-                    <li key={c.key} className="flex items-start gap-2 text-xs">
-                      {c.passed ? (
-                        <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-success shrink-0" />
-                      ) : (
-                        <Circle className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                      )}
-                      <span className={c.passed ? 'text-foreground' : 'text-muted-foreground'}>
-                        {c.label}
+              {pediatric && (
+                <>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div>
+                      <Label htmlFor="ageMonths" className="text-xs text-muted-foreground">Age (months)</Label>
+                      <Input id="ageMonths" type="number" min={0} value={ageMonths} onChange={(e) => setAgeMonths(e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="weightKg" className="text-xs text-muted-foreground">Weight (kg)</Label>
+                      <Input id="weightKg" type="number" min={0} step={0.1} value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="heightCm" className="text-xs text-muted-foreground">Height (cm)</Label>
+                      <Input id="heightCm" type="number" min={0} step={0.1} value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="tempC" className="text-xs text-muted-foreground">Temp (°C)</Label>
+                      <Input id="tempC" type="number" min={0} step={0.1} value={tempC} onChange={(e) => setTempC(e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="heartRate" className="text-xs text-muted-foreground">HR (bpm)</Label>
+                      <Input id="heartRate" type="number" min={0} value={heartRate} onChange={(e) => setHeartRate(e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="respRate" className="text-xs text-muted-foreground">RR (rpm)</Label>
+                      <Input id="respRate" type="number" min={0} value={respRate} onChange={(e) => setRespRate(e.target.value)} className="mt-1" />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 rounded-md border border-border bg-muted/40 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Pediatric readiness
                       </span>
-                    </li>
-                  ))}
-                </ul>
-                {!pediReady && (
-                  <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/50">
-                    Complete every item above to enable saving.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                          pediReady ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
+                        )}
+                      >
+                        {pediReady ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                        {pediPassed}/{pediChecks.length}
+                      </span>
+                    </div>
+                    <ul className="space-y-1">
+                      {pediChecks.map((c) => (
+                        <li key={c.key} className="flex items-start gap-2 text-xs">
+                          {c.passed ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-success shrink-0" />
+                          ) : (
+                            <Circle className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                          )}
+                          <span className={c.passed ? 'text-foreground' : 'text-muted-foreground'}>
+                            {c.label}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    {!pediReady && (
+                      <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/50">
+                        Complete every item above to enable saving.
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
 
           <div>
             <Label>Actions</Label>
