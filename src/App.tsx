@@ -57,6 +57,7 @@ const EpidemiologicalMatrix = lazy(() => import("./pages/EpidemiologicalMatrix")
 const AboutManifest = lazy(() => import("./pages/AboutManifest"));
 const SiteAnalytics = lazy(() => import("./pages/SiteAnalytics"));
 const CaseStudies = lazy(() => import("./pages/CaseStudies"));
+const UserManagement = lazy(() => import("./pages/UserManagement"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -131,6 +132,7 @@ const queryClient = new QueryClient();
                     <Route path="/about" element={<AboutManifest />} />
                     <Route path="/site-analytics" element={<ProtectedRoute><SiteAnalytics /></ProtectedRoute>} />
                     <Route path="/case-studies" element={<CaseStudies />} />
+                    <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
