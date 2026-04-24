@@ -210,10 +210,10 @@ export default function PediatriaPortal() {
             </div>
           </Link>
           <div className="flex items-center gap-4">
-            <Link to="/login">
+            <Link to="/login?redirect=%2Fpediatria">
               <Button variant="ghost" size="sm">Entrar</Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/signup?redirect=%2Fpediatria">
               <Button
                 size="sm"
                 className={`gap-2 bg-gradient-to-r ${PEDIA_GRADIENT} hover:opacity-90`}
@@ -274,7 +274,7 @@ export default function PediatriaPortal() {
                   Abrir Calculadoras Pediátricas
                 </Button>
               </Link>
-              <Link to="/signup">
+              <Link to="/signup?redirect=%2Fpediatria">
                 <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base">
                   <Users className="h-5 w-5" />
                   Criar Conta Grátis
