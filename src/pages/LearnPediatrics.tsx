@@ -193,6 +193,67 @@ export default function LearnPediatrics() {
     }
   };
 
+  // Reader navigation: prev/next within the currently filtered list
+  const viewingIndex = useMemo(
+    () => (viewing ? filtered.findIndex((c) => c.id === viewing.id) : -1),
+    [viewing, filtered],
+  );
+  const prevArticle =
+    viewingIndex > 0 ? filtered[viewingIndex - 1] : null;
+  const nextArticle =
+    viewingIndex >= 0 && viewingIndex < filtered.length - 1
+      ? filtered[viewingIndex + 1]
+      : null;
+
+  const openArticle = (item: EducationContent) => {
+    setViewing(item);
+    // reset scroll + progress on switch
+    if (readerScrollRef.current) {
+      readerScrollRef.current.scrollTop = 0;
+    }
+    setReadProgress(0);
+  };
+
+  // Reader scroll-progress indicator
+  const readerScrollRef = useRef<HTMLDivElement | null>(null);
+  const [readProgress, setReadProgress] = useState(0);
+
+  useEffect(() => {
+    if (!viewing) {
+      setReadProgress(0);
+      return;
+    }
+    const el = readerScrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const max = el.scrollHeight - el.clientHeight;
+      setReadProgress(max > 0 ? Math.min(1, el.scrollTop / max) : 0);
+    };
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [viewing]);
+
+  // Keyboard navigation: ← / → switch articles while the reader is open
+  useEffect(() => {
+    if (!viewing) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+      }
+      if (e.key === 'ArrowLeft' && prevArticle) {
+        e.preventDefault();
+        openArticle(prevArticle);
+      } else if (e.key === 'ArrowRight' && nextArticle) {
+        e.preventDefault();
+        openArticle(nextArticle);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [viewing, prevArticle, nextArticle]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
