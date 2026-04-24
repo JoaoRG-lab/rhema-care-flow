@@ -5,9 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
-import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe, Stethoscope } from 'lucide-react';
 import { VerifiedBadge, VerificationStatusBadge } from '@/components/ui/VerifiedBadge';
 import { LanguageSelector } from '@/components/ui/language-selector';
+import { SpecialtyQuickSwitcher } from '@/components/layout/SpecialtyQuickSwitcher';
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -45,6 +46,22 @@ export default function Settings() {
             </CardHeader>
             <CardContent>
               <LanguageSelector variant="full" />
+            </CardContent>
+          </Card>
+
+          {/* Specialty Switcher */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Stethoscope className="h-4 w-4" />
+                Specialty
+              </CardTitle>
+              <CardDescription>
+                Switch instantly between your active medical specialty workspaces
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SpecialtyQuickSwitcher />
             </CardContent>
           </Card>
 
