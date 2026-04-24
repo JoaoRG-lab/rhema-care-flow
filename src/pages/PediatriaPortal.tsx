@@ -119,6 +119,8 @@ function CardImage({ src, alt }: { src: string; alt: string }) {
 export default function PediatriaPortal() {
   const { content, loading } = usePublicEducationContent();
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTags, setActiveTags] = useState<string[]>([]);
 
   const allPediatric = useMemo(
     () =>
@@ -136,19 +138,60 @@ export default function PediatriaPortal() {
       if (!c.category) return;
       map.set(c.category, (map.get(c.category) ?? 0) + 1);
     });
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1]);
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [allPediatric]);
 
-  const filteredPediatric = useMemo(
-    () =>
-      activeCategory === 'all'
-        ? allPediatric
-        : allPediatric.filter((c) => c.category === activeCategory),
-    [allPediatric, activeCategory],
-  );
+  const tagCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    allPediatric.forEach((c) => {
+      c.diagnosis_tags?.forEach((t) => {
+        if (!t) return;
+        map.set(t, (map.get(t) ?? 0) + 1);
+      });
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 18);
+  }, [allPediatric]);
+
+  const filteredPediatric = useMemo(() => {
+    let list = allPediatric;
+    if (activeCategory !== 'all') {
+      list = list.filter((c) => c.category === activeCategory);
+    }
+    if (activeTags.length > 0) {
+      list = list.filter((c) =>
+        activeTags.every((t) => c.diagnosis_tags?.includes(t)),
+      );
+    }
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (c) =>
+          c.title.toLowerCase().includes(q) ||
+          c.summary?.toLowerCase().includes(q) ||
+          c.content.toLowerCase().includes(q) ||
+          c.diagnosis_tags?.some((t) => t.toLowerCase().includes(q)),
+      );
+    }
+    return list;
+  }, [allPediatric, activeCategory, activeTags, searchQuery]);
 
   const pediatricContent = filteredPediatric.slice(0, 9);
+  const hasActiveFilters =
+    activeCategory !== 'all' || activeTags.length > 0 || searchQuery.trim().length > 0;
+
+  const toggleTag = (tag: string) => {
+    setActiveTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
+  };
+
+  const clearAllFilters = () => {
+    setActiveCategory('all');
+    setActiveTags([]);
+    setSearchQuery('');
+  };
 
   return (
     <div className="min-h-screen bg-background">
