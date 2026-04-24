@@ -130,9 +130,16 @@ export default function ForgotPassword() {
     try {
       const { error } = await resetPassword(target);
       if (error) {
-        if (/rate|too many/i.test(error.message)) {
-          setStatus('error');
-          setErrorMsg('Too many requests. Please wait a minute and try again.');
+        if (/rate|too many|429/i.test(error.message)) {
+          // Try to extract a wait hint like "after 42 seconds" from the
+          // upstream error; otherwise fall back to a sensible default.
+          const match = error.message.match(/(\d+)\s*(second|minute)/i);
+          const waitSeconds = match
+            ? Number(match[1]) * (match[2].toLowerCase().startsWith('m') ? 60 : 1)
+            : RATE_LIMIT_WAIT_S;
+          setStatus('rate_limited');
+          setRetryIn(waitSeconds);
+          setErrorMsg(null);
           return;
         }
         // Treat other errors as success to prevent account enumeration.
