@@ -144,6 +144,8 @@ export default function PediatriaPortal() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [viewing, setViewing] = useState<EducationContent | null>(null);
+  const closeViewer = () => setViewing(null);
 
   const allPediatric = useMemo(
     () =>
