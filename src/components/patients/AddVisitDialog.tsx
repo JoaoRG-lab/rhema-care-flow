@@ -7,7 +7,8 @@
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from '@/contexts/AuthContext';
- import { Plus } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
  import { toast } from 'sonner';
  import { ACTION_OPTIONS, LAB_OPTIONS, IMAGING_OPTIONS } from '@/config/clinical';
  
@@ -45,9 +46,30 @@ export function AddVisitDialog({ patientId, open, onOpenChange, onVisitAdded }: 
      }
    };
  
+  // Pediatric readiness checklist — gates submission when pediatric mode is enabled
+  const num = (s: string) => (s === '' ? NaN : Number(s));
+  const inRange = (v: number, lo: number, hi: number) => Number.isFinite(v) && v >= lo && v <= hi;
+  const pediChecks = [
+    { key: 'age', label: 'Age in months (0–240)', passed: inRange(num(ageMonths), 0, 240) },
+    { key: 'weight', label: 'Weight in kg (0.3–150)', passed: inRange(num(weightKg), 0.3, 150) },
+    { key: 'height', label: 'Height/length in cm (20–220)', passed: inRange(num(heightCm), 20, 220) },
+    { key: 'temp', label: 'Temperature in °C (30–43)', passed: inRange(num(tempC), 30, 43) },
+    { key: 'hr', label: 'Heart rate in bpm (30–250)', passed: inRange(num(heartRate), 30, 250) },
+    { key: 'rr', label: 'Respiratory rate in rpm (5–90)', passed: inRange(num(respRate), 5, 90) },
+    { key: 'plan', label: 'Next steps / follow-up plan documented', passed: nextSteps.replace(/<[^>]*>/g, '').trim().length >= 5 },
+    { key: 'action', label: 'At least one clinical action selected', passed: actions.length > 0 },
+  ];
+  const pediPassed = pediChecks.filter((c) => c.passed).length;
+  const pediReady = pediPassed === pediChecks.length;
+  const canSubmit = !saving && (!pediatric || pediReady);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (pediatric && !pediReady) {
+      toast.error('Complete the pediatric checklist before saving');
+      return;
+    }
 
     setSaving(true);
     const diseaseActivity: Record<string, unknown> = {};
@@ -187,6 +209,43 @@ export function AddVisitDialog({ patientId, open, onOpenChange, onVisitAdded }: 
                 </div>
               </div>
             )}
+            {pediatric && (
+              <div className="rounded-md bg-muted/50 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Pediatric readiness
+                  </span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                      pediReady ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
+                    )}
+                  >
+                    {pediReady ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                    {pediPassed}/{pediChecks.length}
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {pediChecks.map((c) => (
+                    <li key={c.key} className="flex items-start gap-2 text-xs">
+                      {c.passed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-success shrink-0" />
+                      ) : (
+                        <Circle className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                      )}
+                      <span className={c.passed ? 'text-foreground' : 'text-muted-foreground'}>
+                        {c.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {!pediReady && (
+                  <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/50">
+                    Complete every item above to enable saving.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
@@ -261,8 +320,12 @@ export function AddVisitDialog({ patientId, open, onOpenChange, onVisitAdded }: 
              </div>
            </div>
  
-           <Button type="submit" className="w-full" disabled={saving}>
-             {saving ? 'Saving...' : 'Add Visit'}
+           <Button type="submit" className="w-full" disabled={!canSubmit}>
+             {saving
+               ? 'Saving...'
+               : pediatric && !pediReady
+                 ? `Complete checklist (${pediPassed}/${pediChecks.length})`
+                 : 'Add Visit'}
            </Button>
          </form>
        </DialogContent>
