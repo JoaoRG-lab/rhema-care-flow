@@ -12,6 +12,8 @@ import {
 import { SPECIALTIES } from '@/config/specialties';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const STORAGE_KEY = 'uhs:lastSpecialtyId';
 
@@ -36,6 +38,7 @@ function writeStoredSpecialty(id: string) {
 export function SpecialtyQuickSwitcher() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const activeSpecialties = SPECIALTIES.filter((s) => s.isActive);
 
@@ -49,17 +52,47 @@ export function SpecialtyQuickSwitcher() {
         : null;
 
   // Last persisted choice — used as a fallback label so the sidebar "remembers"
-  // the previous specialty after refresh / login even when the user is on a
-  // non-specialty page.
+  // the previous specialty after refresh / login. Hydrated from the user's
+  // profile when authenticated; falls back to localStorage otherwise.
   const [storedId, setStoredId] = useState<string | null>(() => readStoredSpecialty());
+
+  // Hydrate from the authenticated user's profile (cross-device persistence).
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('preferred_specialty')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const remoteId = (data as { preferred_specialty?: string | null } | null)?.preferred_specialty;
+      if (remoteId) {
+        setStoredId(remoteId);
+        writeStoredSpecialty(remoteId);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // Whenever the URL reflects a specialty, treat that as the new last choice.
   useEffect(() => {
     if (currentId && currentId !== storedId) {
       writeStoredSpecialty(currentId);
       setStoredId(currentId);
+      // Sync to profile (fire-and-forget) so other devices see the same choice.
+      if (user) {
+        supabase
+          .from('profiles')
+          .update({ preferred_specialty: currentId })
+          .eq('user_id', user.id)
+          .then(() => {});
+      }
     }
-  }, [currentId, storedId]);
+  }, [currentId, storedId, user]);
 
   const displayedId = currentId;
   const displayed = activeSpecialties.find((s) => s.id === displayedId);
@@ -67,6 +100,13 @@ export function SpecialtyQuickSwitcher() {
   const handleSwitch = (specialtyId: string) => {
     writeStoredSpecialty(specialtyId);
     setStoredId(specialtyId);
+    if (user) {
+      supabase
+        .from('profiles')
+        .update({ preferred_specialty: specialtyId })
+        .eq('user_id', user.id)
+        .then(() => {});
+    }
     const target =
       specialtyId === 'rheumatology'
         ? '/reumato'
