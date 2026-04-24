@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Message {
   id: string;
@@ -11,11 +13,50 @@ export interface Message {
 const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-config-assistant`;
 
 export function useAIAssistant() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+
+  const consumeCredit = useCallback(async (): Promise<boolean> => {
+    if (!user) return true; // public/unauth flows handled elsewhere
+    const { data: row } = await supabase
+      .from('user_ai_credits')
+      .select('credits_balance, free_quota_used, free_quota_limit')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!row) {
+      await supabase.from('user_ai_credits').insert({ user_id: user.id, free_quota_used: 1 });
+      return true;
+    }
+    if (row.free_quota_used < row.free_quota_limit) {
+      await supabase
+        .from('user_ai_credits')
+        .update({ free_quota_used: row.free_quota_used + 1 })
+        .eq('user_id', user.id);
+      return true;
+    }
+    if (row.credits_balance > 0) {
+      await supabase
+        .from('user_ai_credits')
+        .update({ credits_balance: row.credits_balance - 1 })
+        .eq('user_id', user.id);
+      return true;
+    }
+    return false;
+  }, [user]);
 
   const sendMessage = useCallback(async (input: string) => {
     if (!input.trim() || isLoading) return;
+
+    // Quota / credits check
+    const allowed = await consumeCredit();
+    if (!allowed) {
+      setPaywallOpen(true);
+      toast.error('Cota grátis esgotada. Compre créditos via PIX para continuar.');
+      return;
+    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -132,7 +173,7 @@ export function useAIAssistant() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, consumeCredit]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -143,5 +184,7 @@ export function useAIAssistant() {
     isLoading,
     sendMessage,
     clearMessages,
+    paywallOpen,
+    setPaywallOpen,
   };
 }

@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
+import { useAICredits } from '@/hooks/useAICredits';
+import { PaywallDialog } from '@/components/billing/PaywallDialog';
 
 interface AgentRun {
   agent_name: string;
@@ -30,9 +32,22 @@ interface AgentRun {
 const FREE_AI_BALANCE_USD = 1; // Lovable AI free monthly balance
 const FREE_CLOUD_BALANCE_USD = 25; // Lovable Cloud free monthly balance
 
+interface PaymentTx {
+  id: string;
+  amount_brl: number;
+  credits_amount: number;
+  package_label: string | null;
+  status: string;
+  created_at: string;
+  paid_at: string | null;
+}
+
 export default function SettingsCredits() {
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [transactions, setTransactions] = useState<PaymentTx[]>([]);
+  const { credits, remainingFree, refresh } = useAICredits();
 
   useEffect(() => {
     const since = subDays(new Date(), 30).toISOString();
@@ -45,6 +60,15 @@ export default function SettingsCredits() {
       .then(({ data, error }) => {
         if (!error && data) setRuns(data as AgentRun[]);
         setLoading(false);
+      });
+
+    supabase
+      .from('payment_transactions')
+      .select('id,amount_brl,credits_amount,package_label,status,created_at,paid_at')
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => {
+        if (data) setTransactions(data as PaymentTx[]);
       });
   }, []);
 
@@ -77,6 +101,82 @@ export default function SettingsCredits() {
             Monitor your AI usage, plan limits, and billing status.
           </p>
         </div>
+
+        {/* User AI Credits (PIX) */}
+        <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              Your AI Credits
+            </CardTitle>
+            <CardDescription>
+              Free monthly quota + paid credits for the AI Assistant. Recarregue via PIX.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border p-3 bg-background/60">
+                <p className="text-xs text-muted-foreground">Saldo de créditos</p>
+                <p className="text-3xl font-bold mt-1 text-primary">
+                  {credits?.credits_balance ?? 0}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3 bg-background/60">
+                <p className="text-xs text-muted-foreground">Cota grátis restante</p>
+                <p className="text-3xl font-bold mt-1">
+                  {remainingFree}
+                  <span className="text-base text-muted-foreground font-normal">
+                    /{credits?.free_quota_limit ?? 10}
+                  </span>
+                </p>
+                <Progress
+                  value={
+                    credits
+                      ? ((credits.free_quota_limit - remainingFree) / credits.free_quota_limit) * 100
+                      : 0
+                  }
+                  className="mt-2 h-1.5"
+                />
+              </div>
+            </div>
+            <Button onClick={() => setPaywallOpen(true)} className="w-full sm:w-auto">
+              <Zap className="h-4 w-4 mr-2" />
+              Comprar créditos via PIX
+            </Button>
+
+            {transactions.length > 0 && (
+              <div className="space-y-2 pt-2 border-t">
+                <p className="text-xs font-medium text-muted-foreground">Últimas transações</p>
+                <div className="space-y-1">
+                  {transactions.slice(0, 5).map((tx) => (
+                    <div
+                      key={tx.id}
+                      className="flex items-center justify-between text-xs p-2 rounded bg-background/50"
+                    >
+                      <span>
+                        {tx.package_label || `${tx.credits_amount} créditos`} ·{' '}
+                        {format(new Date(tx.created_at), 'dd/MM HH:mm')}
+                      </span>
+                      <Badge
+                        variant={
+                          tx.status === 'paid'
+                            ? 'default'
+                            : tx.status === 'pending'
+                            ? 'secondary'
+                            : 'destructive'
+                        }
+                      >
+                        {tx.status === 'paid' ? 'Pago' : tx.status === 'pending' ? 'Pendente' : tx.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <PaywallDialog open={paywallOpen} onOpenChange={setPaywallOpen} onSuccess={refresh} />
 
         <Alert>
           <AlertCircle className="h-4 w-4" />

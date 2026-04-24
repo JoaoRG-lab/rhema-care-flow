@@ -1441,6 +1441,66 @@ export type Database = {
           },
         ]
       }
+      payment_transactions: {
+        Row: {
+          amount_brl: number
+          created_at: string
+          credits_amount: number
+          expires_at: string | null
+          external_id: string | null
+          id: string
+          metadata: Json | null
+          package_label: string | null
+          paid_at: string | null
+          payment_method: string
+          provider: string
+          qr_code: string | null
+          qr_code_base64: string | null
+          status: string
+          ticket_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_brl: number
+          created_at?: string
+          credits_amount: number
+          expires_at?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          package_label?: string | null
+          paid_at?: string | null
+          payment_method?: string
+          provider?: string
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          status?: string
+          ticket_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_brl?: number
+          created_at?: string
+          credits_amount?: number
+          expires_at?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          package_label?: string | null
+          paid_at?: string | null
+          payment_method?: string
+          provider?: string
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          status?: string
+          ticket_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       peer_reviews: {
         Row: {
           checklist: Json | null
@@ -2095,6 +2155,39 @@ export type Database = {
           transfer_requested_at?: string | null
           transfer_tx_signature?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_ai_credits: {
+        Row: {
+          created_at: string
+          credits_balance: number
+          free_quota_limit: number
+          free_quota_used: number
+          id: string
+          quota_reset_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_balance?: number
+          free_quota_limit?: number
+          free_quota_used?: number
+          id?: string
+          quota_reset_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_balance?: number
+          free_quota_limit?: number
+          free_quota_used?: number
+          id?: string
+          quota_reset_at?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
