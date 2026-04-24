@@ -209,6 +209,43 @@ export function AddVisitDialog({ patientId, open, onOpenChange, onVisitAdded }: 
                 </div>
               </div>
             )}
+            {pediatric && (
+              <div className="rounded-md bg-muted/50 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Pediatric readiness
+                  </span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                      pediReady ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
+                    )}
+                  >
+                    {pediReady ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                    {pediPassed}/{pediChecks.length}
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {pediChecks.map((c) => (
+                    <li key={c.key} className="flex items-start gap-2 text-xs">
+                      {c.passed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-success shrink-0" />
+                      ) : (
+                        <Circle className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                      )}
+                      <span className={c.passed ? 'text-foreground' : 'text-muted-foreground'}>
+                        {c.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {!pediReady && (
+                  <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/50">
+                    Complete every item above to enable saving.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
