@@ -248,7 +248,46 @@ export default function ForgotPassword() {
               </Alert>
             )}
 
-            {status === 'error' && errorMsg && (
+            {status === 'rate_limited' && (
+              <Alert variant="destructive">
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                <AlertTitle>Too many attempts</AlertTitle>
+                <AlertDescription className="space-y-3">
+                  <p>
+                    Our authentication service is temporarily limiting reset
+                    requests for this address to protect your account.
+                  </p>
+                  <p className="text-sm">
+                    {retryIn > 0 ? (
+                      <>
+                        You can try again in{' '}
+                        <span className="font-semibold tabular-nums">
+                          {Math.floor(retryIn / 60) > 0
+                            ? `${Math.floor(retryIn / 60)}m ${retryIn % 60}s`
+                            : `${retryIn}s`}
+                        </span>
+                        .
+                      </>
+                    ) : (
+                      <>You can try again now.</>
+                    )}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={retryIn > 0 || !email}
+                    onClick={() => {
+                      if (retryIn > 0 || !email) return;
+                      void sendReset(email.trim().toLowerCase());
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {retryIn > 0 ? `Retry in ${retryIn}s` : 'Retry now'}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" aria-hidden="true" />
                 <AlertTitle>Couldn't send email</AlertTitle>
