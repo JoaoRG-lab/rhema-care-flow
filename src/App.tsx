@@ -34,6 +34,7 @@ const StyleGuide = lazy(() => import("./pages/StyleGuide"));
 const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
  const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
  const AcademicWorkspace = lazy(() => import("./pages/AcademicWorkspace"));
  const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 const Education = lazy(() => import("./pages/Education"));
@@ -106,6 +107,7 @@ const queryClient = new QueryClient();
                     <Route path="/verification-request" element={<ProtectedRoute><VerificationRequest /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/academic" element={<ProtectedRoute><AcademicWorkspace /></ProtectedRoute>} />
                     <Route path="/patient-portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
                     <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
