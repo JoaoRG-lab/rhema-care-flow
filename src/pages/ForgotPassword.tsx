@@ -18,7 +18,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-type ResetStatus = 'idle' | 'requested' | 'sent' | 'expired' | 'error';
+type ResetStatus = 'idle' | 'requested' | 'sent' | 'expired' | 'error' | 'rate_limited';
+
+// Default backoff window when the auth service rate-limits us. Supabase
+// typically allows another attempt after ~60s.
+const RATE_LIMIT_WAIT_S = 60;
 
 const emailSchema = z
   .string()
