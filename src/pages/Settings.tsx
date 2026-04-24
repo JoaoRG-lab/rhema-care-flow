@@ -5,9 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
-import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, BadgeCheck, FileText, Globe, Stethoscope } from 'lucide-react';
 import { VerifiedBadge, VerificationStatusBadge } from '@/components/ui/VerifiedBadge';
 import { LanguageSelector } from '@/components/ui/language-selector';
+import { SpecialtyQuickSwitcher } from '@/components/layout/SpecialtyQuickSwitcher';
 
 export default function Settings() {
   const { t } = useTranslation();
