@@ -118,17 +118,37 @@ function CardImage({ src, alt }: { src: string; alt: string }) {
 
 export default function PediatriaPortal() {
   const { content, loading } = usePublicEducationContent();
-  const pediatricContent = useMemo(
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+
+  const allPediatric = useMemo(
     () =>
-      content
-        .filter(
-          (c) =>
-            c.specialty?.toLowerCase() === 'pediatrics' ||
-            c.specialty?.toLowerCase() === 'pediatria',
-        )
-        .slice(0, 9),
+      content.filter(
+        (c) =>
+          c.specialty?.toLowerCase() === 'pediatrics' ||
+          c.specialty?.toLowerCase() === 'pediatria',
+      ),
     [content],
   );
+
+  const categoryCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    allPediatric.forEach((c) => {
+      if (!c.category) return;
+      map.set(c.category, (map.get(c.category) ?? 0) + 1);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1]);
+  }, [allPediatric]);
+
+  const filteredPediatric = useMemo(
+    () =>
+      activeCategory === 'all'
+        ? allPediatric
+        : allPediatric.filter((c) => c.category === activeCategory),
+    [allPediatric, activeCategory],
+  );
+
+  const pediatricContent = filteredPediatric.slice(0, 9);
 
   return (
     <div className="min-h-screen bg-background">
@@ -257,6 +277,96 @@ export default function PediatriaPortal() {
               Artigos, diretrizes e revisões publicadas pela comunidade clínica, alinhadas com SBP e AAP.
             </p>
           </div>
+
+          {/* Category breakdown */}
+          {!loading && categoryCounts.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Filtrar por categoria · SBP / AAP
+                </p>
+                <Link
+                  to="/learn/pediatrics"
+                  className="text-xs font-medium hover:underline inline-flex items-center gap-1"
+                  style={{ color: PEDIA_COLOR }}
+                >
+                  Ver tudo na biblioteca
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('all')}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition-all ${
+                    activeCategory === 'all'
+                      ? 'border-transparent text-white shadow-sm'
+                      : 'bg-card border-border hover:border-primary/40'
+                  }`}
+                  style={
+                    activeCategory === 'all'
+                      ? { backgroundColor: PEDIA_COLOR }
+                      : undefined
+                  }
+                >
+                  Todos
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                      activeCategory === 'all'
+                        ? 'bg-white/20'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {allPediatric.length}
+                  </span>
+                </button>
+                {categoryCounts.map(([cat, count]) => {
+                  const active = activeCategory === cat;
+                  return (
+                    <div key={cat} className="inline-flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => setActiveCategory(cat)}
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-l-full text-sm border-y border-l transition-all ${
+                          active
+                            ? 'border-transparent text-white shadow-sm'
+                            : 'bg-card border-border hover:border-primary/40'
+                        }`}
+                        style={active ? { backgroundColor: PEDIA_COLOR } : undefined}
+                      >
+                        {cat}
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                            active ? 'bg-white/20' : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                      <Link
+                        to={`/learn/pediatrics?category=${encodeURIComponent(cat)}`}
+                        aria-label={`Abrir ${cat} na biblioteca completa`}
+                        className={`px-2 py-1.5 rounded-r-full text-xs border-y border-r transition-all ${
+                          active
+                            ? 'text-white border-transparent'
+                            : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
+                        }`}
+                        style={active ? { backgroundColor: PEDIA_COLOR } : undefined}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+              {activeCategory !== 'all' && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  Mostrando <span className="font-medium text-foreground">{filteredPediatric.length}</span>{' '}
+                  publicações em <span className="font-medium text-foreground">{activeCategory}</span>.
+                </p>
+              )}
+            </div>
+          )}
 
           {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
