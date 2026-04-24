@@ -67,11 +67,20 @@ import { toast } from 'sonner';
    const [favorites, setFavorites] = useState<string[]>([]);
    const [historyCount, setHistoryCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
- 
-   useEffect(() => {
-     setFavorites(getFavorites());
-     setHistoryCount(getHistory().length);
-   }, []);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    setFavorites(getFavorites());
+    setHistoryCount(getHistory().length);
+  }, []);
+
+  // Deep-link: open a specific calculator from query, e.g. /scores?calc=bishop
+  useEffect(() => {
+    const calc = searchParams.get('calc');
+    if (calc && CALCULATORS.some((c) => c.id === calc && c.implemented)) {
+      setSelectedCalculator(calc);
+    }
+  }, [searchParams]);
  
    const filteredCalculators = useMemo(() => {
      return CALCULATORS.filter((calc) => {
