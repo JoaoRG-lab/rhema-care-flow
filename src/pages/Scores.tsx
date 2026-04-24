@@ -44,6 +44,10 @@ import { APGARCalculator } from '@/components/scores/APGARCalculator';
 import { PEWSCalculator } from '@/components/scores/PEWSCalculator';
 import { WHOGrowthCalculator } from '@/components/scores/WHOGrowthCalculator';
 import { PediatricDoseCalculator } from '@/components/scores/PediatricDoseCalculator';
+import { BishopScoreCalculator } from '@/components/scores/BishopScoreCalculator';
+import { GestationalAgeCalculator } from '@/components/scores/GestationalAgeCalculator';
+import { PreeclampsiaRiskCalculator } from '@/components/scores/PreeclampsiaRiskCalculator';
+import { PregnancyBMICalculator } from '@/components/scores/PregnancyBMICalculator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
  
