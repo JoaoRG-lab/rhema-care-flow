@@ -73,17 +73,26 @@ export function PaywallDialog({ open, onOpenChange, onSuccess }: PaywallDialogPr
       }
       const { data } = await supabase
         .from("payment_transactions")
-        .select("status")
+        .select("status, paid_at, user_id")
         .eq("id", pix.transactionId)
         .maybeSingle();
       const status = data?.status;
       if (status === "paid") {
         setPaymentStatus("paid");
+        setPaidAt(data?.paid_at ?? new Date().toISOString());
+        // Fetch updated balance for the receipt
+        if (data?.user_id) {
+          const { data: bal } = await supabase
+            .from("user_ai_credits")
+            .select("credits_balance")
+            .eq("user_id", data.user_id)
+            .maybeSingle();
+          if (bal) setBalanceAfter(bal.credits_balance);
+        }
         clearInterval(interval);
         setPolling(false);
         toast.success(`${pix.credits} créditos adicionados!`);
         onSuccess?.();
-        setTimeout(() => onOpenChange(false), 1500);
       } else if (status === "failed" || status === "rejected" || status === "cancelled") {
         setPaymentStatus("failed");
         clearInterval(interval);
