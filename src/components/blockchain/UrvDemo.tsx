@@ -28,8 +28,8 @@ import { getExplorerUrl, formatSignature } from '@/lib/solana';
 
 import idl from '@/idl/urv_privacy.json';
 
-// TODO: Replace with your deployed ProgramId after `anchor deploy`
-const PROGRAM_ID = new PublicKey('11111111111111111111111111111111');
+// Replace with deployed Program ID after `anchor deploy`. Current value is Devnet placeholder.
+const PROGRAM_ID = new PublicKey('URVPr1vacy11111111111111111111111111111111');
 const SCHEMA_VERSION = 1;
 
 // ============================================================================
@@ -162,10 +162,9 @@ export function UrvDemo() {
       console.log('  State PDA:', statePda.toBase58());
 
       const tx = await program.methods
-        .initState()
+        .initState(oraclePk)
         .accounts({
           admin: publicKey,
-          oracle: oraclePk,
           state: statePda,
           systemProgram: SystemProgram.programId,
         })
@@ -276,7 +275,7 @@ export function UrvDemo() {
       // 1) Fetch state on-chain to get lastScoreHash
       let prevHashBytes: Uint8Array;
       try {
-        const stateAcc: any = await (program.account as any).state.fetch(statePda);
+        const stateAcc: any = await (program.account as any).urvState.fetch(statePda);
         prevHashBytes = stateAcc.lastScoreHash 
           ? Uint8Array.from(stateAcc.lastScoreHash) 
           : new Uint8Array(32);
