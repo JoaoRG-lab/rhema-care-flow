@@ -36,7 +36,7 @@ export default function Signup() {
       setLoading(false);
     } else {
       toast.success('Account created! Please check your email to verify.');
-      navigate('/login');
+      navigate(loginHref);
     }
   };
 
