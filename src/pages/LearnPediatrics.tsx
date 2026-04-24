@@ -515,100 +515,178 @@ export default function LearnPediatrics() {
 
       {/* Reader */}
       <Dialog open={!!viewing} onOpenChange={(open) => !open && closeViewer()}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          ref={readerScrollRef}
+          className="max-w-3xl max-h-[90vh] overflow-y-auto p-0"
+        >
           {viewing && (
             <>
-              <DialogHeader>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <Badge
-                    variant="secondary"
-                    style={{ backgroundColor: `${PEDIA_COLOR}15`, color: PEDIA_COLOR }}
-                  >
-                    {viewing.category}
-                  </Badge>
-                  {viewing.is_featured && (
-                    <Badge variant="default" className="gap-1">
-                      <Sparkles className="h-3 w-3" />
-                      Destaque
-                    </Badge>
-                  )}
-                  {viewing.diagnosis_tags?.slice(0, 3).map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                <DialogTitle className="text-2xl">{viewing.title}</DialogTitle>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2">
-                  {viewing.reading_time_minutes && (
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {viewing.reading_time_minutes} min de leitura
-                    </span>
-                  )}
-                  {viewing.published_at && (
-                    <span>{format(new Date(viewing.published_at), 'dd MMMM yyyy')}</span>
-                  )}
-                </div>
-              </DialogHeader>
-
-              {viewing.featured_image_url && (
-                <img
-                  src={viewing.featured_image_url}
-                  alt={viewing.title}
-                  className="w-full rounded-lg my-4"
+              {/* Sticky reading-progress bar */}
+              <div
+                className="sticky top-0 left-0 right-0 z-10 h-1 bg-muted/40"
+                aria-hidden="true"
+              >
+                <div
+                  className="h-full transition-[width] duration-150 ease-out"
+                  style={{
+                    width: `${Math.round(readProgress * 100)}%`,
+                    backgroundColor: PEDIA_COLOR,
+                  }}
                 />
-              )}
+              </div>
 
-              {viewing.summary && (
-                <p className="text-base text-muted-foreground italic border-l-2 border-primary pl-4 my-4">
-                  {viewing.summary}
-                </p>
-              )}
+              <div className="px-6 pt-6 pb-6 md:px-8 md:pt-8 md:pb-8">
+                <DialogHeader>
+                  <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                    <span className="text-xs text-muted-foreground">
+                      {viewingIndex >= 0 && filtered.length > 1 && (
+                        <>
+                          Artigo{' '}
+                          <span className="font-medium text-foreground">
+                            {viewingIndex + 1}
+                          </span>{' '}
+                          de{' '}
+                          <span className="font-medium text-foreground">
+                            {filtered.length}
+                          </span>
+                        </>
+                      )}
+                    </span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {Math.round(readProgress * 100)}% lido
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <Badge
+                      variant="secondary"
+                      style={{ backgroundColor: `${PEDIA_COLOR}15`, color: PEDIA_COLOR }}
+                    >
+                      {viewing.category}
+                    </Badge>
+                    {viewing.is_featured && (
+                      <Badge variant="default" className="gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        Destaque
+                      </Badge>
+                    )}
+                    {viewing.diagnosis_tags?.slice(0, 3).map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <DialogTitle className="text-2xl">{viewing.title}</DialogTitle>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2">
+                    {viewing.reading_time_minutes && (
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {viewing.reading_time_minutes} min de leitura
+                      </span>
+                    )}
+                    {viewing.published_at && (
+                      <span>{format(new Date(viewing.published_at), 'dd MMMM yyyy')}</span>
+                    )}
+                  </div>
+                </DialogHeader>
 
-              <article className="prose prose-sm md:prose-base max-w-none dark:prose-invert">
-                <ReactMarkdown>{viewing.content}</ReactMarkdown>
-              </article>
+                {viewing.featured_image_url && (
+                  <img
+                    src={viewing.featured_image_url}
+                    alt={viewing.title}
+                    className="w-full rounded-lg my-4"
+                  />
+                )}
 
-              {viewing.external_url && (
-                <a
-                  href={viewing.external_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-4"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Recurso externo
-                </a>
-              )}
+                {viewing.summary && (
+                  <p className="text-base text-muted-foreground italic border-l-2 border-primary pl-4 my-4">
+                    {viewing.summary}
+                  </p>
+                )}
 
-              <div className="flex flex-wrap items-center justify-between gap-3 mt-6 pt-6 border-t">
-                <ContentVoteButtons contentId={viewing.id} accentColor={PEDIA_COLOR} />
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() =>
-                      exportContentAsPdf(viewing.title, viewing.content, {
-                        category: viewing.category,
-                        date: viewing.published_at
-                          ? format(new Date(viewing.published_at), 'MMMM d, yyyy')
-                          : undefined,
-                        tags: viewing.diagnosis_tags,
-                      })
-                    }
+                <article className="prose prose-sm md:prose-base max-w-none dark:prose-invert">
+                  <ReactMarkdown>{viewing.content}</ReactMarkdown>
+                </article>
+
+                {viewing.external_url && (
+                  <a
+                    href={viewing.external_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-4"
                   >
-                    <Download className="h-4 w-4" />
-                    PDF
-                  </Button>
-                  <Button
-                    size="sm"
-                    className={`gap-2 bg-gradient-to-r ${PEDIA_GRADIENT} hover:opacity-90`}
-                    onClick={closeViewer}
-                  >
-                    Fechar
-                  </Button>
+                    <ExternalLink className="h-3 w-3" />
+                    Recurso externo
+                  </a>
+                )}
+
+                {/* Prev / Next navigation */}
+                {(prevArticle || nextArticle) && (
+                  <div className="grid sm:grid-cols-2 gap-3 mt-8 pt-6 border-t">
+                    {prevArticle ? (
+                      <button
+                        type="button"
+                        onClick={() => openArticle(prevArticle)}
+                        className="group text-left p-3 rounded-lg border border-border/60 hover:border-primary/40 hover:bg-muted/40 transition-colors"
+                      >
+                        <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                          <ChevronLeft className="h-3 w-3" />
+                          Anterior
+                        </span>
+                        <p className="text-sm font-medium line-clamp-2 mt-1 group-hover:text-primary transition-colors">
+                          {prevArticle.title}
+                        </p>
+                      </button>
+                    ) : (
+                      <div className="hidden sm:block" aria-hidden="true" />
+                    )}
+                    {nextArticle ? (
+                      <button
+                        type="button"
+                        onClick={() => openArticle(nextArticle)}
+                        className="group text-right p-3 rounded-lg border border-border/60 hover:border-primary/40 hover:bg-muted/40 transition-colors sm:text-right"
+                      >
+                        <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground justify-end w-full">
+                          Próximo
+                          <ChevronRight className="h-3 w-3" />
+                        </span>
+                        <p className="text-sm font-medium line-clamp-2 mt-1 group-hover:text-primary transition-colors">
+                          {nextArticle.title}
+                        </p>
+                      </button>
+                    ) : (
+                      <div className="hidden sm:block" aria-hidden="true" />
+                    )}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-6 pt-6 border-t">
+                  <ContentVoteButtons contentId={viewing.id} accentColor={PEDIA_COLOR} />
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() =>
+                        exportContentAsPdf(viewing.title, viewing.content, {
+                          category: viewing.category,
+                          date: viewing.published_at
+                            ? format(new Date(viewing.published_at), 'MMMM d, yyyy')
+                            : undefined,
+                          tags: viewing.diagnosis_tags,
+                        })
+                      }
+                    >
+                      <Download className="h-4 w-4" />
+                      PDF
+                    </Button>
+                    <Button
+                      size="sm"
+                      className={`gap-2 bg-gradient-to-r ${PEDIA_GRADIENT} hover:opacity-90`}
+                      onClick={closeViewer}
+                    >
+                      Fechar
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>
