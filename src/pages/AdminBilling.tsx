@@ -69,6 +69,8 @@ export default function AdminBilling() {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [tab, setTab] = useState("transactions");
   const [filter, setFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState<string>(""); // YYYY-MM-DD
+  const [dateTo, setDateTo] = useState<string>("");     // YYYY-MM-DD
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<PaymentRow[]>([]);
   const [credits, setCredits] = useState<CreditsRow[]>([]);
