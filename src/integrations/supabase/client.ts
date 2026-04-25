@@ -2,10 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Projeto Rheuma — banco oficial da aplicação.
-// Qualquer ambiente (Lovable, Vercel, local) usa este projeto.
-const SUPABASE_URL = 'https://rfsaxstpfpigrjyiochi.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmc2F4c3RwZnBpZ3JqeWlvY2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjY1MzQsImV4cCI6MjA5MjcwMjUzNH0.am_1QoQMgWw4lZPY2dYP801R3aJ_HrURL08uJmtxJbk';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
