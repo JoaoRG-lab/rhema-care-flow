@@ -220,6 +220,38 @@ export function useKnowledgeContributions() {
     return true;
   }, [user]);
 
+  // Admin: moderate (approve / reject) a contribution
+  const moderateContribution = useCallback(async (
+    id: string,
+    decision: 'approved' | 'rejected',
+    reviewerNotes?: string,
+  ): Promise<boolean> => {
+    if (!user) {
+      toast.error('Please sign in');
+      return false;
+    }
+
+    const { error } = await supabase
+      .from('knowledge_contributions')
+      .update({
+        status: decision,
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+        reviewer_notes: reviewerNotes?.trim() || null,
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Moderation error:', error);
+      toast.error('Failed to update contribution');
+      return false;
+    }
+
+    toast.success(decision === 'approved' ? 'Contribution approved' : 'Contribution rejected');
+    await fetchApprovedContributions();
+    return true;
+  }, [user, fetchApprovedContributions]);
+
   // Delete own contribution
   const deleteContribution = useCallback(async (id: string): Promise<boolean> => {
     if (!user) return false;
