@@ -1,4 +1,4 @@
-import { AISiteAgentWidget2 } from './components/ai/AISiteAgentWidget2';import { lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -128,15 +128,16 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
                     <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
                     <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                     <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                    <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-                    <Route path="/patients/:id" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
+                    <Route path="/onboarding" element={<ProtectedRoute><AccountTypeSelect /></ProtectedRoute>} />
+                    <Route path="/dashboard" element={<ClinicianRoute><Dashboard /></ClinicianRoute>} />
+                    <Route path="/patients" element={<ClinicianRoute><Patients /></ClinicianRoute>} />
+                    <Route path="/patients/:id" element={<ClinicianRoute><PatientDetail /></ClinicianRoute>} />
                     <Route path="/scores" element={<Scores />} />
-                    <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
-                    <Route path="/infusions" element={<ProtectedRoute><Infusions /></ProtectedRoute>} />
+                    <Route path="/monitoring" element={<ClinicianRoute><Monitoring /></ClinicianRoute>} />
+                    <Route path="/infusions" element={<ClinicianRoute><Infusions /></ClinicianRoute>} />
                     <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-                    <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-                    <Route path="/focus" element={<ProtectedRoute><Focus /></ProtectedRoute>} />
+                    <Route path="/tasks" element={<ClinicianRoute><Tasks /></ClinicianRoute>} />
+                    <Route path="/focus" element={<ClinicianRoute><Focus /></ClinicianRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                     <Route path="/settings/credits" element={<ProtectedRoute><SettingsCredits /></ProtectedRoute>} />
                     <Route path="/style-guide" element={<StyleGuide />} />
@@ -145,13 +146,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/academic" element={<ProtectedRoute><AcademicWorkspace /></ProtectedRoute>} />
-                    <Route path="/patient-portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
+                    <Route path="/academic" element={<ClinicianRoute><AcademicWorkspace /></ClinicianRoute>} />
+                    <Route path="/patient-portal" element={<PatientRoute><PatientPortal /></PatientRoute>} />
                     <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
                     <Route path="/knowledge" element={<ProtectedRoute><KnowledgeLibrary /></ProtectedRoute>} />
                     <Route path="/learn" element={<PatientEducationLibrary />} />
                     <Route path="/learn/pediatrics" element={<LearnPediatrics />} />
-                    <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                    <Route path="/analytics" element={<ClinicianRoute><Analytics /></ClinicianRoute>} />
                     <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
                     <Route path="/blockchain" element={<ProtectedRoute><BlockchainRegistry /></ProtectedRoute>} />
                     <Route path="/urv" element={<UrvPage />} />
