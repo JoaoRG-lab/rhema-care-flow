@@ -80,7 +80,7 @@ export default function ReumatoPortal() {
               <Button variant="ghost" size="sm">Outras especialidades</Button>
             </Link>
             <Link to="/login?redirect=%2Freumato">
-              <Button variant="ghost" size="sm">Sign In</Button>
+              <Button variant="ghost" size="sm">Entrar</Button>
             </Link>
             <Link to="/signup?redirect=%2Freumato">
               <Button size="sm" className="gap-2 bg-gradient-to-r from-primary to-[hsl(165_60%_48%)] hover:opacity-90">
@@ -100,12 +100,12 @@ export default function ReumatoPortal() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6">
               <Stethoscope className="h-4 w-4" />
-              Rheumatology Clinical Platform
+              Reumatologia Clinical Platform
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 leading-tight">
               Evidence-Based{' '}
-              <span className="gradient-text">Rheumatology</span>
+              <span className="gradient-text">Reumatologia</span>
               <br />
               Clinical Tools
             </h1>
@@ -152,7 +152,7 @@ export default function ReumatoPortal() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Complete <span className="gradient-text">Clinical Toolkit</span>
+              Kit <span className="gradient-text">Clínico Completo</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Built by rheumatologists, for rheumatologists. Validated scores and 
@@ -171,30 +171,30 @@ export default function ReumatoPortal() {
       {/* Quick Links Section */}
       <section className="py-16 px-6 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
-          <h3 className="text-xl font-semibold text-center mb-8">Quick Access</h3>
+          <h3 className="text-xl font-semibold text-center mb-8">Acesso Rápido</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link to="/scores">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:bg-primary/5 hover:border-primary/50">
                 <Calculator className="h-6 w-6 text-primary" />
-                <span>Calculators</span>
+                <span>Calculadoras</span>
               </Button>
             </Link>
             <Link to="/patients">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:bg-primary/5 hover:border-primary/50">
                 <Users className="h-6 w-6 text-primary" />
-                <span>Patients</span>
+                <span>Pacientes</span>
               </Button>
             </Link>
             <Link to="/monitoring">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:bg-primary/5 hover:border-primary/50">
                 <Shield className="h-6 w-6 text-primary" />
-                <span>Monitoring</span>
+                <span>Monitorização</span>
               </Button>
             </Link>
             <Link to="/infusions">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:bg-primary/5 hover:border-primary/50">
                 <Syringe className="h-6 w-6 text-primary" />
-                <span>Infusions</span>
+                <span>Infusões</span>
               </Button>
             </Link>
           </div>

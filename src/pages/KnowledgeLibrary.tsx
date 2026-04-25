@@ -180,7 +180,7 @@ export default function KnowledgeLibrary() {
     <div className="space-y-4">
       {/* Category Filter */}
       <div>
-        <label className="text-sm font-medium mb-2 block">Category</label>
+        <label className="text-sm font-medium mb-2 block">Categoria</label>
         <div className="flex flex-wrap gap-2">
           <Badge
             variant={selectedCategory === 'all' ? 'default' : 'outline'}
@@ -205,7 +205,7 @@ export default function KnowledgeLibrary() {
 
       {/* Disease Area Filter */}
       <div>
-        <label className="text-sm font-medium mb-2 block">Disease Area</label>
+        <label className="text-sm font-medium mb-2 block">Área da Doença</label>
         <Select value={selectedDiseaseArea} onValueChange={setSelectedDiseaseArea}>
           <SelectTrigger>
             <SelectValue />
@@ -220,7 +220,7 @@ export default function KnowledgeLibrary() {
 
       {/* Sort */}
       <div>
-        <label className="text-sm font-medium mb-2 block">Sort By</label>
+        <label className="text-sm font-medium mb-2 block">Ordenar por</label>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
           <SelectTrigger>
             <SelectValue />
@@ -459,7 +459,7 @@ export default function KnowledgeLibrary() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search contributions..."
+              placeholder="Buscar contribuições..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"

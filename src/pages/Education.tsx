@@ -113,25 +113,25 @@
            <Card>
              <CardContent className="pt-4 text-center">
                <p className="text-3xl font-bold text-primary">{stats.total}</p>
-               <p className="text-xs text-muted-foreground">Total Content</p>
+               <p className="text-xs text-muted-foreground">Total de Conteúdo</p>
              </CardContent>
            </Card>
            <Card>
              <CardContent className="pt-4 text-center">
                <p className="text-3xl font-bold text-success">{stats.published}</p>
-               <p className="text-xs text-muted-foreground">Published</p>
+               <p className="text-xs text-muted-foreground">Publicado</p>
              </CardContent>
            </Card>
            <Card>
              <CardContent className="pt-4 text-center">
                <p className="text-3xl font-bold text-warning">{stats.drafts}</p>
-               <p className="text-xs text-muted-foreground">Drafts</p>
+               <p className="text-xs text-muted-foreground">Rascunhos</p>
              </CardContent>
            </Card>
            <Card>
              <CardContent className="pt-4 text-center">
                <p className="text-3xl font-bold">{stats.featured}</p>
-               <p className="text-xs text-muted-foreground">Featured</p>
+               <p className="text-xs text-muted-foreground">Destacado</p>
              </CardContent>
            </Card>
          </div>
@@ -141,7 +141,7 @@
            <div className="relative flex-1">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
              <Input
-               placeholder="Search content..."
+               placeholder="Buscar conteúdo..."
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
                className="pl-9"
@@ -183,7 +183,7 @@
          {/* Category Tabs */}
          <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
            <TabsList className="flex-wrap h-auto gap-1 p-1">
-             <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+             <TabsTrigger value="all" className="text-xs">Todos</TabsTrigger>
              {EDUCATION_CATEGORIES.map(cat => (
                <TabsTrigger key={cat} value={cat} className="text-xs">
                  {cat}
@@ -259,7 +259,7 @@
                </AlertDialogDescription>
              </AlertDialogHeader>
              <AlertDialogFooter>
-               <AlertDialogCancel>Cancel</AlertDialogCancel>
+               <AlertDialogCancel>Cancelar</AlertDialogCancel>
                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
                  Delete
                </AlertDialogAction>

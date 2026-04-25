@@ -219,7 +219,7 @@ export default function PatientEducationLibrary() {
                 className="cursor-pointer"
                 onClick={() => setSelectedDiagnosis('all')}
               >
-                All
+                Todos
               </Badge>
               {allDiagnosisTags.map(tag => (
                 <Badge

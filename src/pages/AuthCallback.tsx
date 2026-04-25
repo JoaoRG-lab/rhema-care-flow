@@ -109,7 +109,7 @@ export default function AuthCallback() {
             </div>
             <span className="text-2xl font-semibold text-foreground">RheumaFlow</span>
           </div>
-          <div className="text-destructive text-lg font-medium">Authentication Error</div>
+          <div className="text-destructive text-lg font-medium">Erro de Autenticação</div>
           <p className="text-muted-foreground">{error}</p>
           <p className="text-sm text-muted-foreground">Redirecting to login...</p>
         </div>

@@ -224,7 +224,7 @@ export default function ForgotPassword() {
             {status === 'sent' && (
               <Alert className="border-primary/30">
                 <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden="true" />
-                <AlertTitle>Email sent</AlertTitle>
+                <AlertTitle>E-mail enviado</AlertTitle>
                 <AlertDescription className="space-y-1">
                   <p>
                     If an account exists for <span className="font-medium">{email}</span>,
@@ -241,7 +241,7 @@ export default function ForgotPassword() {
             {status === 'expired' && (
               <Alert variant="destructive">
                 <Clock className="h-4 w-4" aria-hidden="true" />
-                <AlertTitle>Link expired</AlertTitle>
+                <AlertTitle>Link expirado</AlertTitle>
                 <AlertDescription>
                   Your previous reset link has expired. Send a new one to continue.
                 </AlertDescription>
@@ -329,7 +329,7 @@ export default function ForgotPassword() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email">Endereço de e-mail</Label>
                 <Input
                   id="email"
                   type="email"

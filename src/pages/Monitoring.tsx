@@ -107,10 +107,10 @@ export default function Monitoring() {
                      <Label>Patient (Optional)</Label>
                      <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
                        <SelectTrigger className="mt-1">
-                         <SelectValue placeholder="General (no patient)" />
+                         <SelectValue placeholder="Geral (sem paciente)" />
                        </SelectTrigger>
                        <SelectContent>
-                         <SelectItem value="">General (no patient)</SelectItem>
+                         <SelectItem value="">Geral (sem paciente)</SelectItem>
                          {patients.map((patient) => (
                            <SelectItem key={patient.id} value={patient.id}>{patient.patient_code}</SelectItem>
                          ))}
@@ -118,10 +118,10 @@ export default function Monitoring() {
                      </Select>
                    </div>
                    <div>
-                   <Label>Event Type</Label>
+                   <Label>Tipo de Evento</Label>
                    <Select value={eventType} onValueChange={setEventType}>
                      <SelectTrigger className="mt-1">
-                       <SelectValue placeholder="Select type" />
+                       <SelectValue placeholder="Selecionar tipo" />
                      </SelectTrigger>
                      <SelectContent>
                        {EVENT_TYPES.map((type) => (
@@ -131,7 +131,7 @@ export default function Monitoring() {
                    </Select>
                  </div>
                  <div>
-                   <Label>Due Date</Label>
+                   <Label>Data Prevista</Label>
                    <Input
                      type="date"
                      value={dueDate}
@@ -141,15 +141,15 @@ export default function Monitoring() {
                    />
                  </div>
                  <div>
-                   <Label>Notes</Label>
+                   <Label>Observações</Label>
                    <Input
                      value={notes}
                      onChange={(e) => setNotes(e.target.value)}
-                     placeholder="Optional notes..."
+                     placeholder="Observações opcionais..."
                      className="mt-1"
                    />
                  </div>
-                 <Button type="submit" className="w-full">Create Event</Button>
+                 <Button type="submit" className="w-full">Criar Evento</Button>
                </form>
              </DialogContent>
            </Dialog>
@@ -224,7 +224,7 @@ export default function Monitoring() {
  
              <Card>
                <CardHeader>
-                 <CardTitle className="text-base">Upcoming</CardTitle>
+                 <CardTitle className="text-base">Próximos</CardTitle>
                </CardHeader>
                <CardContent>
                  {upcomingEvents.length === 0 ? (
@@ -275,7 +275,7 @@ export default function Monitoring() {
                                </Link>
                              )}
                          </div>
-                         <span className="status-completed text-xs px-2 py-1 rounded-full">Done</span>
+                         <span className="status-completed text-xs px-2 py-1 rounded-full">Concluído</span>
                        </div>
                      ))}
                    </div>

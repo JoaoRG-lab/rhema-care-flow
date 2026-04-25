@@ -154,13 +154,13 @@ export default function Signup() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label htmlFor="fullName">Nome completo</Label>
               <Input
                 id="fullName"
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Dr. Jane Smith"
+                placeholder="Dr. João Silva"
                 className="mt-1 h-11 rounded-xl"
               />
             </div>
@@ -177,7 +177,7 @@ export default function Signup() {
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -195,14 +195,14 @@ export default function Signup() {
               disabled={loading}
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Create Account
+              Criar conta
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Already have an account?{' '}
+            Já tem conta?{' '}
             <Link to={loginHref} className="text-primary hover:underline font-medium">
-              Sign in
+              Entrar
             </Link>
           </p>
 

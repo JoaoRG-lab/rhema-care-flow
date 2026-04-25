@@ -149,7 +149,7 @@ export default function Patients() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Patient Cards</h1>
+            <h1 className="text-2xl font-bold">Fichas de Pacientes</h1>
             <p className="text-muted-foreground">De-identified patient tracking</p>
           </div>
           <div className="flex items-center gap-2">
@@ -227,7 +227,7 @@ export default function Patients() {
                   </div>
 
                   <div>
-                    <Label>Diagnosis</Label>
+                    <Label>Diagnóstico</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {DIAGNOSIS_OPTIONS.map((dx) => (
                         <DiagnosisTag
@@ -242,7 +242,7 @@ export default function Patients() {
                   </div>
 
                   <div>
-                    <Label>Therapy</Label>
+                    <Label>Terapia</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {THERAPY_OPTIONS.map((tx) => (
                         <DiagnosisTag
@@ -257,7 +257,7 @@ export default function Patients() {
                   </div>
 
                   <div>
-                    <Label>Risk Flags</Label>
+                    <Label>Alertas de Risco</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {RISK_OPTIONS.map((risk) => (
                         <DiagnosisTag
@@ -306,7 +306,7 @@ export default function Patients() {
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by patient code..."
+              placeholder="Buscar pelo código do paciente..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"

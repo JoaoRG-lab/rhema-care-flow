@@ -43,10 +43,10 @@ export default function Settings() {
                 <div>
                   <CardTitle className="text-base flex items-center gap-2">
                     <Coins className="h-4 w-4 text-primary" />
-                    Credits & AI Balance
+                    Créditos & Saldo de IA
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    AI gateway balance, plan limits, and billing status
+                    Saldo do gateway de IA, limites do plano e status de cobrança
                   </CardDescription>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -62,7 +62,7 @@ export default function Settings() {
                 {t('settings.language')}
               </CardTitle>
               <CardDescription>
-                Select your preferred language for the interface
+                Selecione o idioma preferido para a interface
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -103,10 +103,10 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Stethoscope className="h-4 w-4" />
-                Specialty
+                Especialidade
               </CardTitle>
               <CardDescription>
-                Switch instantly between your active medical specialty workspaces
+                Alterne instantaneamente entre seus espaços de trabalho de especialidade médica
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -119,10 +119,10 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <BadgeCheck className="h-4 w-4" />
-                Contributor Verification
+                Verificação de Colaborador
               </CardTitle>
               <CardDescription>
-                Become a verified contributor to add clinical insights and review scores
+                Torne-se um colaborador verificado para adicionar insights clínicos e revisar pontuações
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -134,31 +134,31 @@ export default function Settings() {
                   </div>
                   {tier && (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground">Tier:</span>
+                      <span className="text-sm text-muted-foreground">Nível:</span>
                       <VerifiedBadge tier={tier} />
                     </div>
                   )}
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/verification-request">
-                      View Request Details
+                      Ver Detalhes da Solicitação
                     </Link>
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    You haven't submitted a verification request yet. Verified contributors can:
+                    Você ainda não enviou uma solicitação de verificação. Colaboradores verificados podem:
                   </p>
                   <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                    <li>Add clinical insights and recommendations</li>
-                    <li>Review and validate disease activity scores</li>
-                    <li>Edit clinical guidelines and protocols</li>
+                    <li>Adicionar insights e recomendações clínicas</li>
+                    <li>Revisar e validar pontuações de atividade de doença</li>
+                    <li>Editar diretrizes e protocolos clínicos</li>
                   </ul>
                   <div className="flex gap-2 pt-2">
                     <Button asChild>
                       <Link to="/verification-request">
                         <BadgeCheck className="h-4 w-4 mr-2" />
-                        Apply for Verification
+                        Solicitar Verificação
                       </Link>
                     </Button>
                     <Button variant="outline" size="icon" asChild>
@@ -181,7 +181,7 @@ export default function Settings() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                RheumaFlow is an organizational tool, not a medical record system. Do not store patient identifiers such as names, CPF, phone numbers, or addresses.
+                O RheumaFlow é uma ferramenta organizacional, não um sistema de prontuário médico. Não armazene identificadores de pacientes como nomes, CPF, telefones ou endereços.
               </p>
             </CardContent>
           </Card>

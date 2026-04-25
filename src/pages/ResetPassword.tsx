@@ -109,7 +109,7 @@ export default function ResetPassword() {
           {linkStatus === 'ready' && (
             <Alert className="border-primary/30">
               <CheckCircle2 className="h-4 w-4 text-primary" />
-              <AlertTitle>Link verified</AlertTitle>
+              <AlertTitle>Link verificado</AlertTitle>
               <AlertDescription>
                 You can now choose a new password.
               </AlertDescription>
@@ -137,7 +137,7 @@ export default function ResetPassword() {
           {linkStatus !== 'expired' && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="new-password">New password</Label>
+                <Label htmlFor="new-password">Nova senha</Label>
                 <Input
                   id="new-password"
                   type="password"
@@ -150,7 +150,7 @@ export default function ResetPassword() {
                 />
               </div>
               <div>
-                <Label htmlFor="confirm-password">Confirm password</Label>
+                <Label htmlFor="confirm-password">Confirmar senha</Label>
                 <Input
                   id="confirm-password"
                   type="password"

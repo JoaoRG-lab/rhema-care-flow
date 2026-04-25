@@ -146,7 +146,7 @@ export default function Analytics() {
             <div className="flex flex-wrap gap-4">
               {/* Date Range */}
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Date Range</label>
+                <label className="text-xs text-muted-foreground">Período</label>
                 <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-[260px] justify-start text-left font-normal">
@@ -185,16 +185,16 @@ export default function Analytics() {
 
               {/* Diagnosis Filter */}
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Diagnosis</label>
+                <label className="text-xs text-muted-foreground">Diagnóstico</label>
                 <Select 
                   value={filters.diagnosisFilter || 'all'} 
                   onValueChange={(v) => setFilters(prev => ({ ...prev, diagnosisFilter: v === 'all' ? undefined : v }))}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All diagnoses" />
+                    <SelectValue placeholder="Todos os diagnósticos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All diagnoses</SelectItem>
+                    <SelectItem value="all">Todos os diagnósticos</SelectItem>
                     {availableDiagnoses.map(d => (
                       <SelectItem key={d} value={d}>{d}</SelectItem>
                     ))}
@@ -204,16 +204,16 @@ export default function Analytics() {
 
               {/* Therapy Filter */}
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Therapy</label>
+                <label className="text-xs text-muted-foreground">Terapia</label>
                 <Select 
                   value={filters.therapyFilter || 'all'} 
                   onValueChange={(v) => setFilters(prev => ({ ...prev, therapyFilter: v === 'all' ? undefined : v }))}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All therapies" />
+                    <SelectValue placeholder="Todas as terapias" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All therapies</SelectItem>
+                    <SelectItem value="all">Todas as terapias</SelectItem>
                     {availableTherapies.map(t => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
@@ -259,7 +259,7 @@ export default function Analytics() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2 mb-2">
                     <Users className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-muted-foreground">Total Patients</span>
+                    <span className="text-sm text-muted-foreground">Total de Pacientes</span>
                   </div>
                   <p className="text-2xl font-bold">{data.totalPatients}</p>
                 </CardContent>
@@ -269,7 +269,7 @@ export default function Analytics() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="h-4 w-4 text-success" />
-                    <span className="text-sm text-muted-foreground">New Patients</span>
+                    <span className="text-sm text-muted-foreground">Novos Pacientes</span>
                   </div>
                   <p className="text-2xl font-bold">{data.newPatients}</p>
                   <p className="text-xs text-muted-foreground">In selected period</p>
@@ -280,7 +280,7 @@ export default function Analytics() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2 mb-2">
                     <CalendarIcon className="h-4 w-4 text-info" />
-                    <span className="text-sm text-muted-foreground">Total Visits</span>
+                    <span className="text-sm text-muted-foreground">Total de Consultas</span>
                   </div>
                   <p className="text-2xl font-bold">{data.totalVisits}</p>
                 </CardContent>
@@ -329,7 +329,7 @@ export default function Analytics() {
                   {/* Visit Trend */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Visit Activity</CardTitle>
+                      <CardTitle className="text-base">Atividade de Consultas</CardTitle>
                       <CardDescription>Number of visits over time</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -373,7 +373,7 @@ export default function Analytics() {
                   {/* Patient Growth */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Patient Growth</CardTitle>
+                      <CardTitle className="text-base">Crescimento de Pacientes</CardTitle>
                       <CardDescription>Cumulative patient count over time</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -418,7 +418,7 @@ export default function Analytics() {
                   {/* Diagnosis Distribution */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Diagnosis Distribution</CardTitle>
+                      <CardTitle className="text-base">Distribuição de Diagnósticos</CardTitle>
                       <CardDescription>Patient count by diagnosis</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -457,7 +457,7 @@ export default function Analytics() {
                   {/* Therapy Distribution */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Therapy Distribution</CardTitle>
+                      <CardTitle className="text-base">Distribuição de Terapias</CardTitle>
                       <CardDescription>Patient count by therapy</CardDescription>
                     </CardHeader>
                     <CardContent>

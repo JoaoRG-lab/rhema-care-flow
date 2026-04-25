@@ -102,10 +102,10 @@
  
          <Tabs defaultValue="research" className="w-full">
            <TabsList className="grid w-full grid-cols-4 mb-6">
-             <TabsTrigger value="research">Research Data</TabsTrigger>
-             <TabsTrigger value="publications">Publications</TabsTrigger>
-             <TabsTrigger value="trials">Clinical Trials</TabsTrigger>
-             <TabsTrigger value="guidelines">Guidelines</TabsTrigger>
+             <TabsTrigger value="research">Dados de Pesquisa</TabsTrigger>
+             <TabsTrigger value="publications">Publicações</TabsTrigger>
+             <TabsTrigger value="trials">Ensaios Clínicos</TabsTrigger>
+             <TabsTrigger value="guidelines">Diretrizes</TabsTrigger>
            </TabsList>
  
            {/* Research Data Tab */}
@@ -142,7 +142,7 @@
                  </CardHeader>
                  <CardContent>
                    <p className="text-3xl font-bold">{scoreCount}</p>
-                   <p className="text-sm text-muted-foreground">Longitudinal measurements</p>
+                   <p className="text-sm text-muted-foreground">Medidas longitudinais</p>
                    <Button 
                      variant="outline" 
                      size="sm" 
@@ -176,20 +176,20 @@
  
              <Card>
                <CardHeader>
-                 <CardTitle className="text-base">Export Settings</CardTitle>
+                 <CardTitle className="text-base">Configurações de Exportação</CardTitle>
                  <CardDescription>Configure data export preferences for IRB compliance</CardDescription>
                </CardHeader>
                <CardContent>
                  <div className="grid md:grid-cols-2 gap-4">
                    <div className="space-y-2">
-                     <label className="text-sm font-medium">Date Range</label>
+                     <label className="text-sm font-medium">Período</label>
                      <div className="flex gap-2">
                        <Input type="date" className="flex-1" />
                        <Input type="date" className="flex-1" />
                      </div>
                    </div>
                    <div className="space-y-2">
-                     <label className="text-sm font-medium">Diagnoses</label>
+                     <label className="text-sm font-medium">Diagnósticos</label>
                      <div className="flex flex-wrap gap-1">
                        {['RA', 'SLE', 'SpA', 'PsA'].map(dx => (
                          <Badge key={dx} variant="outline" className="cursor-pointer hover:bg-accent">
@@ -273,7 +273,7 @@
                  <div className="relative mb-4">
                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                    <Input 
-                     placeholder="Search guidelines..." 
+                     placeholder="Buscar diretrizes..." 
                      className="pl-9"
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}

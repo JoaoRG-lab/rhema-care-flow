@@ -112,7 +112,7 @@ export default function Login() {
             <Link to="/" className="lg:hidden inline-block mb-6">
               <UHSLogo size="md" />
             </Link>
-            <h1 className="text-2xl font-bold">Welcome back</h1>
+            <h1 className="text-2xl font-bold">Bem-vindo de volta</h1>
             <p className="text-muted-foreground mt-2">Sign in to your UHS Health OS account</p>
           </div>
 
@@ -173,13 +173,13 @@ export default function Login() {
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Senha</Label>
                 <button
                   type="button"
                   onClick={() => { setResetEmail(email); setResetOpen(true); }}
                   className="text-xs text-primary hover:underline font-medium"
                 >
-                  Forgot password?
+                  Esqueceu a senha?
                 </button>
               </div>
               <Input
@@ -198,14 +198,14 @@ export default function Login() {
               disabled={loading}
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Sign In
+              Entrar
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Don't have an account?{' '}
+            Não tem conta?{' '}
             <Link to={redirectTo !== '/dashboard' ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : '/signup'} className="text-primary hover:underline font-medium">
-              Sign up
+              Cadastre-se
             </Link>
           </p>
 

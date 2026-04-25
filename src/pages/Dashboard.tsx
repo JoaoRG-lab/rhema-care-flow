@@ -201,7 +201,7 @@ export default function Dashboard() {
              <CardContent className="p-4">
                <div className="flex items-center gap-3 mb-3">
                  <Zap className="h-5 w-5 text-primary" />
-                 <h3 className="font-semibold">Quick Actions</h3>
+                 <h3 className="font-semibold">Ações Rápidas</h3>
                </div>
                <div className="flex flex-col sm:flex-row gap-3">
                  <QuickPatientSearch />

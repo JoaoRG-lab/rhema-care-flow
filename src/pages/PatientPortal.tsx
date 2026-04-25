@@ -78,7 +78,7 @@ import { useConsultationSessions } from '@/hooks/useConsultationSessions';
              <CardContent className="p-4">
                <div className="flex items-center gap-2 text-muted-foreground mb-1">
                  <Activity className="h-4 w-4" />
-                 <span className="text-xs font-medium">Disease Activity</span>
+                 <span className="text-xs font-medium">Atividade da Doença</span>
                </div>
                <p className="text-2xl font-bold">{currentScore.toFixed(1)}</p>
                <p className={`text-xs ${scoreChange < 0 ? 'text-success' : 'text-destructive'}`}>
@@ -91,7 +91,7 @@ import { useConsultationSessions } from '@/hooks/useConsultationSessions';
              <CardContent className="p-4">
                <div className="flex items-center gap-2 text-muted-foreground mb-1">
                  <Calendar className="h-4 w-4" />
-                 <span className="text-xs font-medium">Next Appointment</span>
+                 <span className="text-xs font-medium">Próxima Consulta</span>
                </div>
                <p className="text-2xl font-bold">{format(appointments[0].date, 'MMM d')}</p>
                <p className="text-xs text-muted-foreground">{appointments[0].type}</p>
@@ -102,10 +102,10 @@ import { useConsultationSessions } from '@/hooks/useConsultationSessions';
              <CardContent className="p-4">
                <div className="flex items-center gap-2 text-muted-foreground mb-1">
                  <Pill className="h-4 w-4" />
-                 <span className="text-xs font-medium">Medications</span>
+                 <span className="text-xs font-medium">Medicamentos</span>
                </div>
                <p className="text-2xl font-bold">{medications.length}</p>
-               <p className="text-xs text-muted-foreground">Active prescriptions</p>
+               <p className="text-xs text-muted-foreground">Prescrições ativas</p>
              </CardContent>
            </Card>
  
@@ -113,9 +113,9 @@ import { useConsultationSessions } from '@/hooks/useConsultationSessions';
              <CardContent className="p-4">
                <div className="flex items-center gap-2 text-muted-foreground mb-1">
                  <TrendingUp className="h-4 w-4" />
-                 <span className="text-xs font-medium">Trend</span>
+                 <span className="text-xs font-medium">Tendência</span>
                </div>
-               <p className="text-2xl font-bold text-success">Improving</p>
+               <p className="text-2xl font-bold text-success">Melhorando</p>
                <p className="text-xs text-muted-foreground">Over 5 months</p>
              </CardContent>
            </Card>
@@ -123,11 +123,11 @@ import { useConsultationSessions } from '@/hooks/useConsultationSessions';
  
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-5 mb-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="sessions">Sessions</TabsTrigger>
-              <TabsTrigger value="appointments">Appointments</TabsTrigger>
-              <TabsTrigger value="medications">Medications</TabsTrigger>
-              <TabsTrigger value="learn">Learn</TabsTrigger>
+              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+              <TabsTrigger value="sessions">Sessões</TabsTrigger>
+              <TabsTrigger value="appointments">Consultas</TabsTrigger>
+              <TabsTrigger value="medications">Medicamentos</TabsTrigger>
+              <TabsTrigger value="learn">Aprender</TabsTrigger>
             </TabsList>
  
            {/* Overview Tab */}
@@ -223,7 +223,7 @@ import { useConsultationSessions } from '@/hooks/useConsultationSessions';
            <TabsContent value="appointments" className="space-y-4">
              <Card>
                <CardHeader>
-                 <CardTitle className="text-base">Upcoming Appointments</CardTitle>
+                 <CardTitle className="text-base">Próximas Consultas</CardTitle>
                </CardHeader>
                <CardContent className="space-y-3">
                  {appointments.map((apt, idx) => (
@@ -251,7 +251,7 @@ import { useConsultationSessions } from '@/hooks/useConsultationSessions';
            <TabsContent value="medications" className="space-y-4">
              <Card>
                <CardHeader>
-                 <CardTitle className="text-base">Current Medications</CardTitle>
+                 <CardTitle className="text-base">Medicamentos Atuais</CardTitle>
                  <CardDescription>Your active prescriptions and schedules</CardDescription>
                </CardHeader>
                <CardContent className="space-y-4">

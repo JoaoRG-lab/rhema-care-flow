@@ -233,7 +233,7 @@ import {
                  <Clock className="h-8 w-8 text-warning" />
                  <div>
                    <p className="text-2xl font-bold">{stats.pending}</p>
-                   <p className="text-xs text-muted-foreground">Pending</p>
+                   <p className="text-xs text-muted-foreground">Pendente</p>
                  </div>
                </div>
              </CardContent>
@@ -244,7 +244,7 @@ import {
                  <Eye className="h-8 w-8 text-info" />
                  <div>
                    <p className="text-2xl font-bold">{stats.under_review}</p>
-                   <p className="text-xs text-muted-foreground">Under Review</p>
+                   <p className="text-xs text-muted-foreground">Em Revisão</p>
                  </div>
                </div>
              </CardContent>
@@ -255,7 +255,7 @@ import {
                  <CheckCircle className="h-8 w-8 text-success" />
                  <div>
                    <p className="text-2xl font-bold">{stats.approved}</p>
-                   <p className="text-xs text-muted-foreground">Approved</p>
+                   <p className="text-xs text-muted-foreground">Aprovado</p>
                  </div>
                </div>
              </CardContent>
@@ -266,7 +266,7 @@ import {
                  <XCircle className="h-8 w-8 text-destructive" />
                  <div>
                    <p className="text-2xl font-bold">{stats.rejected}</p>
-                   <p className="text-xs text-muted-foreground">Rejected</p>
+                   <p className="text-xs text-muted-foreground">Rejeitado</p>
                  </div>
                </div>
              </CardContent>
@@ -277,10 +277,10 @@ import {
          <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="mb-4">
            <TabsList>
              <TabsTrigger value="all">All ({requests.length})</TabsTrigger>
-             <TabsTrigger value="pending">Pending ({stats.pending})</TabsTrigger>
-             <TabsTrigger value="under_review">Under Review ({stats.under_review})</TabsTrigger>
-             <TabsTrigger value="approved">Approved ({stats.approved})</TabsTrigger>
-             <TabsTrigger value="rejected">Rejected ({stats.rejected})</TabsTrigger>
+             <TabsTrigger value="pending">Pendente ({stats.pending})</TabsTrigger>
+             <TabsTrigger value="under_review">Em Revisão ({stats.under_review})</TabsTrigger>
+             <TabsTrigger value="approved">Aprovado ({stats.approved})</TabsTrigger>
+             <TabsTrigger value="rejected">Rejeitado ({stats.rejected})</TabsTrigger>
            </TabsList>
          </Tabs>
  
@@ -376,19 +376,19 @@ import {
                      </h4>
                      <div className="grid grid-cols-2 gap-4 text-sm">
                        <div>
-                         <Label className="text-muted-foreground">Full Name</Label>
+                         <Label className="text-muted-foreground">Nome Completo</Label>
                          <p className="font-medium">{selectedRequest.full_name}</p>
                        </div>
                        <div>
-                         <Label className="text-muted-foreground">Email</Label>
+                         <Label className="text-muted-foreground">E-mail</Label>
                          <p className="font-medium">{selectedRequest.email}</p>
                        </div>
                        <div>
-                         <Label className="text-muted-foreground">Contributor Type</Label>
+                         <Label className="text-muted-foreground">Tipo de Contribuidor</Label>
                          <p className="font-medium capitalize">{selectedRequest.contributor_type || 'Clinical'}</p>
                        </div>
                        <div>
-                         <Label className="text-muted-foreground">Submitted</Label>
+                         <Label className="text-muted-foreground">Enviado em</Label>
                          <p className="font-medium">{format(new Date(selectedRequest.submitted_at), 'PPp')}</p>
                        </div>
                      </div>
@@ -404,19 +404,19 @@ import {
                        <div className="grid grid-cols-2 gap-4 text-sm">
                          {selectedRequest.institution && (
                            <div>
-                             <Label className="text-muted-foreground">Institution</Label>
+                             <Label className="text-muted-foreground">Instituição</Label>
                              <p className="font-medium">{selectedRequest.institution}</p>
                            </div>
                          )}
                          {selectedRequest.department && (
                            <div>
-                             <Label className="text-muted-foreground">Department</Label>
+                             <Label className="text-muted-foreground">Departamento</Label>
                              <p className="font-medium">{selectedRequest.department}</p>
                            </div>
                          )}
                          {selectedRequest.position && (
                            <div>
-                             <Label className="text-muted-foreground">Position</Label>
+                             <Label className="text-muted-foreground">Cargo</Label>
                              <p className="font-medium">{selectedRequest.position}</p>
                            </div>
                          )}
@@ -440,25 +440,25 @@ import {
                        <div className="grid grid-cols-2 gap-4 text-sm">
                          {selectedRequest.license_number && (
                            <div>
-                             <Label className="text-muted-foreground">License Number</Label>
+                             <Label className="text-muted-foreground">Número de Registro</Label>
                              <p className="font-medium">{selectedRequest.license_number}</p>
                            </div>
                          )}
                          {selectedRequest.license_issuing_authority && (
                            <div>
-                             <Label className="text-muted-foreground">Issuing Authority</Label>
+                             <Label className="text-muted-foreground">Órgão Emissor</Label>
                              <p className="font-medium">{selectedRequest.license_issuing_authority}</p>
                            </div>
                          )}
                          {selectedRequest.certification_credential && (
                            <div>
-                             <Label className="text-muted-foreground">Board Certification</Label>
+                             <Label className="text-muted-foreground">Certificação</Label>
                              <p className="font-medium">{selectedRequest.certification_credential}</p>
                            </div>
                          )}
                          {selectedRequest.certifying_body && (
                            <div>
-                             <Label className="text-muted-foreground">Certifying Body</Label>
+                             <Label className="text-muted-foreground">Entidade Certificadora</Label>
                              <p className="font-medium">{selectedRequest.certifying_body}</p>
                            </div>
                          )}
@@ -469,7 +469,7 @@ import {
                    {/* Expertise */}
                    {(selectedRequest.expertise_areas?.length || selectedRequest.expertise_statement) && (
                      <div>
-                       <h4 className="font-semibold mb-3">Expertise</h4>
+                       <h4 className="font-semibold mb-3">Especialização</h4>
                        {selectedRequest.expertise_areas && selectedRequest.expertise_areas.length > 0 && (
                          <div className="flex flex-wrap gap-1.5 mb-3">
                            {selectedRequest.expertise_areas.map((area, i) => (
@@ -530,14 +530,14 @@ import {
  
                    {/* Review Section */}
                    <div className="border-t pt-6">
-                     <h4 className="font-semibold mb-3">Decision</h4>
+                     <h4 className="font-semibold mb-3">Decisão</h4>
                      
                      <div className="space-y-4">
                        <div>
-                         <Label>Verification Tier</Label>
+                         <Label>Nível de Verificação</Label>
                          <Select value={selectedTier || ''} onValueChange={(v) => setSelectedTier(v as VerificationTier)}>
                            <SelectTrigger className="mt-1.5">
-                             <SelectValue placeholder="Select tier for approval" />
+                             <SelectValue placeholder="Selecionar nível para aprovação" />
                            </SelectTrigger>
                            <SelectContent>
                              {TIER_OPTIONS.map((option) => (
@@ -552,11 +552,11 @@ import {
                        </div>
  
                        <div>
-                         <Label>Reviewer Notes</Label>
+                         <Label>Notas do Revisor</Label>
                          <Textarea
                            value={reviewerNotes}
                            onChange={(e) => setReviewerNotes(e.target.value)}
-                           placeholder="Add notes about your decision (visible only to admins)"
+                           placeholder="Adicione notas sobre sua decisão (visível apenas para admins)"
                            className="mt-1.5"
                            rows={3}
                          />

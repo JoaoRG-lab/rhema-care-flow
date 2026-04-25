@@ -80,10 +80,10 @@
                </DialogHeader>
                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                  <div>
-                   <Label>Drug</Label>
+                   <Label>Medicamento</Label>
                    <Select value={drug} onValueChange={handleDrugChange}>
                      <SelectTrigger className="mt-1">
-                       <SelectValue placeholder="Select drug" />
+                       <SelectValue placeholder="Selecionar medicamento" />
                      </SelectTrigger>
                      <SelectContent>
                        {BIOLOGIC_DRUGS.map((d) => (
@@ -113,15 +113,15 @@
                    />
                  </div>
                  <div>
-                   <Label>Notes</Label>
+                   <Label>Observações</Label>
                    <Input
                      value={notes}
                      onChange={(e) => setNotes(e.target.value)}
-                     placeholder="Pre-infusion checklist, etc."
+                     placeholder="Checklist pré-infusão, etc."
                      className="mt-1"
                    />
                  </div>
-                 <Button type="submit" className="w-full">Schedule</Button>
+                 <Button type="submit" className="w-full">Agendar</Button>
                </form>
              </DialogContent>
            </Dialog>

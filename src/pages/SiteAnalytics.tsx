@@ -235,11 +235,11 @@ export default function SiteAnalytics() {
 
             {/* Stat cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <StatCard icon={Eye} label="Pageviews" value={stats.totalPageviews.toLocaleString()} />
+              <StatCard icon={Eye} label="Visualizações" value={stats.totalPageviews.toLocaleString()} />
               <StatCard icon={Users} label="Visitantes Únicos" value={stats.uniqueVisitors.toLocaleString()} />
               <StatCard icon={Activity} label="Sessões" value={stats.totalSessions.toLocaleString()} />
               <StatCard icon={Clock} label="Duração Média" value={formatDuration(stats.avgDuration)} />
-              <StatCard icon={MousePointerClick} label="Bounce Rate" value={`${stats.bounceRate}%`} alert={stats.bounceRate > 70} />
+              <StatCard icon={MousePointerClick} label="Taxa de Rejeição" value={`${stats.bounceRate}%`} alert={stats.bounceRate > 70} />
               <StatCard icon={TrendingUp} label="Páginas/Sessão" value={stats.pagesPerSession.toString()} />
             </div>
 
@@ -284,7 +284,7 @@ export default function SiteAnalytics() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>Página</TableHead>
-                            <TableHead className="text-right">Views</TableHead>
+                            <TableHead className="text-right">Visualizações</TableHead>
                             <TableHead className="text-right">Visitantes</TableHead>
                           </TableRow>
                         </TableHeader>
