@@ -7,7 +7,7 @@ import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight, ArrowLeftRight, MessageSquare, ClipboardPlus, Video } from 'lucide-react';
+import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight, ArrowLeftRight, MessageSquare, ClipboardPlus, Video, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { VisitHistory } from '@/components/patients/VisitHistory';
@@ -19,6 +19,7 @@ import { PatientSmsHistory } from '@/components/patients/PatientSmsHistory';
 import { PatientChainAnchorPanel } from '@/components/patients/PatientChainAnchorPanel';
 import { PrescriptionList } from '@/components/prescriptions/PrescriptionList';
 import { TeleconsultaLobby } from '@/components/teleconsulta/TeleconsultaLobby';
+import { SharePatientCodeDialog } from '@/components/prontuario/SharePatientCodeDialog';
 
 import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
 import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
@@ -227,13 +228,19 @@ import type { PatientCard } from '@/types/clinical';
                   onScoreSaved={() => setRefreshKey(prev => prev + 1)}
                 />
                 <PatientReportExport patient={patient} />
+                <SharePatientCodeDialog patientCode={patient.patient_code}>
+                  <Button variant="outline" size="sm" className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5">
+                    <Share2 className="h-4 w-4" />
+                    Prontuário
+                  </Button>
+                </SharePatientCodeDialog>
                 <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
                   <Pencil className="h-4 w-4 mr-2" />
-                  Edit
+                  Editar
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setIsDeleteOpen(true)} className="text-destructive hover:text-destructive">
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  Excluir
                 </Button>
                 <AddVisitDialog 
                   patientId={patient.id} 

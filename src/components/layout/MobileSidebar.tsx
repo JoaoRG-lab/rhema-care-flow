@@ -29,6 +29,7 @@ import {
   Stethoscope,
   ChevronRight,
   Video,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -69,6 +70,7 @@ const navItems = [
   { path: '/site-analytics', label: 'Analytics do Site',  icon: BarChart3 },
   { path: '/case-studies',  label: 'Casos Clínicos',     icon: Stethoscope },
   { path: '/teleconsulta', label: 'Teleconsulta', icon: Video },
+  { path: '/prontuario', label: 'Prontuário Integrado', icon: ClipboardList },
 ];
 
 const academicNavItems = [
