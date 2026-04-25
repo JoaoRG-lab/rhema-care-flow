@@ -37,6 +37,8 @@ import {
 import { format } from 'date-fns';
 import { useKnowledgeContributions, ContributionCategory, KnowledgeContribution } from '@/hooks/useKnowledgeContributions';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+import { useUserRole } from '@/hooks/useUserRole';
+import { ModerationQueue } from '@/components/knowledge/ModerationQueue';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
