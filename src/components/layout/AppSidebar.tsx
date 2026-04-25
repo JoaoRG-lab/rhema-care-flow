@@ -56,6 +56,7 @@ const navItems = [
   { path: '/scores', label: 'Scores & Tools', icon: Activity },
   { path: '/monitoring', label: 'Monitoring', icon: Shield },
   { path: '/infusions', label: 'Infusions', icon: Syringe },
+  { path: '/especialidades', label: 'Specialties', icon: Stethoscope },
   { path: '/learn', label: 'Library', icon: BookOpen },
   { path: '/education', label: 'Education CMS', icon: FileText },
   { path: '/knowledge', label: 'Knowledge', icon: GraduationCap },
