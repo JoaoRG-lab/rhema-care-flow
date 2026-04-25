@@ -75,6 +75,7 @@ type SortOption = 'popular' | 'recent' | 'oldest';
 export default function KnowledgeLibrary() {
   const isMobile = useIsMobile();
   const { tier } = useVerificationStatus();
+  const { isAdmin } = useUserRole();
   const [searchParams, setSearchParams] = useSearchParams();
   const specialtyParam = searchParams.get('specialty');
   const currentSpecialty = specialtyParam ? getSpecialtyById(specialtyParam) : null;
