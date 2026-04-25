@@ -447,6 +447,13 @@ export default function KnowledgeLibrary() {
           </Link>
         </div>
 
+        {/* Admin moderation queue */}
+        {isAdmin && (
+          <div className="mb-6">
+            <ModerationQueue />
+          </div>
+        )}
+
         {/* Search Bar */}
         <div className="flex gap-2 mb-6">
           <div className="relative flex-1">
