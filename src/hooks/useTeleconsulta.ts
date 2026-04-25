@@ -75,12 +75,20 @@ export function useTeleconsulta(patientCardId?: string) {
   const fetchTeleconsultas = useCallback(async () => {
     if (!user) { setTeleconsultas([]); setLoading(false); return; }
     try {
-      // Verifica se tabela existe antes de consultar
+      // Verifica se tabela existe — só mostra banner se for erro 42P01 (tabela inexistente)
       const { error: tableErr } = await supabase.from('teleconsultas').select('id').limit(0);
-      if (tableErr && tableErr.message.includes('relation') || tableErr && tableErr.code === 'PGRST205') {
-        setTableReady(false);
-        setLoading(false);
-        return;
+      if (tableErr) {
+        const isTableMissing =
+          tableErr.code === '42P01' ||
+          tableErr.code === 'PGRST205' ||
+          (tableErr.message?.toLowerCase().includes('relation') &&
+           tableErr.message?.toLowerCase().includes('does not exist'));
+        if (isTableMissing) {
+          setTableReady(false);
+          setLoading(false);
+          return;
+        }
+        // Qualquer outro erro (rede, RLS, etc.) — tabela existe, continua normalmente
       }
       setTableReady(true);
       let query = supabase
