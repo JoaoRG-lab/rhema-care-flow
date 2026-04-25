@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Stethoscope, Check, RotateCcw, ChevronDown } from 'lucide-react';
+import { Stethoscope, Check, RotateCcw, ChevronDown, LayoutGrid } from 'lucide-react';
 
 const STORAGE_KEY = 'uhs:lastSpecialtyId';
 
@@ -152,6 +152,13 @@ export function SpecialtyQuickSwitcher({ compact = false }: SpecialtyQuickSwitch
           );
         })}
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => navigate('/especialidades')}
+          className="cursor-pointer"
+        >
+          <LayoutGrid className="mr-2 h-4 w-4" />
+          <span className="flex-1">Ver todas as especialidades</span>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleReset}
           disabled={!storedId}
