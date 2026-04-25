@@ -99,7 +99,7 @@ export function TeleconsultaLobby({ patientCardId, patientName, onEnterRoom }: T
             <p className="text-xs text-amber-700 dark:text-amber-400">
               Acesse{' '}
               <a
-                href="https://supabase.com/dashboard/project/rqaqdhmdeyzyjglhxrne/sql/new"
+                href="https://supabase.com/dashboard/project/jiswutjmmoirkoarpbpf/sql/new"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline font-medium"
