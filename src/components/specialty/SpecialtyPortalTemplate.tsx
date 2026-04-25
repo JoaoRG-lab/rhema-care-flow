@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { UHSLogo } from '@/components/brand/UHSLogo';
 import { TrustBadge } from '@/components/brand/TrustBadges';
 import { FeatureCard, FeatureGrid } from '@/components/brand/FeatureCard';
@@ -11,8 +12,12 @@ import {
   Users,
   Search,
   Sparkles,
+  Video,
+  FileText,
+  ShieldCheck,
+  ChevronRight,
 } from 'lucide-react';
-import { SpecialtyConfig } from '@/config/specialties';
+import { type SpecialtyConfig } from '@/config/specialties';
 
 interface SpecialtyPortalTemplateProps {
   specialty: SpecialtyConfig;
@@ -30,10 +35,7 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
           <Link to="/especialidades" className="flex items-center gap-3">
             <UHSLogo size="sm" showText={false} />
             <div>
-              <span 
-                className="font-bold text-lg"
-                style={{ color: specialty.color }}
-              >
+              <span className="font-bold text-lg" style={{ color: specialty.color }}>
                 {specialty.shortName}
               </span>
               <span className="text-xs text-muted-foreground block">by UHS Health OS</span>
@@ -44,12 +46,10 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
               <Button variant="ghost" size="sm">Entrar</Button>
             </Link>
             <Link to={`/signup${redirectParam}`}>
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 className="gap-2 hover:opacity-90"
-                style={{ 
-                  background: `linear-gradient(to right, ${specialty.color}, ${specialty.color}dd)` 
-                }}
+                style={{ background: `linear-gradient(to right, ${specialty.color}, ${specialty.color}dd)` }}
               >
                 Começar <ArrowRight className="h-4 w-4" />
               </Button>
@@ -58,39 +58,28 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="relative pt-32 pb-20 px-6 hero-pattern overflow-hidden">
-        <div 
-          className="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl opacity-10"
-          style={{ backgroundColor: specialty.color }}
-        />
-        <div 
-          className="absolute bottom-10 right-10 w-96 h-96 rounded-full blur-3xl opacity-10"
-          style={{ backgroundColor: specialty.color }}
-        />
-        
+        <div className="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl opacity-10" style={{ backgroundColor: specialty.color }} />
+        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full blur-3xl opacity-10" style={{ backgroundColor: specialty.color }} />
+
         <div className="container mx-auto max-w-5xl relative">
           <div className="text-center mb-12">
-            <div 
+            <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"
-              style={{ 
-                backgroundColor: `${specialty.color}20`,
-                color: specialty.color 
-              }}
+              style={{ backgroundColor: `${specialty.color}20`, color: specialty.color }}
             >
               <Icon className="h-4 w-4" />
-              {specialty.namePt} - Plataforma Clínica
+              {specialty.namePt} — Plataforma Clínica
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 leading-tight">
               Ferramentas Clínicas para{' '}
-              <span style={{ color: specialty.color }}>
-                {specialty.namePt}
-              </span>
+              <span style={{ color: specialty.color }}>{specialty.namePt}</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-              {specialty.descriptionPt}. Calculadoras, protocolos, monitorização 
+              {specialty.descriptionPt}. Calculadoras, protocolos, teleconsulta
               e conhecimento baseado em evidências para sua prática clínica.
             </p>
 
@@ -109,27 +98,111 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
               </div>
             )}
 
-            {/* CTA Buttons */}
+            {/* CTA */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/scores">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="gap-2 px-8 h-12 text-base shadow-lg hover:opacity-90"
-                  style={{ 
-                    background: `linear-gradient(to right, ${specialty.color}, ${specialty.color}dd)` 
-                  }}
+                  style={{ background: `linear-gradient(to right, ${specialty.color}, ${specialty.color}dd)` }}
                 >
                   <Calculator className="h-5 w-5" />
-                  Abrir Calculadoras
+                  Calculadoras
+                </Button>
+              </Link>
+              <Link to="/teleconsulta">
+                <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base border-blue-300 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30">
+                  <Video className="h-5 w-5" />
+                  Teleconsulta
                 </Button>
               </Link>
               <Link to={`/knowledge?specialty=${specialty.id}`}>
                 <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base">
                   <BookOpen className="h-5 w-5" />
-                  Biblioteca de Conhecimento
+                  Biblioteca
                 </Button>
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TELECONSULTA + PRESCRIÇÃO MEMED ── destaque para todas as especialidades */}
+      <section className="py-16 px-6 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/20 border-y border-blue-100 dark:border-blue-900">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-10">
+            <Badge className="bg-blue-600 text-white mb-4 px-3 py-1 text-xs">
+              <Video className="h-3 w-3 mr-1.5 inline" />
+              Teleconsulta + Prescrição Digital
+            </Badge>
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">
+              Atenda por vídeo e prescreva com{' '}
+              <span className="text-blue-600">assinatura digital</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Para médicos de <strong>{specialty.namePt}</strong> — realize teleconsultas, 
+              emita prescrições digitais pela plataforma Memed e assine com certificado 
+              digital A1 ou A3 diretamente pelo navegador.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-4 mb-8">
+            {/* Card 1: Teleconsulta */}
+            <Card className="border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-900">
+              <CardContent className="p-5">
+                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-3">
+                  <Video className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="font-semibold mb-1">Vídeo Consulta</h3>
+                <p className="text-xs text-muted-foreground">
+                  Sala de vídeo WebRTC segura via Daily.co. Agendamento, histórico 
+                  e acesso com 1 clique.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Card 2: Prescrição Memed */}
+            <Card className="border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-900">
+              <CardContent className="p-5">
+                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-3">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="font-semibold mb-1">Prescrição Memed</h3>
+                <p className="text-xs text-muted-foreground">
+                  Integração oficial com o módulo Memed. Prescreva medicamentos 
+                  durante a consulta, com auto-complete e posologia completa.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Card 3: Assinatura A1/A3 */}
+            <Card className="border-blue-200 dark:border-blue-800 bg-white dark:bg-gray-900">
+              <CardContent className="p-5">
+                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-3">
+                  <ShieldCheck className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="font-semibold mb-1">Assinatura A1 / A3</h3>
+                <p className="text-xs text-muted-foreground">
+                  Validade jurídica garantida. O módulo Memed detecta automaticamente 
+                  seu certificado digital instalado (ICP-Brasil).
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link to="/teleconsulta">
+              <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 h-11">
+                <Video className="h-4 w-4" />
+                Acessar Teleconsulta
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button variant="outline" className="gap-2 px-8 h-11 border-blue-300 text-blue-700 dark:text-blue-400">
+                Criar Conta Gratuita
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -143,20 +216,19 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
                 Ferramentas <span style={{ color: specialty.color }}>Clínicas</span>
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Construído por especialistas, para especialistas. Scores validados e 
-                protocolos baseados em evidências ao seu alcance.
+                Scores validados, calculadoras e protocolos baseados em evidências 
+                para {specialty.namePt}.
               </p>
             </div>
-
             <FeatureGrid columns={3}>
               {specialty.tools.map((tool) => (
-                <FeatureCard 
-                  key={tool.label} 
+                <FeatureCard
+                  key={tool.label}
                   icon={tool.icon}
                   title={tool.label}
                   description={tool.description}
                   badge={tool.badge}
-                  gradient 
+                  gradient
                 />
               ))}
             </FeatureGrid>
@@ -164,13 +236,39 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
         </section>
       )}
 
-      {/* Knowledge Search CTA */}
+      {/* Acesso Rápido */}
       <section className="py-16 px-6 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
+          <h3 className="text-xl font-semibold text-center mb-8">Acesso Rápido</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[
+              { to: '/scores',      Icon: Calculator,  label: 'Calculadoras' },
+              { to: '/teleconsulta',Icon: Video,        label: 'Teleconsulta' },
+              { to: '/patients',    Icon: Users,        label: 'Pacientes'    },
+              { to: `/knowledge?specialty=${specialty.id}`, Icon: BookOpen, label: 'Conhecimento' },
+              { to: '/ai-assistant',Icon: Sparkles,     label: 'AI Assistant' },
+            ].map(({ to, Icon: I, label }) => (
+              <Link to={to} key={label}>
+                <Button
+                  variant="outline"
+                  className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:border-primary/50"
+                >
+                  <I className="h-6 w-6" style={{ color: specialty.color }} />
+                  <span className="text-xs">{label}</span>
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Busca de Conhecimento */}
+      <section className="py-16 px-6">
+        <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-8">
-            <h3 className="text-xl font-semibold mb-2">Busca de Conhecimento</h3>
+            <h3 className="text-xl font-semibold mb-2">Biblioteca de Conhecimento</h3>
             <p className="text-muted-foreground">
-              Acesse artigos, guidelines e pearls clínicas específicos para {specialty.namePt}
+              Artigos, guidelines e pearls clínicas específicos para {specialty.namePt}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -190,68 +288,15 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
         </div>
       </section>
 
-      {/* Quick Links */}
-      <section className="py-16 px-6">
-        <div className="container mx-auto max-w-4xl">
-          <h3 className="text-xl font-semibold text-center mb-8">Acesso Rápido</h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link to="/scores">
-              <Button 
-                variant="outline" 
-                className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:border-primary/50"
-                style={{ ['--hover-color' as string]: specialty.color }}
-              >
-                <Calculator className="h-6 w-6" style={{ color: specialty.color }} />
-                <span>Calculadoras</span>
-              </Button>
-            </Link>
-            <Link to="/patients">
-              <Button 
-                variant="outline" 
-                className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:border-primary/50"
-              >
-                <Users className="h-6 w-6" style={{ color: specialty.color }} />
-                <span>Pacientes</span>
-              </Button>
-            </Link>
-            <Link to={`/knowledge?specialty=${specialty.id}`}>
-              <Button 
-                variant="outline" 
-                className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:border-primary/50"
-              >
-                <BookOpen className="h-6 w-6" style={{ color: specialty.color }} />
-                <span>Conhecimento</span>
-              </Button>
-            </Link>
-            <Link to="/ai-assistant">
-              <Button 
-                variant="outline" 
-                className="w-full h-auto py-4 flex-col gap-2 rounded-xl hover:border-primary/50"
-              >
-                <Sparkles className="h-6 w-6" style={{ color: specialty.color }} />
-                <span>AI Assistant</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Society Info */}
+      {/* Sociedade */}
       {specialty.society && (
         <section className="py-10 px-6 bg-muted/30">
           <div className="container mx-auto max-w-4xl text-center">
-            <Badge variant="outline" className="text-sm mb-4">
-              Sociedade Médica
-            </Badge>
+            <Badge variant="outline" className="text-sm mb-4">Sociedade Médica de Referência</Badge>
             <p className="text-muted-foreground">
               Conteúdo alinhado com as diretrizes da{' '}
               {specialty.societyUrl ? (
-                <a 
-                  href={specialty.societyUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
+                <a href={specialty.societyUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                   {specialty.society}
                 </a>
               ) : (
@@ -269,10 +314,8 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
             <div className="flex items-center gap-4">
               <UHSLogo size="sm" showText={false} />
               <div className="text-sm text-muted-foreground">
-                <p className="font-medium text-foreground">
-                  {specialty.shortName} by UHS Health OS
-                </p>
-                <p className="text-xs">{specialty.namePt} - Plataforma Clínica</p>
+                <p className="font-medium text-foreground">{specialty.shortName} — UHS Health OS</p>
+                <p className="text-xs">{specialty.namePt} — Plataforma Clínica</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -282,7 +325,7 @@ export function SpecialtyPortalTemplate({ specialty }: SpecialtyPortalTemplatePr
           </div>
           <div className="mt-6 pt-4 border-t border-border text-center">
             <p className="text-xs text-muted-foreground">
-              Esta é uma ferramenta organizacional para profissionais de saúde. Não é um sistema de prontuário eletrônico.
+              Ferramenta organizacional para profissionais de saúde. Não substitui prontuário eletrônico (PEP).
             </p>
           </div>
         </div>

@@ -16,22 +16,22 @@ const clinicalTabs = [
   { path: '/dashboard', label: 'Home',       icon: LayoutDashboard },
   { path: '/patients',  label: 'Patients',   icon: Users },
   { path: '/scores',    label: 'Scores',     icon: Activity },
-  { path: '/knowledge', label: 'Knowledge',  icon: GraduationCap },
-  { path: '/calendar',  label: 'Calendar',   icon: Calendar },
+  { path: '/knowledge', label: 'Conhecimento',  icon: GraduationCap },
+  { path: '/calendar',  label: 'Agenda',   icon: Calendar },
 ];
 
 const academicTabs = [
   { path: '/dashboard', label: 'Home',       icon: LayoutDashboard },
-  { path: '/academic',  label: 'Research',   icon: GraduationCap },
+  { path: '/academic',  label: 'Pesquisa',   icon: GraduationCap },
   { path: '/patients',  label: 'Cohort',     icon: Users },
   { path: '/scores',    label: 'Calc',       icon: Activity },
-  { path: '/calendar',  label: 'Calendar',   icon: Calendar },
+  { path: '/calendar',  label: 'Agenda',   icon: Calendar },
 ];
 
 const patientTabs = [
-  { path: '/patient-portal', label: 'My Health', icon: Heart },
-  { path: '/learn',           label: 'Education', icon: GraduationCap },
-  { path: '/calendar',        label: 'Appointments', icon: Calendar },
+  { path: '/patient-portal', label: 'Minha Saúde', icon: Heart },
+  { path: '/learn',           label: 'Educação', icon: GraduationCap },
+  { path: '/calendar',        label: 'Consultas', icon: Calendar },
 ];
 
 export function BottomNavBar() {

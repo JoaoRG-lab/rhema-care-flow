@@ -35,6 +35,7 @@ import { AISiteAgentWidget } from '@/components/ai/AISiteAgentWidget';
    CheckSquare,
    Clock,
    Zap,
+  Video,
  } from 'lucide-react';
  import { format, addDays, isAfter, isBefore } from 'date-fns';
  import { useIsMobile } from '@/hooks/use-mobile';
@@ -208,6 +209,12 @@ export default function Dashboard() {
                    <VoiceNoteButton onTranscript={() => { /* Voice note captured */ }} />
                    <span className="text-xs text-muted-foreground hidden sm:inline">Voice note</span>
                  </div>
+                 <a href="/teleconsulta">
+                   <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors">
+                     <Video className="h-4 w-4" />
+                     Teleconsulta
+                   </button>
+                 </a>
                </div>
              </CardContent>
            </Card>
