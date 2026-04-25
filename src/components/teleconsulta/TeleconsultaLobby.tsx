@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
 import {
-  Video, Plus, Clock, Calendar, Users, PlayCircle, Trash2, CheckCircle2
+  Video, Plus, Clock, Calendar, Users, PlayCircle, Trash2, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -57,7 +57,7 @@ interface TeleconsultaLobbyProps {
 }
 
 export function TeleconsultaLobby({ patientCardId, patientName, onEnterRoom }: TeleconsultaLobbyProps) {
-  const { teleconsultas, loading, createTeleconsulta, deleteTeleconsulta, iniciarConsulta } = useTeleconsulta(patientCardId);
+  const { teleconsultas, loading, tableReady, createTeleconsulta, deleteTeleconsulta, iniciarConsulta } = useTeleconsulta(patientCardId);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<CreateTeleconsultaInput>({
@@ -88,6 +88,48 @@ export function TeleconsultaLobby({ patientCardId, patientName, onEnterRoom }: T
 
   return (
     <div className="space-y-6">
+      {/* Banner: tabela não existe no Supabase */}
+      {tableReady === false && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 p-4 flex gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+              Configuração necessária — execute o SQL abaixo no Supabase
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              Acesse{' '}
+              <a
+                href="https://supabase.com/dashboard/project/rqaqdhmdeyzyjglhxrne/sql/new"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-medium"
+              >
+                SQL Editor do Supabase
+              </a>
+              {' '}e execute:
+            </p>
+            <pre className="text-[10px] bg-amber-100 dark:bg-amber-950 rounded p-2 overflow-x-auto text-amber-900 dark:text-amber-200 select-all">{`CREATE TABLE IF NOT EXISTS public.teleconsultas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  patient_card_id UUID REFERENCES public.patient_cards(id) ON DELETE SET NULL,
+  patient_name TEXT, specialty TEXT,
+  scheduled_date DATE NOT NULL, start_time TIME NOT NULL,
+  duration_minutes INTEGER NOT NULL DEFAULT 30,
+  status TEXT NOT NULL DEFAULT 'scheduled'
+    CHECK (status IN ('scheduled','in_progress','completed','cancelled')),
+  daily_room_name TEXT, daily_room_url TEXT, notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE public.teleconsultas ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Clinicians see own teleconsultas"
+  ON public.teleconsultas FOR ALL USING (provider_id = auth.uid());
+CREATE INDEX IF NOT EXISTS idx_teleconsultas_provider
+  ON public.teleconsultas(provider_id, scheduled_date);`}</pre>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

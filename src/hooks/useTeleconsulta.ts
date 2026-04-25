@@ -70,10 +70,19 @@ export function useTeleconsulta(patientCardId?: string) {
   const { user } = useAuth();
   const [teleconsultas, setTeleconsultas] = useState<Teleconsulta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableReady, setTableReady] = useState<boolean | null>(null);
 
   const fetchTeleconsultas = useCallback(async () => {
     if (!user) { setTeleconsultas([]); setLoading(false); return; }
     try {
+      // Verifica se tabela existe antes de consultar
+      const { error: tableErr } = await supabase.from('teleconsultas').select('id').limit(0);
+      if (tableErr && tableErr.message.includes('relation') || tableErr && tableErr.code === 'PGRST205') {
+        setTableReady(false);
+        setLoading(false);
+        return;
+      }
+      setTableReady(true);
       let query = supabase
         .from('teleconsultas')
         .select('*')
@@ -190,6 +199,7 @@ export function useTeleconsulta(patientCardId?: string) {
   return {
     teleconsultas,
     loading,
+    tableReady,
     createTeleconsulta,
     updateTeleconsulta,
     deleteTeleconsulta,
