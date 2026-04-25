@@ -50,6 +50,7 @@ export function ContributeKnowledge() {
   const { tier } = useVerificationStatus();
   const { 
     contributions, 
+    myContributions,
     loading, 
     createContribution, 
     voteOnContribution 
