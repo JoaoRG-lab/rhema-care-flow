@@ -7,7 +7,7 @@ import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight, ArrowLeftRight, MessageSquare, ClipboardPlus } from 'lucide-react';
+import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight, ArrowLeftRight, MessageSquare, ClipboardPlus, Video } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { VisitHistory } from '@/components/patients/VisitHistory';
@@ -18,6 +18,8 @@ import { TreatmentResponseTimeline } from '@/components/patients/TreatmentRespon
 import { PatientSmsHistory } from '@/components/patients/PatientSmsHistory';
 import { PatientChainAnchorPanel } from '@/components/patients/PatientChainAnchorPanel';
 import { PrescriptionList } from '@/components/prescriptions/PrescriptionList';
+import { TeleconsultaLobby } from '@/components/teleconsulta/TeleconsultaLobby';
+
 import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
 import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
 import { QuickScoreEntry } from '@/components/patients/QuickScoreEntry';
@@ -335,7 +337,11 @@ import type { PatientCard } from '@/types/clinical';
                  <Shield className="h-4 w-4" />
                  Chain
                </TabsTrigger>
-               <TabsTrigger value="prescriptions" className="gap-2">
+               <TabsTrigger value="teleconsulta" className="gap-2">
+                <Video className="h-4 w-4" />
+                Teleconsulta
+              </TabsTrigger>
+              <TabsTrigger value="prescriptions" className="gap-2">
                  <ClipboardPlus className="h-4 w-4" />
                  Prescrições
                </TabsTrigger>
@@ -379,6 +385,15 @@ import type { PatientCard } from '@/types/clinical';
                />
              </TabsContent>
 
+             <TabsContent value="teleconsulta" className="mt-0">
+               <TeleconsultaLobby
+                 patientCardId={patient?.id}
+                 patientName={patient?.patient_name ?? patient?.patient_code}
+                 onEnterRoom={() => {
+                   navigate('/teleconsulta');
+                 }}
+               />
+             </TabsContent>
              <TabsContent value="prescriptions">
                {patient && (
                  <PrescriptionList

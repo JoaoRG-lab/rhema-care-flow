@@ -28,6 +28,7 @@ import {
   BarChart3,
   Stethoscope,
   ChevronRight,
+  Video,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -67,6 +68,7 @@ const navItems = [
   { path: '/epi-matrix',    label: 'Epi Matrix',       icon: Brain },
   { path: '/site-analytics', label: 'Site Analytics',  icon: BarChart3 },
   { path: '/case-studies',  label: 'Case Studies',     icon: Stethoscope },
+  { path: '/teleconsulta', label: 'Teleconsulta', icon: Video },
 ];
 
 const academicNavItems = [

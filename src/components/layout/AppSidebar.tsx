@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import {
+import { Video,
   LayoutDashboard,
   Users,
   Activity,
@@ -28,6 +28,7 @@ import {
   Brain,
   BarChart3,
   Stethoscope,
+  Video,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -41,7 +42,7 @@ import { PersonaSwitcher } from './PersonaSwitcher';
 import { SpecialtyQuickSwitcher } from './SpecialtyQuickSwitcher';
 import { UHSLogoMark } from '@/components/brand/UHSLogo';
 import { TrustBadge } from '@/components/brand/TrustBadges';
-import {
+import { Video,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -71,6 +72,7 @@ const navItems = [
   { path: '/epi-matrix', label: 'Epi Matrix', icon: Brain },
   { path: '/site-analytics', label: 'Site Analytics', icon: BarChart3 },
   { path: '/case-studies', label: 'Case Studies', icon: Stethoscope },
+  { path: '/teleconsulta', label: 'Teleconsulta', icon: Video },
 ];
 
 const academicNavItems = [
