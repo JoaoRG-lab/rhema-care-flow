@@ -69,6 +69,8 @@ export default function AdminBilling() {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [tab, setTab] = useState("transactions");
   const [filter, setFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState<string>(""); // YYYY-MM-DD
+  const [dateTo, setDateTo] = useState<string>("");     // YYYY-MM-DD
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<PaymentRow[]>([]);
   const [credits, setCredits] = useState<CreditsRow[]>([]);
@@ -135,33 +137,51 @@ export default function AdminBilling() {
   }, [isAdmin]);
 
   const f = filter.trim().toLowerCase();
+
+  // Date range bounds (inclusive). dateTo is end-of-day.
+  const fromTs = useMemo(() => (dateFrom ? new Date(dateFrom + "T00:00:00").getTime() : null), [dateFrom]);
+  const toTs = useMemo(() => (dateTo ? new Date(dateTo + "T23:59:59.999").getTime() : null), [dateTo]);
+  const inRange = (iso: string | null | undefined) => {
+    if (!iso) return fromTs === null && toTs === null;
+    const t = new Date(iso).getTime();
+    if (fromTs !== null && t < fromTs) return false;
+    if (toTs !== null && t > toTs) return false;
+    return true;
+  };
+
   const filteredTx = useMemo(
     () =>
-      !f
-        ? transactions
-        : transactions.filter(
-            (t) =>
-              t.user_id.toLowerCase().includes(f) ||
-              t.id.toLowerCase().includes(f) ||
-              (t.external_id ?? "").toLowerCase().includes(f) ||
-              t.status.toLowerCase().includes(f)
-          ),
-    [transactions, f]
+      transactions.filter(
+        (t) =>
+          inRange(t.created_at) &&
+          (!f ||
+            t.user_id.toLowerCase().includes(f) ||
+            t.id.toLowerCase().includes(f) ||
+            (t.external_id ?? "").toLowerCase().includes(f) ||
+            t.status.toLowerCase().includes(f))
+      ),
+    [transactions, f, fromTs, toTs]
   );
   const filteredCredits = useMemo(
-    () => (!f ? credits : credits.filter((c) => c.user_id.toLowerCase().includes(f))),
-    [credits, f]
+    () =>
+      credits.filter(
+        (c) =>
+          // Filter credits by quota_reset_at when a range is set
+          (fromTs === null && toTs === null ? true : inRange(c.quota_reset_at)) &&
+          (!f || c.user_id.toLowerCase().includes(f))
+      ),
+    [credits, f, fromTs, toTs]
   );
   const filteredIdem = useMemo(
     () =>
-      !f
-        ? idem
-        : idem.filter(
-            (i) =>
-              i.user_id.toLowerCase().includes(f) ||
-              i.idempotency_key.toLowerCase().includes(f)
-          ),
-    [idem, f]
+      idem.filter(
+        (i) =>
+          inRange(i.created_at) &&
+          (!f ||
+            i.user_id.toLowerCase().includes(f) ||
+            i.idempotency_key.toLowerCase().includes(f))
+      ),
+    [idem, f, fromTs, toTs]
   );
 
   // User search across all loaded data + profiles
@@ -176,33 +196,33 @@ export default function AdminBilling() {
         (p?.institution ?? "").toLowerCase().includes(f)
       );
     };
-    transactions.forEach((t) => matchProfile(t.user_id) && ids.add(t.user_id));
-    credits.forEach((c) => matchProfile(c.user_id) && ids.add(c.user_id));
-    idem.forEach((i) => matchProfile(i.user_id) && ids.add(i.user_id));
+    filteredTx.forEach((t) => matchProfile(t.user_id) && ids.add(t.user_id));
+    filteredCredits.forEach((c) => matchProfile(c.user_id) && ids.add(c.user_id));
+    filteredIdem.forEach((i) => matchProfile(i.user_id) && ids.add(i.user_id));
     return Array.from(ids)
       .slice(0, 10)
       .map((id) => ({
         id,
         profile: profiles[id],
-        txCount: transactions.filter((t) => t.user_id === id).length,
-        reqCount: idem.filter((i) => i.user_id === id).length,
+        txCount: filteredTx.filter((t) => t.user_id === id).length,
+        reqCount: filteredIdem.filter((i) => i.user_id === id).length,
         balance: credits.find((c) => c.user_id === id)?.credits_balance ?? 0,
       }));
-  }, [f, transactions, credits, idem, profiles]);
+  }, [f, filteredTx, filteredCredits, filteredIdem, profiles, credits]);
 
   const totals = useMemo(() => {
-    const paid = transactions.filter((t) => t.status === "paid");
+    const paid = filteredTx.filter((t) => t.status === "paid");
     const sumBrl = paid.reduce((s, t) => s + Number(t.amount_brl || 0), 0);
     const sumCredits = paid.reduce((s, t) => s + Number(t.credits_amount || 0), 0);
     return {
-      txCount: transactions.length,
+      txCount: filteredTx.length,
       paidCount: paid.length,
-      pendingCount: transactions.filter((t) => t.status === "pending").length,
+      pendingCount: filteredTx.filter((t) => t.status === "pending").length,
       revenueBrl: sumBrl,
       creditsSold: sumCredits,
-      duplicatesPrevented: idem.filter((i) => !i.debited).length,
+      duplicatesPrevented: filteredIdem.filter((i) => !i.debited).length,
     };
-  }, [transactions, idem]);
+  }, [filteredTx, filteredIdem]);
 
   if (roleLoading) {
     return (
@@ -234,7 +254,7 @@ export default function AdminBilling() {
               Per-user credit transactions and AI request idempotency for debugging.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -243,6 +263,34 @@ export default function AdminBilling() {
                 placeholder="Filtrar (user_id, key, status…)"
                 className="pl-8 w-64"
               />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-muted-foreground">De</label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-[150px]"
+                max={dateTo || undefined}
+              />
+              <label className="text-xs text-muted-foreground">Até</label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-[150px]"
+                min={dateFrom || undefined}
+              />
+              {(dateFrom || dateTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setDateFrom(""); setDateTo(""); }}
+                  className="h-9 text-xs"
+                >
+                  Limpar
+                </Button>
+              )}
             </div>
             <Button variant="outline" onClick={load} disabled={loading}>
               {loading ? (
