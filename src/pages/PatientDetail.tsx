@@ -7,7 +7,7 @@ import { DiagnosisTag } from '@/components/ui/DiagnosisTag';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight, ArrowLeftRight, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Calendar, ClipboardList, TrendingUp, Shield, Pencil, Trash2, ChevronLeft, ChevronRight, ArrowLeftRight, MessageSquare, ClipboardPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { VisitHistory } from '@/components/patients/VisitHistory';
@@ -17,6 +17,7 @@ import { PatientMonitoring } from '@/components/patients/PatientMonitoring';
 import { TreatmentResponseTimeline } from '@/components/patients/TreatmentResponseTimeline';
 import { PatientSmsHistory } from '@/components/patients/PatientSmsHistory';
 import { PatientChainAnchorPanel } from '@/components/patients/PatientChainAnchorPanel';
+import { PrescriptionList } from '@/components/prescriptions/PrescriptionList';
 import { EditPatientDialog } from '@/components/patients/EditPatientDialog';
 import { DeletePatientDialog } from '@/components/patients/DeletePatientDialog';
 import { QuickScoreEntry } from '@/components/patients/QuickScoreEntry';
@@ -334,6 +335,10 @@ import type { PatientCard } from '@/types/clinical';
                  <Shield className="h-4 w-4" />
                  Chain
                </TabsTrigger>
+               <TabsTrigger value="prescriptions" className="gap-2">
+                 <ClipboardPlus className="h-4 w-4" />
+                 Prescrições
+               </TabsTrigger>
              </TabsList>
  
            <TabsContent value="visits">
@@ -372,6 +377,15 @@ import type { PatientCard } from '@/types/clinical';
                  patientCode={patient.patient_code}
                  refreshKey={refreshKey}
                />
+             </TabsContent>
+
+             <TabsContent value="prescriptions">
+               {patient && (
+                 <PrescriptionList
+                   patientId={patient.id}
+                   patientCode={patient.patient_code}
+                 />
+               )}
              </TabsContent>
 
              <TabsContent value="chain">
