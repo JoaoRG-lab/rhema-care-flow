@@ -37,6 +37,8 @@ import {
 import { format } from 'date-fns';
 import { useKnowledgeContributions, ContributionCategory, KnowledgeContribution } from '@/hooks/useKnowledgeContributions';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+import { useUserRole } from '@/hooks/useUserRole';
+import { ModerationQueue } from '@/components/knowledge/ModerationQueue';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -73,6 +75,7 @@ type SortOption = 'popular' | 'recent' | 'oldest';
 export default function KnowledgeLibrary() {
   const isMobile = useIsMobile();
   const { tier } = useVerificationStatus();
+  const { isAdmin } = useUserRole();
   const [searchParams, setSearchParams] = useSearchParams();
   const specialtyParam = searchParams.get('specialty');
   const currentSpecialty = specialtyParam ? getSpecialtyById(specialtyParam) : null;
@@ -443,6 +446,13 @@ export default function KnowledgeLibrary() {
             </Button>
           </Link>
         </div>
+
+        {/* Admin moderation queue */}
+        {isAdmin && (
+          <div className="mb-6">
+            <ModerationQueue />
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="flex gap-2 mb-6">
