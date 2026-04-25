@@ -27,19 +27,25 @@ export function AccountTypeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
-    supabase
-      .from('profiles')
-      .select('account_type')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('account_type' as any)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (cancelled) return;
         const remote = (data as any)?.account_type as AccountType | null;
         if (remote) {
           setAccountTypeState(remote);
           try { localStorage.setItem(LS_KEY, remote); } catch { /* no-op */ }
         }
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [user]);
 
   const setAccountType = useCallback(async (type: AccountType) => {
