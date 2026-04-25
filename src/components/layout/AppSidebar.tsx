@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Video,
-  LayoutDashboard,
+import { LayoutDashboard,
   Users,
   Activity,
   Shield,
@@ -43,7 +42,7 @@ import { PersonaSwitcher } from './PersonaSwitcher';
 import { SpecialtyQuickSwitcher } from './SpecialtyQuickSwitcher';
 import { UHSLogoMark } from '@/components/brand/UHSLogo';
 import { TrustBadge } from '@/components/brand/TrustBadges';
-import { Video,
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
