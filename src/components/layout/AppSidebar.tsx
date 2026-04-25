@@ -152,7 +152,13 @@ export function AppSidebar() {
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">
           {currentNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            // Highlight "Specialties" entry on any specialty portal route
+            const specialtyRoutes = ['/especialidades', '/reumato', '/pediatria', '/ginecologia', '/obstetrics'];
+            const isActive =
+              item.path === '/especialidades'
+                ? specialtyRoutes.includes(location.pathname) ||
+                  location.pathname.startsWith('/specialty/')
+                : location.pathname === item.path;
             return (
               <li key={item.path}>
                 <Link
