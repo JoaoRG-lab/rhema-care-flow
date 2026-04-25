@@ -11,6 +11,7 @@ import { AlphaCTASection, AlphaInvite } from '@/components/landing/AlphaInvite';
 import { 
   Shield, Activity, Users, Calendar, ArrowRight, Lock, Link2, Fingerprint,
   FileCheck, Blocks, Heart, Brain, Sparkles, CheckCircle, Zap, Globe, BookOpen, Search,
+  Layers, GitBranch, ShieldCheck, Database, Code2, MessageSquare,
 } from 'lucide-react';
 
 const features = [
@@ -328,6 +329,184 @@ export default function Landing() {
                 <FeatureCard key={feature.title} {...feature} gradient />
               ))}
             </FeatureGrid>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Roadmap & Architecture ── */}
+      <section className="py-28 px-6 bg-muted/30 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/4 rounded-full blur-[120px] hero-blob" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[hsl(42_85%_55%)]/4 rounded-full blur-[100px] hero-blob-2" />
+
+        <div className="container mx-auto max-w-6xl relative">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent text-accent-foreground text-sm font-semibold mb-6 glow-ring">
+              <GitBranch className="h-4 w-4" />
+              Open Source Roadmap
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Construído para <span className="text-shine">Evoluir</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Sugestões da comunidade que guiam o desenvolvimento. Cada bloco é independente — 
+              contribua onde sua expertise é maior.
+            </p>
+          </div>
+
+          {/* Cards de sugestão */}
+          <div className="grid md:grid-cols-2 gap-6 mb-16">
+            {/* MVP */}
+            <div className="uhs-card-elevated p-8 hover:scale-[1.01] transition-transform duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-primary uppercase tracking-widest">Fase 1</div>
+                    <h3 className="text-lg font-bold">Comece com um MVP focado</h3>
+                  </div>
+                </div>
+                <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                  Para criar momentum, começar com um núcleo pequeno mas funcional demonstra valor
+                  e atrai contribuidores desde o início.
+                </p>
+                <ul className="space-y-2">
+                  {[
+                    'Timeline centrada no paciente — registro longitudinal de eventos',
+                    'Entidades básicas: encontros, observações e medicamentos',
+                    'Interface simples para visualizar continuidade ao longo do tempo',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* FHIR */}
+            <div className="uhs-card-elevated p-8 hover:scale-[1.01] transition-transform duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[hsl(42_85%_55%)]/3 to-transparent" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-[hsl(42_85%_55%)]/10 flex items-center justify-center">
+                    <Link2 className="h-5 w-5 text-[hsl(42_85%_55%)]" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-[hsl(42_85%_55%)] uppercase tracking-widest">Interoperabilidade</div>
+                    <h3 className="text-lg font-bold">Alinhamento com HL7 FHIR</h3>
+                  </div>
+                </div>
+                <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                  Alinhamento progressivo com recursos <code className="text-xs bg-muted px-1 py-0.5 rounded">Patient</code>,{' '}
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">Observation</code> e{' '}
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">Encounter</code> — sem necessidade de conformidade total no início.
+                </p>
+                <ul className="space-y-2">
+                  {[
+                    'Melhor compatibilidade de longo prazo',
+                    'Onboarding mais fácil para contribuidores com experiência em saúde',
+                    'Maior credibilidade para pilotos e integrações',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <CheckCircle className="h-4 w-4 text-[hsl(42_85%_55%)] mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Consentimento */}
+            <div className="uhs-card-elevated p-8 hover:scale-[1.01] transition-transform duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[hsl(280_55%_55%)]/3 to-transparent" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-[hsl(280_55%_55%)]/10 flex items-center justify-center">
+                    <ShieldCheck className="h-5 w-5 text-[hsl(280_55%_55%)]" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-[hsl(280_55%_55%)] uppercase tracking-widest">Segurança</div>
+                    <h3 className="text-lg font-bold">Consentimento e Auditabilidade</h3>
+                  </div>
+                </div>
+                <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                  Dado que dados de saúde são sensíveis, consentimento e auditoria precisam ser
+                  features centrais — não adições posteriores.
+                </p>
+                <ul className="space-y-2">
+                  {[
+                    'Consentimento granular e revogável por tipo de dado e provedor',
+                    'Permissões com validade temporal (time-bound)',
+                    'Logs de auditoria imutáveis para todos os acessos e alterações',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <CheckCircle className="h-4 w-4 text-[hsl(280_55%_55%)] mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Arquitetura */}
+            <div className="uhs-card-elevated p-8 hover:scale-[1.01] transition-transform duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[hsl(165_60%_48%)]/3 to-transparent" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-[hsl(165_60%_48%)]/10 flex items-center justify-center">
+                    <Layers className="h-5 w-5 text-[hsl(165_60%_48%)]" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-[hsl(165_60%_48%)] uppercase tracking-widest">Arquitetura</div>
+                    <h3 className="text-lg font-bold">Arquitetura Modular</h3>
+                  </div>
+                </div>
+                <p className="text-muted-foreground text-sm mb-5 leading-relaxed">
+                  Uma abordagem em camadas permite escalabilidade e que contribuidores
+                  trabalhem de forma independente em diferentes domínios.
+                </p>
+                <div className="space-y-2">
+                  {[
+                    { icon: Code2, label: 'API Layer', desc: 'REST / GraphQL', color: 'text-primary' },
+                    { icon: Brain, label: 'Core Services', desc: 'Timeline, Identidade, Consentimento', color: 'text-[hsl(42_85%_55%)]' },
+                    { icon: Link2, label: 'Interoperability Layer', desc: 'Adaptadores FHIR', color: 'text-[hsl(165_60%_48%)]' },
+                    { icon: Database, label: 'Data Layer', desc: 'Estruturado + Event Store', color: 'text-[hsl(280_55%_55%)]' },
+                    { icon: ShieldCheck, label: 'Security Layer', desc: 'Auth, Criptografia, Auditoria', color: 'text-destructive' },
+                  ].map(({ icon: Icon, label, desc, color }) => (
+                    <div key={label} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                      <Icon className={`h-4 w-4 shrink-0 ${color}`} />
+                      <span className="text-xs font-medium text-foreground">{label}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">{desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA discussão */}
+          <div className="text-center p-10 rounded-3xl bg-gradient-to-r from-primary/5 via-transparent to-[hsl(42_85%_55%)]/5 border border-border/50">
+            <MessageSquare className="h-8 w-8 text-primary mx-auto mb-4" />
+            <h3 className="text-xl font-bold mb-2">Contribua com o Roadmap</h3>
+            <p className="text-muted-foreground text-sm mb-6 max-w-xl mx-auto">
+              Essas sugestões vêm da comunidade. Quer propor uma implementação, criticar uma decisão
+              ou sugerir novos rumos? Abra uma Discussion no GitHub.
+            </p>
+            <a
+              href="https://github.com/JoaoRG-lab/rhema-care-flow/discussions/15"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" className="gap-2 border-primary/40 hover:border-primary/70">
+                <GitBranch className="h-4 w-4" />
+                Ver Discussion no GitHub
+              </Button>
+            </a>
           </div>
         </div>
       </section>
