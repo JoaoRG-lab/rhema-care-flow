@@ -1,0 +1,57 @@
+title: "[Sugestão] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 💡 Sugestão de melhoria
+        Use este espaço para propor ideias, melhorias ou novos recursos.
+        **Não envie código aqui** — isso é para discussão e alinhamento antes de qualquer implementação.
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema ou limitação você identificou?
+      description: Descreva o contexto clínico ou técnico
+      placeholder: "Ex: O score DAS28 não aceita valor decimal no campo de VHS..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposta
+    attributes:
+      label: O que você propõe?
+      description: Descreva a solução ideal, sem necessidade de código
+      placeholder: "Ex: Aceitar duas casas decimais e exibir aviso de referência..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área do projeto
+      options:
+        - Scores clínicos
+        - Prontuário / Pacientes
+        - Teleconsulta
+        - Monitorização
+        - Interface / UX
+        - Performance
+        - Testes
+        - Acessibilidade
+        - Documentação
+        - Segurança
+        - Outro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Impacto estimado
+      options:
+        - Alto — afeta fluxo clínico diário
+        - Médio — melhora experiência
+        - Baixo — refinamento
+    validations:
+      required: true

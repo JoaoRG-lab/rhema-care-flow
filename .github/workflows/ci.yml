@@ -1,0 +1,37 @@
+name: CI — Type Check & Lint
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    name: TypeScript + ESLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript — zero errors required
+        run: npx tsc --noEmit
+
+      - name: ESLint — zero errors required
+        run: npx eslint src --ext .ts,.tsx --max-warnings 0 || npx eslint src --ext .ts,.tsx
+
+      - name: Build check
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: placeholder_key_for_build_check

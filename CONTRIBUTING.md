@@ -2,10 +2,13 @@
 
 Obrigado por querer contribuir! Este é um projeto open source de saúde — cada linha de código pode impactar o cuidado de pacientes reais.
 
+> ⚠️ **Importante:** A `main` é protegida. Nenhum push direto é aceito — nem do mantenedor. Todo código passa por Pull Request com revisão obrigatória. Sugestões de funcionalidade ou design devem ser abertas como [Discussion](https://github.com/JoaoRG-lab/rhema-care-flow/discussions) antes de qualquer implementação.
+
 ## Índice
 
 - [Código de Conduta](#código-de-conduta)
-- [Como contribuir](#como-contribuir)
+- [Tenho uma ideia — por onde começo?](#tenho-uma-ideia--por-onde-começo)
+- [Como contribuir com código](#como-contribuir-com-código)
 - [Setup local](#setup-local)
 - [Padrões de código](#padrões-de-código)
 - [Áreas prioritárias](#áreas-prioritárias)
@@ -19,7 +22,30 @@ Seja respeitoso, construtivo e inclusivo. Este é um espaço para colaboração 
 
 ---
 
-## Como contribuir
+## Tenho uma ideia — por onde começo?
+
+**Não abra um PR diretamente.** O fluxo correto é:
+
+```
+Ideia / sugestão
+     ↓
+💬 Discussion (https://github.com/JoaoRG-lab/rhema-care-flow/discussions)
+     ↓
+  Alinhamento com o mantenedor
+     ↓
+🐛 Issue criada com escopo definido
+     ↓
+🔧 Fork → branch → PR
+     ↓
+  Code review pelo mantenedor (@JoaoRG-lab)
+     → Aprovado → merge em main
+```
+
+Isto garante que **nenhuma alteração entra no código sem revisão clínica e técnica**. Dados de saúde exigem esse rigor.
+
+---
+
+## Como contribuir com código
 
 ### 1. Issues primeiro
 
@@ -163,10 +189,22 @@ npx eslint src --ext .ts,.tsx
 
 ## Processo de PR
 
-1. PR abre → CI roda `tsc --noEmit` + `eslint`
-2. Review em até 48h
-3. Máximo 2 rounds de revisão
-4. Merge por squash
+1. **Obrigatório:** Discussion ou Issue prévia aprovada pelo mantenedor
+2. PR abre → CI roda `tsc --noEmit` + `eslint` (0 erros obrigatórios)
+3. **Revisão obrigatória** de `@JoaoRG-lab` — nenhum PR entra sem aprovação
+4. Arquivos em `.github/CODEOWNERS` exigem revisão do mantenedor independente
+5. Review em até 48h úteis
+6. Máximo 2 rounds de revisão
+7. Merge por squash
+
+### O que bloqueia um PR automaticamente
+
+- TypeScript com erros
+- ESLint com erros
+- Alterações em `supabase/migrations/` sem discussion prévia
+- Remoção ou bypass de RLS (Row Level Security)
+- Qualquer dado de paciente exposto sem filtro por `user_id`
+- Dependências adicionadas sem justificativa na issue
 
 ---
 

@@ -1,0 +1,24 @@
+# CODEOWNERS — Rhema Care Flow
+# Qualquer PR que toque estes arquivos exige aprovação do mantenedor.
+# Documentação: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Dono padrão para tudo no repositório
+* @JoaoRG-lab
+
+# Arquivos de segurança e autenticação — revisão obrigatória do mantenedor
+src/integrations/supabase/          @JoaoRG-lab
+supabase/migrations/                @JoaoRG-lab
+supabase/functions/                 @JoaoRG-lab
+
+# Roteamento e controle de acesso
+src/App.tsx                         @JoaoRG-lab
+src/components/auth/                @JoaoRG-lab
+
+# Configuração e dados sensíveis
+.env.example                        @JoaoRG-lab
+vite.config.ts                      @JoaoRG-lab
+tailwind.config.ts                  @JoaoRG-lab
+
+# Especialidades e lógica clínica
+src/config/specialties.ts           @JoaoRG-lab
+src/hooks/                          @JoaoRG-lab
