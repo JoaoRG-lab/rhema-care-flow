@@ -153,6 +153,13 @@ export function SpecialtyQuickSwitcher({ compact = false }: SpecialtyQuickSwitch
         })}
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          onClick={() => navigate('/especialidades')}
+          className="cursor-pointer"
+        >
+          <LayoutGrid className="mr-2 h-4 w-4" />
+          <span className="flex-1">Ver todas as especialidades</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onClick={handleReset}
           disabled={!storedId}
           className="cursor-pointer text-muted-foreground focus:text-foreground"
