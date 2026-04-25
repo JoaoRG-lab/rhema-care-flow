@@ -254,7 +254,7 @@ export default function AdminBilling() {
               Per-user credit transactions and AI request idempotency for debugging.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -263,6 +263,34 @@ export default function AdminBilling() {
                 placeholder="Filtrar (user_id, key, status…)"
                 className="pl-8 w-64"
               />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-muted-foreground">De</label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-[150px]"
+                max={dateTo || undefined}
+              />
+              <label className="text-xs text-muted-foreground">Até</label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-[150px]"
+                min={dateFrom || undefined}
+              />
+              {(dateFrom || dateTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setDateFrom(""); setDateTo(""); }}
+                  className="h-9 text-xs"
+                >
+                  Limpar
+                </Button>
+              )}
             </div>
             <Button variant="outline" onClick={load} disabled={loading}>
               {loading ? (
