@@ -118,10 +118,19 @@ export function ContributeKnowledge() {
        </CardHeader>
        <CardContent>
          <Tabs defaultValue="browse" className="w-full">
-           <TabsList className="grid w-full grid-cols-2 mb-4">
+           <TabsList className="grid w-full grid-cols-3 mb-4">
              <TabsTrigger value="browse" className="gap-2">
                <Users className="h-4 w-4" />
                Community
+             </TabsTrigger>
+             <TabsTrigger value="mine" className="gap-2">
+               <ClipboardList className="h-4 w-4" />
+               Mine
+               {myContributions.length > 0 && (
+                 <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5">
+                   {myContributions.length}
+                 </Badge>
+               )}
              </TabsTrigger>
              <TabsTrigger value="contribute" className="gap-2">
                <Send className="h-4 w-4" />
