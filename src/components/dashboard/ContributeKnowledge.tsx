@@ -217,7 +217,55 @@ export function ContributeKnowledge() {
               </Button>
             )}
           </TabsContent>
- 
+
+          {/* My Contributions with status indicators */}
+          <TabsContent value="mine" className="space-y-3">
+            {myContributions.length === 0 ? (
+              <div className="text-center py-6">
+                <ClipboardList className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">
+                  You haven't submitted anything yet.
+                </p>
+              </div>
+            ) : (
+              myContributions.map((c) => {
+                const Icon = getCategoryIcon(c.category);
+                const statusConfig = {
+                  pending: { label: 'Pending review', icon: Clock, className: 'bg-warning/15 text-warning border-warning/30' },
+                  approved: { label: 'Approved', icon: CheckCircle2, className: 'bg-success/15 text-success border-success/30' },
+                  rejected: { label: 'Rejected', icon: XCircle, className: 'bg-destructive/15 text-destructive border-destructive/30' },
+                }[c.status];
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div key={c.id} className="p-3 rounded-lg border bg-card space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="p-1.5 rounded-md bg-primary/10 shrink-0">
+                          <Icon className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span className="font-medium text-sm truncate">{c.title}</span>
+                      </div>
+                      <Badge variant="outline" className={cn('shrink-0 text-xs gap-1', statusConfig.className)}>
+                        <StatusIcon className="h-3 w-3" />
+                        {statusConfig.label}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{c.content}</p>
+                    {c.reviewer_notes && (
+                      <div className="text-xs p-2 rounded-md bg-muted/50">
+                        <span className="font-medium">Reviewer:</span> {c.reviewer_notes}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Submitted {format(new Date(c.created_at), 'MMM d, yyyy')}
+                      {c.reviewed_at && ` · Reviewed ${format(new Date(c.reviewed_at), 'MMM d, yyyy')}`}
+                    </p>
+                  </div>
+                );
+              })
+            )}
+          </TabsContent>
+
            {/* Contribute Form */}
            <TabsContent value="contribute" className="space-y-4">
              {!tier ? (
