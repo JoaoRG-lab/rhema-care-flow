@@ -1,157 +1,144 @@
-# Welcome to your Lovable project
+<div align="center">
 
-## Project info
+<img src="https://jiswutjmmoirkoarpbpf.supabase.co/storage/v1/object/public/avatars/rhema-logo.png" alt="Rhema Care Flow" width="120" onerror="this.style.display='none'"/>
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+# Rhema Care Flow
 
-## How can I edit this code?
+**Plataforma clínica open source para reumatologia e especialidades médicas**
 
-There are several ways of editing your application.
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://typescriptlang.org)
+[![Supabase](https://img.shields.io/badge/Supabase-backend-3ECF8E?logo=supabase)](https://supabase.com)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**Use Lovable**
+[🌐 Ver Demo ao Vivo](https://www.perplexity.ai/computer/a/rhema-care-flow-vmTlYyliQR6c6F0hVko4EA) · [🐛 Reportar Bug](https://github.com/JoaoRG-lab/rhema-care-flow/issues) · [💡 Sugerir Feature](https://github.com/JoaoRG-lab/rhema-care-flow/issues/new?template=feature_request.md) · [🤝 Contribuir](CONTRIBUTING.md)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+</div>
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🩺 O que é o Rhema Care Flow?
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Rhema Care Flow é uma plataforma web clínica de código aberto focada em **reumatologia**, com suporte a múltiplas especialidades médicas. Desenvolvida por médicos, para médicos — priorizando privacidade de dados, segurança e usabilidade em ambiente clínico real.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Funcionalidades principais
 
-Follow these steps:
+| Módulo | Descrição |
+|--------|-----------|
+| 📋 **Prontuário Integrado** | Acesso seguro por código do paciente (sem expor dados sensíveis) |
+| 📹 **Teleconsulta** | Videoconsulta integrada via Daily.co com prescrição Memed |
+| 📊 **Scores Clínicos** | DAS28, CDAI, SDAI, SLEDAI, HAQ e 15+ calculadoras |
+| 💊 **Monitorização** | Planos de monitoramento por medicamento (DMARDs, biológicos) |
+| 🏥 **Multi-especialidade** | Reumatologia, Pediatria, Ginecologia, Neurologia e mais 10+ |
+| 🔗 **Blockchain (URV)** | Integridade de dados via Solana — nenhum PHI on-chain |
+| 📚 **Biblioteca Clínica** | Conteúdo educacional com versionamento |
+| 🤖 **Assistente IA** | Chat clínico contextualizado por especialidade |
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🚀 Começar em 3 passos
 
-# Step 3: Install the necessary dependencies.
-npm i
+```bash
+# 1. Clone o repositório
+git clone https://github.com/JoaoRG-lab/rhema-care-flow.git
+cd rhema-care-flow
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 2. Instale as dependências
+npm install
+
+# 3. Configure o ambiente e inicie
+cp .env.example .env   # preencha com suas chaves Supabase
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+> A aplicação roda em `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Variáveis de ambiente necessárias
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-- Supabase (Lovable Cloud)
-- Solana/Anchor (Blockchain integration)
-
-## URV Health Value Chain - Blockchain Integration
-
-This project includes a privacy-preserving blockchain registry for healthcare data integrity.
-
-### Privacy Design
-
-**CRITICAL: No PHI/PII is ever stored on-chain.**
-
-#### What IS stored on-chain:
-- **Data Hashes**: SHA-256 hashes of canonical JSON records
-- **URI Pointers**: References to encrypted off-chain storage
-- **Score Updates**: Chained hashes for audit trail integrity
-
-#### What is NOT stored on-chain:
-- Patient names, addresses, or contact information
-- Medical records, diagnoses, or treatment details
-- Any data that could identify an individual
-
-## Solana (Devnet) + Anchor — Deploy e Integração
-
-### Devnet
-
-```bash
-solana config set --url https://api.devnet.solana.com
-solana airdrop 2
-solana balance
+```env
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sua-anon-key
+VITE_DAILY_CO_API_KEY=opcional-para-teleconsulta
 ```
 
-### Build/Deploy Anchor
+---
+
+## 🛠️ Stack Tecnológica
+
+- **Frontend:** React 18 + TypeScript + Vite
+- **UI:** shadcn/ui + Tailwind CSS
+- **Backend:** Supabase (PostgreSQL + Auth + RLS + Edge Functions)
+- **Video:** Daily.co
+- **Prescrição:** Memed SDK
+- **Blockchain:** Solana/Anchor (Devnet)
+- **Deploy:** Qualquer host estático (Vercel, Netlify, S3)
+
+---
+
+## 🤝 Contribuir — precisamos de você!
+
+Este projeto é mantido por um médico e está crescendo rapidamente. **Se você é desenvolvedor e quer impactar a saúde de verdade**, sua contribuição faz diferença direta no cuidado de pacientes.
+
+### Áreas com mais necessidade de ajuda
+
+- 🔴 **Performance** — chunks grandes (>500kb), lazy loading, otimização de bundle
+- 🔴 **Testes** — zero cobertura de testes (Vitest/Testing Library)
+- 🟡 **Mobile** — paridade total web/mobile ainda incompleta
+- 🟡 **Acessibilidade** — WCAG 2.1 AA para ambiente clínico
+- 🟡 **i18n** — PT-BR completo; EN-US em progresso
+- 🟢 **Novos scores clínicos** — BASDAI, PASI, ACR/EULAR
+- 🟢 **Documentação** — JSDoc, Storybook, guias de uso
+
+### Como contribuir
+
+1. Leia o [CONTRIBUTING.md](CONTRIBUTING.md)
+2. Veja as [issues abertas](https://github.com/JoaoRG-lab/rhema-care-flow/issues) — filtre por `good first issue`
+3. Fork → branch → PR para `main`
+
+> ⭐ Se o projeto te interessa, deixa uma estrela — ajuda muito na visibilidade!
+
+---
+
+## 🗄️ Banco de Dados (Supabase)
+
+Execute as migrations em ordem:
+
+```bash
+# Via Supabase CLI
+supabase db push
+
+# Ou manualmente via painel SQL do Supabase
+# Arquivos em: supabase/migrations/ (ordem cronológica)
+```
+
+### Privacidade e RLS
+
+**Todos os dados clínicos têm Row Level Security ativado.** Cada médico acessa apenas seus próprios pacientes. O prontuário integrado expõe evoluções anonimizadas (só iniciais + especialidade) mediante código do paciente.
+
+---
+
+## 🔗 Blockchain — URV Health Value Chain
+
+Registro de integridade de dados em Solana Devnet. **Nenhum dado de paciente vai on-chain** — apenas hashes SHA-256.
 
 ```bash
 cd anchor
-anchor build
-anchor deploy
+anchor build && anchor deploy
 ```
-
-### IDL
-
-Copie:
-```
-anchor/target/idl/urv_privacy.json
-```
-
-E cole em:
-```
-src/idl/urv_privacy.json
-```
-
-### ProgramId
-
-Após deploy, cole o ProgramId em:
-- `src/components/UrvDemo.tsx` (PROGRAM_ID)
-- `src/components/blockchain/UrvDemo.tsx` (PROGRAM_ID)
-
-### Privacidade
-
-**Plaintext nunca vai on-chain.** On-chain registra apenas:
-- Hashes/commitments
-- Score e confidence
-- Encadeamento (prev_hash → new_hash)
 
 ---
 
-## Teste rápido (ordem certa)
+## 📄 Licença
 
-1. **Conectar Phantom** (wallet)
-2. **Init State** - Inicializa o state PDA
-3. **Create Record** - Cria um record com hash do payload
-4. **Post Score Update** - Posta atualização de score encadeada
-
-> ⚠️ Se der erro "account does not exist" no `postScoreUpdate`, é porque você ainda não inicializou o state (passo 2).
+MIT © [JoaoRG-lab](https://github.com/JoaoRG-lab) — use, modifique e distribua livremente.
 
 ---
 
-## Acesso ao URV Demo
+<div align="center">
 
-O componente URV está disponível em duas rotas:
-- `/urv` - Página dedicada com providers Solana
-- `/blockchain` - Página de Blockchain Registry (requer autenticação)
+**Construído com ❤️ para médicos, por médicos.**
 
----
+[⭐ Deixar uma estrela](https://github.com/JoaoRG-lab/rhema-care-flow) · [🐛 Abrir issue](https://github.com/JoaoRG-lab/rhema-care-flow/issues) · [🤝 CONTRIBUTING.md](CONTRIBUTING.md)
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+</div>
