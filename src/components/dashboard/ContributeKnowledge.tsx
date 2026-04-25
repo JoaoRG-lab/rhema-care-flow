@@ -24,7 +24,12 @@ import {
   ThumbsUp,
   ExternalLink,
   Loader2,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ClipboardList,
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
