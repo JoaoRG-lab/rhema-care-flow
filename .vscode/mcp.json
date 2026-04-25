@@ -1,0 +1,53 @@
+{
+  // VS Code Copilot — .vscode/mcp.json
+  // Documentação: https://code.visualstudio.com/docs/copilot/customization/mcp-servers
+  //
+  // Como usar:
+  //   1. Copie sbp_... no campo SUPABASE_ACCESS_TOKEN (já preenchido)
+  //   2. Defina GITHUB_PAT no seu ambiente: export GITHUB_PAT=ghp_...
+  //   3. Reinicie o VS Code
+  //   4. Abra Copilot Chat → ícone de ferramentas → ative os servidores
+
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github-pat",
+      "description": "GitHub Personal Access Token (repo + read:org)",
+      "password": true
+    }
+  ],
+
+  "servers": {
+
+    "supabase": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--read-only"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_75740ef5abbd592eed6648b8c943a2791a7a127a"
+      }
+    },
+
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@latest"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github-pat}"
+      }
+    },
+
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@latest",
+        "${workspaceFolder}/src",
+        "${workspaceFolder}/supabase",
+        "${workspaceFolder}/public"
+      ]
+    }
+
+  }
+}

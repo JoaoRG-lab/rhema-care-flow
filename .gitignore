@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Permitir mcp.json nos diretórios de editor (não contém segredos hardcoded)
+!.vscode/mcp.json
+!.cursor/mcp.json
