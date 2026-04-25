@@ -287,6 +287,7 @@ export function useKnowledgeContributions() {
     createContribution,
     voteOnContribution,
     deleteContribution,
+    moderateContribution,
     refreshContributions: fetchApprovedContributions,
     refreshMyContributions: fetchMyContributions,
   };
