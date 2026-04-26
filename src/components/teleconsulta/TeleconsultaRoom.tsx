@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import {
-  Video, VideoOff, PhoneOff, ChevronRight, ChevronLeft,
-  FileText, ClipboardList, Maximize2, Minimize2
-} from 'lucide-react';
+import { ChevronRight, ChevronLeft, FileText, ClipboardList } from 'lucide-react';
 import { MemedPrescriptionPanel } from './MemedPrescriptionPanel';
 import { PrescriptionList } from '@/components/prescriptions/PrescriptionList';
+import { VideoRoom } from './VideoRoom';
 import type { Teleconsulta } from '@/hooks/useTeleconsulta';
 import { cn } from '@/lib/utils';
 
@@ -21,96 +19,33 @@ type PanelTab = 'prescricao' | 'historico';
 export function TeleconsultaRoom({ teleconsulta, onEnd }: TeleconsultaRoomProps) {
   const [panelOpen, setPanelOpen] = useState(true);
   const [panelTab, setPanelTab] = useState<PanelTab>('prescricao');
-  const [fullscreen, setFullscreen] = useState(false);
-  const [elapsed] = useState<string>('00:00');
 
-  const roomUrl = teleconsulta.daily_room_url;
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setFullscreen(true);
-    } else {
-      document.exitFullscreen().catch(() => {});
-      setFullscreen(false);
-    }
-  };
+  // Nome único da sala: usa daily_room_name se disponível, senão deriva do id
+  const roomName = teleconsulta.daily_room_name ?? `rhema-${teleconsulta.id.slice(0, 8)}`;
 
   return (
     <div className="flex h-full w-full bg-gray-950 overflow-hidden rounded-xl">
-      {/* Área de vídeo */}
-      <div className={cn('flex flex-col flex-1 min-w-0 relative', !panelOpen && 'flex-1')}>
-        {/* Header da sala */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
-          <div className="flex items-center gap-3">
-            <Badge className="bg-red-500 text-white text-xs animate-pulse">● AO VIVO</Badge>
-            <span className="text-white text-sm font-medium">
-              {teleconsulta.patient_name ?? 'Paciente'}
-            </span>
-            {teleconsulta.specialty && (
-              <Badge variant="outline" className="text-gray-300 border-gray-600 text-xs">
-                {teleconsulta.specialty}
-              </Badge>
-            )}
-            <span className="text-gray-400 text-xs font-mono">{elapsed}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 w-7 p-0 text-gray-400 hover:text-white"
-              onClick={toggleFullscreen}
-              title={fullscreen ? 'Sair de tela cheia' : 'Tela cheia'}
-            >
-              {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 w-7 p-0 text-gray-400 hover:text-white"
-              onClick={() => setPanelOpen(p => !p)}
-              title={panelOpen ? 'Fechar painel' : 'Abrir painel'}
-            >
-              {panelOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Iframe Daily.co */}
-        <div className="flex-1 relative">
-          {roomUrl ? (
-            <iframe
-              src={roomUrl}
-              allow="camera; microphone; fullscreen; display-capture; autoplay"
-              className="w-full h-full border-0"
-              title="Sala de Teleconsulta"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
-              <VideoOff className="h-12 w-12" />
-              <p className="text-sm">Link de sala não disponível</p>
-              <p className="text-xs text-gray-600 text-center max-w-xs">
-                Configure <code className="bg-gray-800 px-1 rounded">VITE_DAILY_CO_API_KEY</code> no .env para gerar salas automáticas
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Barra de controles */}
-        <div className="flex items-center justify-center gap-4 px-4 py-3 bg-gray-900 border-t border-gray-800">
-          <Button size="sm" variant="outline" className="h-9 border-gray-700 text-gray-300 hover:text-white hover:bg-gray-800">
-            <Video className="h-4 w-4" />
-          </Button>
+      {/* Área de vídeo — VideoRoom cuida de Daily.co vs Jitsi automaticamente */}
+      <div className={cn('flex flex-col flex-1 min-w-0 relative')}>
+        {/* Botão de toggle do painel */}
+        <div className="absolute top-2 right-2 z-20">
           <Button
             size="sm"
-            variant="destructive"
-            className="h-9 px-6 font-medium"
-            onClick={onEnd}
+            variant="ghost"
+            className="h-7 w-7 p-0 text-gray-400 hover:text-white bg-gray-900/80"
+            onClick={() => setPanelOpen(p => !p)}
+            title={panelOpen ? 'Fechar painel' : 'Abrir painel'}
           >
-            <PhoneOff className="h-4 w-4 mr-2" />
-            Encerrar consulta
+            {panelOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
+
+        <VideoRoom
+          roomName={roomName}
+          roomUrl={teleconsulta.daily_room_url}
+          displayName="Médico"
+          onEnd={onEnd}
+        />
       </div>
 
       {/* Painel lateral */}
