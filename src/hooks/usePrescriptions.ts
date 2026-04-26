@@ -5,8 +5,14 @@
  */
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
+// The `prescriptions` table is not yet in the generated Database types.
+// Cast the client to a permissive shape so query results are typed as
+// `Prescription` rows instead of `SelectQueryError` unions.
+const db = supabase as unknown as SupabaseClient<any, 'public', any>;
 
 export type PrescriptionStatus = 'draft' | 'signed' | 'dispensed' | 'cancelled';
 
@@ -58,14 +64,15 @@ export function usePrescriptions(patientId?: string) {
     if (!user || !patientId) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('prescriptions' as any)
+      const { data, error } = await db
+        .from('prescriptions')
         .select('*')
         .eq('patient_id', patientId)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<Prescription[]>();
       if (error) throw error;
-      setPrescriptions((data ?? []) as unknown as Prescription[]);
+      setPrescriptions(data ?? []);
     } catch (e: any) {
       toast.error('Erro ao carregar prescrições: ' + e.message);
     } finally {
@@ -76,15 +83,16 @@ export function usePrescriptions(patientId?: string) {
   const createPrescription = useCallback(async (input: CreatePrescriptionInput): Promise<Prescription | null> => {
     if (!user) return null;
     try {
-      const { data, error } = await supabase
-        .from('prescriptions' as any)
+      const { data, error } = await db
+        .from('prescriptions')
         .insert({ ...input, user_id: user.id, status: input.status ?? 'draft' })
         .select()
-        .single();
+        .single()
+        .returns<Prescription>();
       if (error) throw error;
       await fetchPrescriptions();
       toast.success('Prescrição criada com sucesso');
-      return data as unknown as Prescription;
+      return data ?? null;
     } catch (e: any) {
       toast.error('Erro ao criar prescrição: ' + e.message);
       return null;
