@@ -43,7 +43,7 @@ export function useSharedRecord() {
 
     try {
       // Busca evoluções via RPC segura
-      const { data, error: rpcError } = await supabase.rpc('get_evolucoes_by_code', {
+      const { data, error: rpcError } = await (supabase.rpc as any)('get_evolucoes_by_code', {
         p_code: codigoNorm,
       });
 
@@ -69,7 +69,7 @@ export function useSharedRecord() {
       // Registra log de acesso em background
       setLogging(true);
       const { data: { user } } = await supabase.auth.getUser();
-      supabase.from('prontuario_access_log').insert({
+      (supabase.from as any)('prontuario_access_log').insert({
         patient_code: codigoNorm,
         accessor_id: user?.id ?? null,
         accessor_name: accessorInfo?.name ?? null,
@@ -109,8 +109,7 @@ export function useProntuarioAccessLog(patientCode: string) {
   const fetchLogs = useCallback(async () => {
     if (!patientCode) return;
     setLoading(true);
-    const { data } = await supabase
-      .from('prontuario_access_log')
+    const { data } = await (supabase.from as any)('prontuario_access_log')
       .select('id, accessor_name, accessor_crm, accessor_specialty, accessed_at')
       .eq('patient_code', patientCode.toUpperCase())
       .order('accessed_at', { ascending: false })
