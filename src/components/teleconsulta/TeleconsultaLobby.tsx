@@ -52,16 +52,17 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 
 interface TeleconsultaLobbyProps {
   patientCardId?: string;
-  patientName?: string;
+  /** De-identified patient label (patient_code). Never a real name. */
+  patientCode?: string;
   onEnterRoom: (teleconsulta: Teleconsulta) => void;
 }
 
-export function TeleconsultaLobby({ patientCardId, patientName, onEnterRoom }: TeleconsultaLobbyProps) {
+export function TeleconsultaLobby({ patientCardId, patientCode, onEnterRoom }: TeleconsultaLobbyProps) {
   const { teleconsultas, loading, tableReady, createTeleconsulta, deleteTeleconsulta, iniciarConsulta } = useTeleconsulta(patientCardId);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<CreateTeleconsultaInput>({
-    patient_name: patientName ?? '',
+    patient_name: patientCode ?? '',
     specialty: '',
     scheduled_date: new Date().toISOString().split('T')[0],
     start_time: '09:00',

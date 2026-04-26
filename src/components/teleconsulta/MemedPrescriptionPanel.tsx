@@ -11,12 +11,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface MemedPrescriptionPanelProps {
-  patientName?: string;
+  /** De-identified patient label (patient_code). Never a real name. */
+  patientCode?: string;
   patientCardId?: string;
   collapsed?: boolean;
 }
 
-export function MemedPrescriptionPanel({ patientName, patientCardId, collapsed }: MemedPrescriptionPanelProps) {
+export function MemedPrescriptionPanel({ patientCode, patientCardId, collapsed }: MemedPrescriptionPanelProps) {
   const { user } = useAuth();
   const { ready, loading, setDoctorToken, setPatient, showPrescription } = useMemedPrescription();
   const [tokenLoading, setTokenLoading] = useState(false);
@@ -47,9 +48,9 @@ export function MemedPrescriptionPanel({ patientName, patientCardId, collapsed }
     try {
       setDoctorToken(memedToken.trim());
       // Configura paciente se tiver dados
-      if (patientName) {
+      if (patientCode) {
         const patient: MemedPatient = {
-          nome: patientName,
+          nome: patientCode,
           idExterno: patientCardId,
         };
         setPatient(patient);
@@ -169,9 +170,9 @@ export function MemedPrescriptionPanel({ patientName, patientCardId, collapsed }
             )}
 
             {/* Paciente configurado */}
-            {patientName && tokenSet && (
+            {patientCode && tokenSet && (
               <div className="text-xs text-muted-foreground bg-white dark:bg-muted/30 rounded p-2 border">
-                Paciente: <strong>{patientName}</strong>
+                Paciente: <strong>{patientCode}</strong>
               </div>
             )}
 
