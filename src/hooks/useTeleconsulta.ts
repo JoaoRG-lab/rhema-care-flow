@@ -189,7 +189,9 @@ export function useTeleconsulta(patientCardId?: string) {
   const iniciarConsulta = async (id: string): Promise<Teleconsulta | null> => {
     const ok = await updateTeleconsulta(id, { status: 'in_progress' });
     if (!ok) return null;
-    return teleconsultas.find(t => t.id === id) ?? null;
+    // Return the updated teleconsulta with the new status
+    const updated = teleconsultas.find(t => t.id === id);
+    return updated ? { ...updated, status: 'in_progress' } : null;
   };
 
   const finalizarConsulta = async (id: string) => updateTeleconsulta(id, { status: 'completed' });
