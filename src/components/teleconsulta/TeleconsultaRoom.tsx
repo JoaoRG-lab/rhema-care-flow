@@ -148,7 +148,7 @@ export function TeleconsultaRoom({ teleconsulta, onEnd }: TeleconsultaRoomProps)
             {panelTab === 'prescricao' && (
               <>
                 <MemedPrescriptionPanel
-                  patientName={teleconsulta.patient_name ?? undefined}
+                  patientCode={teleconsulta.patient_name ?? undefined}
                   patientCardId={teleconsulta.patient_card_id ?? undefined}
                 />
                 <Separator />
