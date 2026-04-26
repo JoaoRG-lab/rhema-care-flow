@@ -97,16 +97,7 @@ export function TeleconsultaLobby({ patientCardId, patientName, onEnterRoom }: T
               Configuração necessária — execute o SQL abaixo no Supabase
             </p>
             <p className="text-xs text-amber-700 dark:text-amber-400">
-              Acesse{' '}
-              <a
-                href="https://supabase.com/dashboard/project/jiswutjmmoirkoarpbpf/sql/new"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline font-medium"
-              >
-                SQL Editor do Supabase
-              </a>
-              {' '}e execute:
+              Acesse o SQL Editor do backend e execute:
             </p>
             <pre className="text-[10px] bg-amber-100 dark:bg-amber-950 rounded p-2 overflow-x-auto text-amber-900 dark:text-amber-200 select-all">{`CREATE TABLE IF NOT EXISTS public.teleconsultas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
