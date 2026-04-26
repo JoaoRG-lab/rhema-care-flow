@@ -1,4 +1,4 @@
-/**
+/** @version 2026-04-26T15:09:12Z
  * VideoRoom — Sala de vídeo nativa para teleconsulta
  *
  * Estratégia de fallback (sem custo):
