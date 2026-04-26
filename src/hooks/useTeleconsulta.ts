@@ -36,12 +36,11 @@ const DAILY_API_KEY = import.meta.env.VITE_DAILY_CO_API_KEY as string | undefine
 
 async function createDailyRoom(roomName: string): Promise<{ url: string; name: string } | null> {
   if (!DAILY_API_KEY) {
-    // Fallback: use a public demo room for development
-    const fallbackName = roomName;
-    return { url: `https://rhema.daily.co/${fallbackName}`, name: fallbackName };
+    // Sem API key: retorna null — VideoRoom usará Jitsi automaticamente (gratuito)
+    return null;
   }
   try {
-    const res = await fetch('https://api.daily.co/v1/rooms', {
+    const res = await fetch('https://api.daily.co/v1/rooms/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

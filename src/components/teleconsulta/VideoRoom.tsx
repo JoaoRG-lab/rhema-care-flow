@@ -27,7 +27,9 @@ type PermissionState = 'idle' | 'requesting' | 'granted' | 'denied' | 'error';
 
 export function VideoRoom({ roomName, roomUrl, displayName = 'Médico', onEnd }: VideoRoomProps) {
   const hasDailyKey = !!import.meta.env.VITE_DAILY_CO_API_KEY;
-  const useDaily = hasDailyKey && !!roomUrl;
+  // Só usa Daily se tiver key E a URL existir E não for uma URL de sala inexistente
+  // (salas criadas sem key real sempre falham com "does not exist")
+  const useDaily = hasDailyKey && !!roomUrl && !roomUrl.includes('rhema.daily.co');
 
   // Jitsi config
   const jitsiRef = useRef<HTMLIFrameElement>(null);
