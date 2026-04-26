@@ -87,8 +87,7 @@ export function usePrescriptions(patientId?: string) {
         .from('prescriptions')
         .insert({ ...input, user_id: user.id, status: input.status ?? 'draft' })
         .select()
-        .single()
-        .returns<Prescription>();
+        .single<Prescription>();
       if (error) throw error;
       await fetchPrescriptions();
       toast.success('Prescrição criada com sucesso');
