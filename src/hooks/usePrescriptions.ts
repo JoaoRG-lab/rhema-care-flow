@@ -65,7 +65,7 @@ export function usePrescriptions(patientId?: string) {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setPrescriptions((data ?? []) as Prescription[]);
+      setPrescriptions((data ?? []) as unknown as Prescription[]);
     } catch (e: any) {
       toast.error('Erro ao carregar prescrições: ' + e.message);
     } finally {
@@ -84,7 +84,7 @@ export function usePrescriptions(patientId?: string) {
       if (error) throw error;
       await fetchPrescriptions();
       toast.success('Prescrição criada com sucesso');
-      return data as Prescription;
+      return data as unknown as Prescription;
     } catch (e: any) {
       toast.error('Erro ao criar prescrição: ' + e.message);
       return null;

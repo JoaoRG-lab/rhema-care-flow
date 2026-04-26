@@ -395,7 +395,7 @@ import type { PatientCard } from '@/types/clinical';
              <TabsContent value="teleconsulta" className="mt-0">
                <TeleconsultaLobby
                  patientCardId={patient?.id}
-                 patientName={patient?.patient_name ?? patient?.patient_code}
+                 patientName={patient?.patient_code}
                  onEnterRoom={() => {
                    navigate('/teleconsulta');
                  }}
