@@ -8,45 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-/**
- * Typed query wrapper for the `prescriptions` table.
- *
- * The table is not present in the generated `Database` types yet, so the
- * default Supabase client widens results into `SelectQueryError` unions.
- * `prescriptionsTable()` returns a strongly-typed query builder that yields
- * `Prescription` rows for reads and accepts `PrescriptionInsert` /
- * `PrescriptionUpdate` payloads for writes — without scattering casts
- * throughout call sites.
- */
-type PrescriptionInsert = CreatePrescriptionInput & {
-  user_id: string;
-  status: PrescriptionStatus;
-};
-type PrescriptionUpdate = Partial<Omit<Prescription, 'id' | 'user_id' | 'created_at'>>;
-
-interface PrescriptionsTable {
-  Row: Prescription;
-  Insert: PrescriptionInsert;
-  Update: PrescriptionUpdate;
-  Relationships: [];
-}
-
-const prescriptionsTable = () =>
-  (supabase as unknown as {
-    from: (table: 'prescriptions') => ReturnType<
-      ReturnType<typeof getTypedFrom>
-    >;
-  }).from('prescriptions');
-
-// Helper to derive a properly-typed `from()` for the synthetic table.
-function getTypedFrom() {
-  return (supabase as unknown as {
-    from: <T extends { Row: unknown; Insert: unknown; Update: unknown }>(
-      _t: string,
-    ) => ReturnType<typeof supabase.from<any, PrescriptionsTable>>;
-  }).from;
-}
-
 export type PrescriptionStatus = 'draft' | 'signed' | 'dispensed' | 'cancelled';
 
 export interface PrescriptionItem {
@@ -88,6 +49,58 @@ export interface CreatePrescriptionInput {
   signed_by_crm?: string | null;
 }
 
+export type PrescriptionInsert = CreatePrescriptionInput & {
+  user_id: string;
+  status: PrescriptionStatus;
+};
+
+export type PrescriptionUpdate = Partial<
+  Omit<Prescription, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+>;
+
+/**
+ * Typed query wrapper for the `prescriptions` table.
+ *
+ * The table is not present in the generated `Database` types, so the default
+ * client widens its responses into `SelectQueryError` unions. This wrapper
+ * narrows the responses back to strict `Prescription` rows for reads and
+ * accepts well-typed insert/update payloads for writes — keeping all the
+ * casting in a single place instead of every call site.
+ */
+type QueryResult<T> = { data: T | null; error: { message: string } | null };
+
+const prescriptionsTable = () => {
+  // Single `unknown` cast: the rest of the API is fully typed downstream.
+  const table = (supabase as unknown as {
+    from: (name: string) => any;
+  }).from('prescriptions');
+
+  return {
+    selectAllForPatient: (
+      patientId: string,
+      userId: string,
+    ): Promise<QueryResult<Prescription[]>> =>
+      table
+        .select('*')
+        .eq('patient_id', patientId)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false }),
+
+    insertOne: (payload: PrescriptionInsert): Promise<QueryResult<Prescription>> =>
+      table.insert(payload).select().single(),
+
+    updateForUser: (
+      id: string,
+      userId: string,
+      payload: PrescriptionUpdate,
+    ): Promise<QueryResult<null>> =>
+      table.update(payload).eq('id', id).eq('user_id', userId),
+
+    deleteForUser: (id: string, userId: string): Promise<QueryResult<null>> =>
+      table.delete().eq('id', id).eq('user_id', userId),
+  };
+};
+
 export function usePrescriptions(patientId?: string) {
   const { user } = useAuth();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -97,13 +110,10 @@ export function usePrescriptions(patientId?: string) {
     if (!user || !patientId) return;
     setLoading(true);
     try {
-      const { data, error } = await db
-        .from('prescriptions')
-        .select('*')
-        .eq('patient_id', patientId)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .returns<Prescription[]>();
+      const { data, error } = await prescriptionsTable().selectAllForPatient(
+        patientId,
+        user.id,
+      );
       if (error) throw error;
       setPrescriptions(data ?? []);
     } catch (e: any) {
@@ -113,89 +123,95 @@ export function usePrescriptions(patientId?: string) {
     }
   }, [user, patientId]);
 
-  const createPrescription = useCallback(async (input: CreatePrescriptionInput): Promise<Prescription | null> => {
-    if (!user) return null;
-    try {
-      const { data, error } = await db
-        .from('prescriptions')
-        .insert({ ...input, user_id: user.id, status: input.status ?? 'draft' })
-        .select()
-        .single<Prescription>();
-      if (error) throw error;
-      await fetchPrescriptions();
-      toast.success('Prescrição criada com sucesso');
-      return data ?? null;
-    } catch (e: any) {
-      toast.error('Erro ao criar prescrição: ' + e.message);
-      return null;
-    }
-  }, [user, fetchPrescriptions]);
+  const createPrescription = useCallback(
+    async (input: CreatePrescriptionInput): Promise<Prescription | null> => {
+      if (!user) return null;
+      try {
+        const { data, error } = await prescriptionsTable().insertOne({
+          ...input,
+          user_id: user.id,
+          status: input.status ?? 'draft',
+        });
+        if (error) throw error;
+        await fetchPrescriptions();
+        toast.success('Prescrição criada com sucesso');
+        return data;
+      } catch (e: any) {
+        toast.error('Erro ao criar prescrição: ' + e.message);
+        return null;
+      }
+    },
+    [user, fetchPrescriptions],
+  );
 
-  const signPrescription = useCallback(async (
-    id: string,
-    signatureDataUrl: string,
-    options: { name: string; crm: string },
-  ): Promise<boolean> => {
-    if (!user) return false;
-    try {
-      // Compute a deterministic hash of the signature for verification
-      const encoder = new TextEncoder();
-      const buf = await crypto.subtle.digest('SHA-256', encoder.encode(signatureDataUrl + id));
-      const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const signPrescription = useCallback(
+    async (
+      id: string,
+      signatureDataUrl: string,
+      options: { name: string; crm: string },
+    ): Promise<boolean> => {
+      if (!user) return false;
+      try {
+        const encoder = new TextEncoder();
+        const buf = await crypto.subtle.digest(
+          'SHA-256',
+          encoder.encode(signatureDataUrl + id),
+        );
+        const hash = Array.from(new Uint8Array(buf))
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join('');
 
-      const { error } = await supabase
-        .from('prescriptions' as any)
-        .update({
+        const { error } = await prescriptionsTable().updateForUser(id, user.id, {
           status: 'signed',
           signature_data_url: signatureDataUrl,
           signature_hash: hash,
           signed_at: new Date().toISOString(),
           signed_by_name: options.name,
           signed_by_crm: options.crm,
-        } as any)
-        .eq('id', id)
-        .eq('user_id', user.id);
-      if (error) throw error;
-      await fetchPrescriptions();
-      toast.success('Prescrição assinada com sucesso');
-      return true;
-    } catch (e: any) {
-      toast.error('Erro ao assinar: ' + e.message);
-      return false;
-    }
-  }, [user, fetchPrescriptions]);
+        });
+        if (error) throw error;
+        await fetchPrescriptions();
+        toast.success('Prescrição assinada com sucesso');
+        return true;
+      } catch (e: any) {
+        toast.error('Erro ao assinar: ' + e.message);
+        return false;
+      }
+    },
+    [user, fetchPrescriptions],
+  );
 
-  const cancelPrescription = useCallback(async (id: string): Promise<void> => {
-    if (!user) return;
-    try {
-      const { error } = await supabase
-        .from('prescriptions' as any)
-        .update({ status: 'cancelled' } as any)
-        .eq('id', id)
-        .eq('user_id', user.id);
-      if (error) throw error;
-      await fetchPrescriptions();
-      toast.success('Prescrição cancelada');
-    } catch (e: any) {
-      toast.error('Erro ao cancelar: ' + e.message);
-    }
-  }, [user, fetchPrescriptions]);
+  const cancelPrescription = useCallback(
+    async (id: string): Promise<void> => {
+      if (!user) return;
+      try {
+        const { error } = await prescriptionsTable().updateForUser(id, user.id, {
+          status: 'cancelled',
+        });
+        if (error) throw error;
+        await fetchPrescriptions();
+        toast.success('Prescrição cancelada');
+      } catch (e: any) {
+        toast.error('Erro ao cancelar: ' + e.message);
+      }
+    },
+    [user, fetchPrescriptions],
+  );
 
-  const deletePrescription = useCallback(async (id: string): Promise<void> => {
-    if (!user) return;
-    try {
-      const { error } = await supabase
-        .from('prescriptions' as any)
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-      if (error) throw error;
-      await fetchPrescriptions();
-      toast.success('Prescrição removida');
-    } catch (e: any) {
-      toast.error('Erro ao remover: ' + e.message);
-    }
-  }, [user, fetchPrescriptions]);
+  const deletePrescription = useCallback(
+    async (id: string): Promise<void> => {
+      if (!user) return;
+      try {
+        const { error } = await prescriptionsTable().deleteForUser(id, user.id);
+        if (error) throw error;
+        await fetchPrescriptions();
+        toast.success('Prescrição removida');
+      } catch (e: any) {
+        toast.error('Erro ao remover: ' + e.message);
+      }
+    },
+    [user, fetchPrescriptions],
+  );
 
   return {
     prescriptions,
