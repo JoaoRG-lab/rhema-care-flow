@@ -2120,6 +2120,72 @@ export type Database = {
         }
         Relationships: []
       }
+      teleconsultas: {
+        Row: {
+          created_at: string
+          daily_room_name: string | null
+          daily_room_url: string | null
+          duration_minutes: number
+          id: string
+          notes: string | null
+          patient_card_id: string | null
+          patient_name: string | null
+          provider_id: string
+          scheduled_date: string
+          specialty: string | null
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_room_name?: string | null
+          daily_room_url?: string | null
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          patient_card_id?: string | null
+          patient_name?: string | null
+          provider_id: string
+          scheduled_date: string
+          specialty?: string | null
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_room_name?: string | null
+          daily_room_url?: string | null
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          patient_card_id?: string | null
+          patient_name?: string | null
+          provider_id?: string
+          scheduled_date?: string
+          specialty?: string | null
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teleconsultas_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teleconsultas_patient_card_id_fkey"
+            columns: ["patient_card_id"]
+            isOneToOne: false
+            referencedRelation: "patient_cards_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ultimate_user_custody: {
         Row: {
           created_at: string | null
