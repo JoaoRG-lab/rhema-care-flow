@@ -70,6 +70,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const AccountTypeSelect = lazy(() => import("./pages/AccountTypeSelect"));
 const Teleconsulta = lazy(() => import("./pages/Teleconsulta"));
 const ProntuarioIntegrado = lazy(() => import("./pages/ProntuarioIntegrado"));
+const ResearchHub = lazy(() => import("./pages/ResearchHub"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -181,6 +182,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
                     <Route path="/admin/billing" element={<ProtectedRoute><AdminBilling /></ProtectedRoute>} />
                     <Route path="/teleconsulta" element={<ClinicianRoute><Teleconsulta /></ClinicianRoute>} />
                     <Route path="/prontuario" element={<ProtectedRoute><ProntuarioIntegrado /></ProtectedRoute>} />
+                    <Route path="/research-hub" element={<ProtectedRoute><ResearchHub /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
