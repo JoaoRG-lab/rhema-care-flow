@@ -5,14 +5,47 @@
  */
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-// The `prescriptions` table is not yet in the generated Database types.
-// Cast the client to a permissive shape so query results are typed as
-// `Prescription` rows instead of `SelectQueryError` unions.
-const db = supabase as unknown as SupabaseClient<any, 'public', any>;
+/**
+ * Typed query wrapper for the `prescriptions` table.
+ *
+ * The table is not present in the generated `Database` types yet, so the
+ * default Supabase client widens results into `SelectQueryError` unions.
+ * `prescriptionsTable()` returns a strongly-typed query builder that yields
+ * `Prescription` rows for reads and accepts `PrescriptionInsert` /
+ * `PrescriptionUpdate` payloads for writes — without scattering casts
+ * throughout call sites.
+ */
+type PrescriptionInsert = CreatePrescriptionInput & {
+  user_id: string;
+  status: PrescriptionStatus;
+};
+type PrescriptionUpdate = Partial<Omit<Prescription, 'id' | 'user_id' | 'created_at'>>;
+
+interface PrescriptionsTable {
+  Row: Prescription;
+  Insert: PrescriptionInsert;
+  Update: PrescriptionUpdate;
+  Relationships: [];
+}
+
+const prescriptionsTable = () =>
+  (supabase as unknown as {
+    from: (table: 'prescriptions') => ReturnType<
+      ReturnType<typeof getTypedFrom>
+    >;
+  }).from('prescriptions');
+
+// Helper to derive a properly-typed `from()` for the synthetic table.
+function getTypedFrom() {
+  return (supabase as unknown as {
+    from: <T extends { Row: unknown; Insert: unknown; Update: unknown }>(
+      _t: string,
+    ) => ReturnType<typeof supabase.from<any, PrescriptionsTable>>;
+  }).from;
+}
 
 export type PrescriptionStatus = 'draft' | 'signed' | 'dispensed' | 'cancelled';
 
