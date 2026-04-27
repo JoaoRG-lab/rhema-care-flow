@@ -23,26 +23,31 @@
    const [labs, setLabs] = useState<string[]>(visit.labs_ordered || []);
    const [imaging, setImaging] = useState<string[]>(visit.imaging || []);
    const [nextSteps, setNextSteps] = useState(visit.next_steps || '');
-   const [diseaseScore, setDiseaseScore] = useState('');
-   const [saving, setSaving] = useState(false);
-   const [attachments, setAttachments] = useState<string[]>(visit.attachments || []);
- 
-   useEffect(() => {
-     setVisitDate(visit.visit_date);
-     setActions(visit.actions || []);
-     setLabs(visit.labs_ordered || []);
-     setImaging(visit.imaging || []);
-     setNextSteps(visit.next_steps || '');
-     setAttachments(visit.attachments || []);
-     
-     // Extract score from disease_activity JSON
-     if (visit.disease_activity && typeof visit.disease_activity === 'object' && !Array.isArray(visit.disease_activity)) {
-       const activity = visit.disease_activity as Record<string, unknown>;
-       setDiseaseScore(activity.score ? String(activity.score) : '');
-     } else {
-       setDiseaseScore('');
-     }
-   }, [visit]);
+  const [diseaseScore, setDiseaseScore] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [attachments, setAttachments] = useState<string[]>(visit.attachments || []);
+  // Preserve every other key in disease_activity (pediatric, vitals, custom fields, etc.)
+  // so editing the visit never silently drops information entered elsewhere.
+  const [extraActivity, setExtraActivity] = useState<Record<string, unknown>>({});
+
+  useEffect(() => {
+    setVisitDate(visit.visit_date);
+    setActions(visit.actions || []);
+    setLabs(visit.labs_ordered || []);
+    setImaging(visit.imaging || []);
+    setNextSteps(visit.next_steps || '');
+    setAttachments(visit.attachments || []);
+
+    // Split disease_activity into the editable "score" field and everything else
+    if (visit.disease_activity && typeof visit.disease_activity === 'object' && !Array.isArray(visit.disease_activity)) {
+      const { score, ...rest } = visit.disease_activity as Record<string, unknown>;
+      setDiseaseScore(score ? String(score) : '');
+      setExtraActivity(rest);
+    } else {
+      setDiseaseScore('');
+      setExtraActivity({});
+    }
+  }, [visit]);
  
    const toggleItem = (arr: string[], item: string, setter: (arr: string[]) => void) => {
      if (arr.includes(item)) {
@@ -56,7 +61,10 @@
      e.preventDefault();
      setSaving(true);
  
-     const diseaseActivity = diseaseScore ? { score: diseaseScore } : null;
+    // Merge: keep all preserved keys (pediatric, vitals, etc.) and overlay the edited score
+    const merged: Record<string, unknown> = { ...extraActivity };
+    if (diseaseScore) merged.score = diseaseScore;
+    const diseaseActivity = Object.keys(merged).length > 0 ? merged : null;
  
      const { error } = await supabase
        .from('visits')
