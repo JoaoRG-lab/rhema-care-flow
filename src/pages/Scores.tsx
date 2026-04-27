@@ -381,9 +381,10 @@ import { toast } from 'sonner';
     </>
   );
 
-   return (
+    return (
      <AppLayout>
-      <div className="flex h-[calc(100vh-64px)] w-full">
+      {/* Use dvh + responsive offsets so content scrolls correctly above mobile bottom nav */}
+      <div className="flex h-[calc(100dvh-11.5rem)] md:h-[calc(100dvh-4rem)] w-full">
         {/* Desktop Sidebar - hidden on mobile */}
         <aside className="hidden md:flex w-80 border-r bg-card flex-col shrink-0">
           <SidebarContent />
