@@ -98,11 +98,17 @@ export function VisitHistory({ patientId, refreshKey, patientCode, diagnosisTags
                </CardTitle>
               <div className="flex items-center gap-2">
                 {visit.disease_activity && Object.keys(visit.disease_activity).length > 0 && (
-                  <Badge variant="outline" className="font-normal">
-                    {typeof visit.disease_activity === 'object' && visit.disease_activity !== null && !Array.isArray(visit.disease_activity) && 
-                      Object.entries(visit.disease_activity).map(([key, value]) => (
-                        <span key={key} className="mr-2">{key}: {String(value)}</span>
-                      ))
+                  <Badge variant="outline" className="font-normal max-w-[60%] whitespace-normal text-left">
+                    {typeof visit.disease_activity === 'object' && visit.disease_activity !== null && !Array.isArray(visit.disease_activity) &&
+                      Object.entries(visit.disease_activity).map(([key, value]) => {
+                        const display =
+                          value !== null && typeof value === 'object'
+                            ? Object.entries(value as Record<string, unknown>)
+                                .map(([k, v]) => `${k}: ${String(v)}`)
+                                .join(', ')
+                            : String(value);
+                        return <span key={key} className="mr-2">{key}: {display}</span>;
+                      })
                     }
                   </Badge>
                 )}
