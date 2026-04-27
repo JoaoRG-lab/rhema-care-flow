@@ -1,0 +1,81 @@
+name: Mirror to external repositories
+
+# Mirrors every push on the default branch (and tags) from this Lovable-managed
+# repo to the external repositories listed in TARGET_REPOS below.
+#
+# Setup (one-time):
+#   1. Create a GitHub Personal Access Token (classic) with `repo` scope, OR a
+#      fine-grained token with "Contents: Read and write" on each target repo.
+#   2. In this repo: Settings → Secrets and variables → Actions → New secret
+#      named MIRROR_TOKEN with that token as the value.
+#   3. Edit TARGET_REPOS below — one `owner/repo` per line.
+#
+# Notes:
+#   - This is a one-way mirror (Lovable repo → targets). Changes pushed
+#     directly to a target repo will be overwritten on the next sync.
+#   - Uses `git push --mirror` so branches AND tags stay in sync, including
+#     deletions. Remove `--mirror` if you want additive-only behavior.
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["**"]
+  workflow_dispatch:
+
+concurrency:
+  group: mirror-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    env:
+      # ⬇️  EDIT THIS LIST — one `owner/repo` per line, no https:// prefix.
+      TARGET_REPOS: |
+        your-org/repo-one
+        your-org/repo-two
+        your-org/repo-three
+    steps:
+      - name: Checkout (full history + all refs)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Mirror clone needed so tags and all branches are pushed
+          persist-credentials: false
+
+      - name: Validate token
+        run: |
+          if [ -z "${{ secrets.MIRROR_TOKEN }}" ]; then
+            echo "::error::MIRROR_TOKEN secret is missing. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Push to each target repository
+        env:
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Re-fetch as a bare-style mirror so --mirror push includes everything
+          git fetch --prune --tags origin
+
+          echo "$TARGET_REPOS" | sed '/^\s*$/d' | while read -r repo; do
+            repo="$(echo "$repo" | xargs)"  # trim whitespace
+            echo "::group::Mirroring → $repo"
+            remote_url="https://x-access-token:${MIRROR_TOKEN}@github.com/${repo}.git"
+
+            # Add (or refresh) a remote per target
+            remote_name="mirror_$(echo "$repo" | tr '/.' '__')"
+            git remote remove "$remote_name" 2>/dev/null || true
+            git remote add "$remote_name" "$remote_url"
+
+            # --mirror keeps branches AND tags identical (including deletions)
+            if git push --mirror "$remote_name"; then
+              echo "✅ Synced $repo"
+            else
+              echo "::error::Failed to mirror to $repo"
+              exit 1
+            fi
+
+            git remote remove "$remote_name"
+            echo "::endgroup::"
+          done
