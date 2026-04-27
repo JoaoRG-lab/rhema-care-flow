@@ -319,40 +319,40 @@ import type { PatientCard } from '@/types/clinical';
  
          {/* Tabs for Visits and Scores */}
          <Tabs defaultValue="visits" className="space-y-4">
-           <TabsList>
-             <TabsTrigger value="visits" className="gap-2">
+           <TabsList className="w-full">
+             <TabsTrigger value="visits" className="gap-1.5">
                <ClipboardList className="h-4 w-4" />
-               Visit History
+               <span className="hidden sm:inline">Visitas</span>
              </TabsTrigger>
-             <TabsTrigger value="scores" className="gap-2">
+             <TabsTrigger value="scores" className="gap-1.5">
                <TrendingUp className="h-4 w-4" />
-               Score Trends
+               <span className="hidden sm:inline">Scores</span>
              </TabsTrigger>
-             <TabsTrigger value="monitoring" className="gap-2">
+             <TabsTrigger value="monitoring" className="gap-1.5">
                <Shield className="h-4 w-4" />
-               Monitoring
+               <span className="hidden sm:inline">Monitoramento</span>
              </TabsTrigger>
-              <TabsTrigger value="timeline" className="gap-2">
-                <ArrowLeftRight className="h-4 w-4" />
-                Response
-              </TabsTrigger>
-               <TabsTrigger value="sms" className="gap-2">
-                 <MessageSquare className="h-4 w-4" />
-                 SMS
-               </TabsTrigger>
-               <TabsTrigger value="chain" className="gap-2">
-                 <Shield className="h-4 w-4" />
-                 Chain
-               </TabsTrigger>
-               <TabsTrigger value="teleconsulta" className="gap-2">
-                <Video className="h-4 w-4" />
-                Teleconsulta
-              </TabsTrigger>
-              <TabsTrigger value="prescriptions" className="gap-2">
-                 <ClipboardPlus className="h-4 w-4" />
-                 Prescrições
-               </TabsTrigger>
-             </TabsList>
+             <TabsTrigger value="timeline" className="gap-1.5">
+               <ArrowLeftRight className="h-4 w-4" />
+               <span className="hidden sm:inline">Resposta</span>
+             </TabsTrigger>
+             <TabsTrigger value="sms" className="gap-1.5">
+               <MessageSquare className="h-4 w-4" />
+               <span className="hidden sm:inline">SMS</span>
+             </TabsTrigger>
+             <TabsTrigger value="chain" className="gap-1.5">
+               <Shield className="h-4 w-4" />
+               <span className="hidden sm:inline">Blockchain</span>
+             </TabsTrigger>
+             <TabsTrigger value="teleconsulta" className="gap-1.5">
+               <Video className="h-4 w-4" />
+               <span className="hidden sm:inline">Teleconsulta</span>
+             </TabsTrigger>
+             <TabsTrigger value="prescriptions" className="gap-1.5">
+               <ClipboardPlus className="h-4 w-4" />
+               <span className="hidden sm:inline">Prescrições</span>
+             </TabsTrigger>
+           </TabsList>
  
            <TabsContent value="visits">
             <VisitHistory 
