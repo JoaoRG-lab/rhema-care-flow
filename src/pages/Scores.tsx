@@ -398,8 +398,8 @@ import { toast } from 'sonner';
         </Sheet>
  
          {/* Main Content */}
-         <main className="flex-1 overflow-auto">
-           <div className="p-6 max-w-4xl mx-auto">
+         <main className="flex-1 overflow-y-auto overscroll-contain">
+           <div className="p-6 pb-24 max-w-4xl mx-auto">
             {/* Mobile Header with Menu Button */}
             <div className="md:hidden flex items-center gap-3 mb-4">
               <Button
