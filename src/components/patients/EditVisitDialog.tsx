@@ -61,7 +61,10 @@
      e.preventDefault();
      setSaving(true);
  
-     const diseaseActivity = diseaseScore ? { score: diseaseScore } : null;
+    // Merge: keep all preserved keys (pediatric, vitals, etc.) and overlay the edited score
+    const merged: Record<string, unknown> = { ...extraActivity };
+    if (diseaseScore) merged.score = diseaseScore;
+    const diseaseActivity = Object.keys(merged).length > 0 ? merged : null;
  
      const { error } = await supabase
        .from('visits')
