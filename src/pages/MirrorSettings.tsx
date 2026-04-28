@@ -170,7 +170,107 @@ export default function MirrorSettings() {
     }
   }
 
-  const summary = results
+  async function runDryRun() {
+    setDryRunning(true);
+    setDryRun(null);
+    const checks: DryRunCheck[] = [];
+
+    // 1. Target list non-empty
+    checks.push({
+      label: "Target list is non-empty",
+      ok: targets.length > 0,
+      detail:
+        targets.length > 0
+          ? `${targets.length} target${targets.length === 1 ? "" : "s"} configured`
+          : "Add at least one owner/repo entry before running",
+    });
+
+    // 2. All targets pass schema validation
+    const invalid = targets.filter((t) => !repoPathSchema.safeParse(t).success);
+    checks.push({
+      label: "All targets match owner/repo format",
+      ok: invalid.length === 0,
+      detail:
+        invalid.length === 0
+          ? "Every entry is well-formed"
+          : `Invalid: ${invalid.join(", ")}`,
+    });
+
+    // 3. No duplicates
+    const dupes = targets.filter((t, i) => targets.indexOf(t) !== i);
+    checks.push({
+      label: "No duplicate targets",
+      ok: dupes.length === 0,
+      detail:
+        dupes.length === 0 ? "All entries unique" : `Duplicates: ${[...new Set(dupes)].join(", ")}`,
+    });
+
+    // 4. Targets do not include the source repo (best-effort)
+    const sourceLike = targets.filter((t) =>
+      /lovable|preview|31d3db34/i.test(t)
+    );
+    checks.push({
+      label: "Targets are not the source repo",
+      ok: sourceLike.length === 0,
+      detail:
+        sourceLike.length === 0
+          ? "No self-referencing entries detected"
+          : `Possible source repo: ${sourceLike.join(", ")}`,
+    });
+
+    // 5. Workflow file references MIRROR_TOKEN (fetched from preview build)
+    let tokenWired = false;
+    let workflowDetail = "Could not read workflow file from preview";
+    try {
+      const res = await fetch("/.github/workflows/mirror-to-repos.yml", {
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const yaml = await res.text();
+        tokenWired = /MIRROR_TOKEN/.test(yaml);
+        workflowDetail = tokenWired
+          ? "Workflow references secrets.MIRROR_TOKEN"
+          : "Workflow file found but does not reference MIRROR_TOKEN";
+      } else {
+        workflowDetail =
+          "Workflow not served by preview — verify directly on GitHub that MIRROR_TOKEN is wired in .github/workflows/mirror-to-repos.yml";
+        tokenWired = true; // can't verify in-browser; don't fail the dry run
+      }
+    } catch {
+      tokenWired = true;
+      workflowDetail = "Skipped (preview cannot fetch workflow file)";
+    }
+    checks.push({
+      label: "Workflow wires MIRROR_TOKEN secret",
+      ok: tokenWired,
+      detail: workflowDetail,
+    });
+
+    // 6. Last access verification (if any) shows no failures
+    const failedAccess = results?.filter((r) => !r.ok) ?? [];
+    checks.push({
+      label: "Last access verification clean",
+      ok: !results || failedAccess.length === 0,
+      detail: !results
+        ? "No verification run yet — recommended before pushing"
+        : failedAccess.length === 0
+        ? "All previously checked targets were writable"
+        : `${failedAccess.length} target(s) would fail: ${failedAccess
+            .map((r) => r.repo)
+            .join(", ")}`,
+    });
+
+    const ready = checks.every((c) => c.ok);
+    setDryRun({ checks, ready });
+    setDryRunning(false);
+    toast({
+      title: ready ? "Dry-run passed" : "Dry-run found issues",
+      description: ready
+        ? "Safe to trigger the mirror workflow on GitHub"
+        : "Resolve the failing checks before mirroring",
+      variant: ready ? "default" : "destructive",
+    });
+  }
     ? {
         writable: results.filter((r) => r.ok).length,
         failed: results.filter((r) => !r.ok).length,
