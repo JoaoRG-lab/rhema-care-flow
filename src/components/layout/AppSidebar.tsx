@@ -155,7 +155,7 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
+      <nav className="flex-1 min-h-0 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">
           {currentNavItems.map((item) => {
             // Highlight "Specialties" entry on any specialty portal route
@@ -188,8 +188,8 @@ export function AppSidebar() {
         </ul>
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-sidebar-border p-3 space-y-1">
+      {/* Footer — scrollable when its content exceeds available height */}
+      <div className="border-t border-sidebar-border p-3 space-y-1 max-h-[45vh] overflow-y-auto shrink-0">
         {/* Blockchain status badge */}
         <div className="px-3 py-2 mb-2">
           <TrustBadge variant="blockchain" size="sm" />
