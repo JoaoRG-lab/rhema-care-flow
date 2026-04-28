@@ -18,6 +18,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Copy,
+  FlaskConical,
   GitBranch,
   KeyRound,
   Loader2,
