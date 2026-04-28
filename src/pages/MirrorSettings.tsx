@@ -271,6 +271,8 @@ export default function MirrorSettings() {
       variant: ready ? "default" : "destructive",
     });
   }
+
+  const summary = results
     ? {
         writable: results.filter((r) => r.ok).length,
         failed: results.filter((r) => !r.ok).length,
