@@ -1,0 +1,65 @@
+name: Mirror to external repos
+
+on:
+  push:
+    branches: ['**']
+    tags: ['**']
+  workflow_dispatch:
+
+concurrency:
+  group: mirror-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Load target repos
+        id: targets
+        run: |
+          if [ ! -f .github/mirror-targets.json ]; then
+            echo "No .github/mirror-targets.json found — nothing to mirror."
+            echo "list=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Extract "owner/repo" entries, one per line
+          mapfile -t REPOS < <(jq -r '.targets[]?' .github/mirror-targets.json)
+          if [ "${#REPOS[@]}" -eq 0 ]; then
+            echo "Target list is empty — nothing to mirror."
+          fi
+          printf '%s\n' "${REPOS[@]}"
+          {
+            echo 'list<<EOF'
+            printf '%s\n' "${REPOS[@]}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Verify MIRROR_TOKEN is set
+        if: steps.targets.outputs.list != ''
+        env:
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          if [ -z "${MIRROR_TOKEN}" ]; then
+            echo "::error::MIRROR_TOKEN secret is not configured. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "MIRROR_TOKEN is configured."
+
+      - name: Push to each target
+        if: steps.targets.outputs.list != ''
+        env:
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          set -e
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            echo "::group::Mirroring to $REPO"
+            REMOTE="https://x-access-token:${MIRROR_TOKEN}@github.com/${REPO}.git"
+            git push --prune "$REMOTE" "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
+            echo "::endgroup::"
+          done <<< "${{ steps.targets.outputs.list }}"

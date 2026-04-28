@@ -71,6 +71,7 @@ const AccountTypeSelect = lazy(() => import("./pages/AccountTypeSelect"));
 const Teleconsulta = lazy(() => import("./pages/Teleconsulta"));
 const ProntuarioIntegrado = lazy(() => import("./pages/ProntuarioIntegrado"));
 const ResearchHub = lazy(() => import("./pages/ResearchHub"));
+const MirrorSettings = lazy(() => import("./pages/MirrorSettings"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -183,6 +184,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
                     <Route path="/teleconsulta" element={<ClinicianRoute><Teleconsulta /></ClinicianRoute>} />
                     <Route path="/prontuario" element={<ProtectedRoute><ProntuarioIntegrado /></ProtectedRoute>} />
                     <Route path="/research-hub" element={<ProtectedRoute><ResearchHub /></ProtectedRoute>} />
+                    <Route path="/settings/mirror" element={<ProtectedRoute><MirrorSettings /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
