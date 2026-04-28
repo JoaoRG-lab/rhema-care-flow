@@ -1,0 +1,4 @@
+{
+  "$schema": "Mirror targets for .github/workflows/mirror-to-repos.yml",
+  "targets": []
+}
