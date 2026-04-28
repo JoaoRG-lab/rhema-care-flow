@@ -490,7 +490,7 @@ export default function MirrorSettings() {
 
       {/* Verification dialog */}
       <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Verify token access</DialogTitle>
             <DialogDescription>
