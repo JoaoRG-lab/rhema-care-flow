@@ -398,6 +398,40 @@ export default function MirrorSettings() {
             </div>
           )}
 
+          {dryRun && (
+            <div className="rounded-md border p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                {dryRun.ready ? (
+                  <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Ready to mirror
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    <XCircle className="h-3.5 w-3.5 mr-1" /> Not ready
+                  </Badge>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  Dry-run only — no pushes performed.
+                </span>
+              </div>
+              <ul className="space-y-1.5 text-sm">
+                {dryRun.checks.map((c) => (
+                  <li key={c.label} className="flex items-start gap-2">
+                    {c.ok ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-medium">{c.label}</p>
+                      <p className="text-xs text-muted-foreground">{c.detail}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {targets.length === 0 ? (
             <p className="text-sm text-muted-foreground">No targets yet. Add at least one repo.</p>
           ) : (
