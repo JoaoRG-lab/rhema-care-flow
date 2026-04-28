@@ -79,6 +79,14 @@ export default function MirrorSettings() {
   const [results, setResults] = useState<VerifyResult[] | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
+  // Dry-run state
+  interface DryRunCheck { label: string; ok: boolean; detail: string }
+  const [dryRun, setDryRun] = useState<{
+    checks: DryRunCheck[];
+    ready: boolean;
+  } | null>(null);
+  const [dryRunning, setDryRunning] = useState(false);
+
   useEffect(() => {
     setTargets(loadTargets());
   }, []);
