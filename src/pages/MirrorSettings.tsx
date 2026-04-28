@@ -324,19 +324,35 @@ export default function MirrorSettings() {
                 Format: <code className="text-xs">owner/repo</code> (no URL, no .git).
               </CardDescription>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setVerifyError(null);
-                setVerifyOpen(true);
-              }}
-              disabled={targets.length === 0}
-            >
-              <KeyRound className="h-4 w-4 mr-2" />
-              Verify access
-            </Button>
+            <div className="flex flex-wrap gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={runDryRun}
+                disabled={dryRunning}
+              >
+                {dryRunning ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FlaskConical className="h-4 w-4 mr-2" />
+                )}
+                Test mirror run
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setVerifyError(null);
+                  setVerifyOpen(true);
+                }}
+                disabled={targets.length === 0}
+              >
+                <KeyRound className="h-4 w-4 mr-2" />
+                Verify access
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
