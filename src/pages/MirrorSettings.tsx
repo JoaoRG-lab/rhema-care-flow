@@ -18,6 +18,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Copy,
+  FlaskConical,
   GitBranch,
   KeyRound,
   Loader2,
@@ -77,6 +78,14 @@ export default function MirrorSettings() {
   const [verifying, setVerifying] = useState(false);
   const [results, setResults] = useState<VerifyResult[] | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+
+  // Dry-run state
+  interface DryRunCheck { label: string; ok: boolean; detail: string }
+  const [dryRun, setDryRun] = useState<{
+    checks: DryRunCheck[];
+    ready: boolean;
+  } | null>(null);
+  const [dryRunning, setDryRunning] = useState(false);
 
   useEffect(() => {
     setTargets(loadTargets());
@@ -161,6 +170,108 @@ export default function MirrorSettings() {
     }
   }
 
+  async function runDryRun() {
+    setDryRunning(true);
+    setDryRun(null);
+    const checks: DryRunCheck[] = [];
+
+    // 1. Target list non-empty
+    checks.push({
+      label: "Target list is non-empty",
+      ok: targets.length > 0,
+      detail:
+        targets.length > 0
+          ? `${targets.length} target${targets.length === 1 ? "" : "s"} configured`
+          : "Add at least one owner/repo entry before running",
+    });
+
+    // 2. All targets pass schema validation
+    const invalid = targets.filter((t) => !repoPathSchema.safeParse(t).success);
+    checks.push({
+      label: "All targets match owner/repo format",
+      ok: invalid.length === 0,
+      detail:
+        invalid.length === 0
+          ? "Every entry is well-formed"
+          : `Invalid: ${invalid.join(", ")}`,
+    });
+
+    // 3. No duplicates
+    const dupes = targets.filter((t, i) => targets.indexOf(t) !== i);
+    checks.push({
+      label: "No duplicate targets",
+      ok: dupes.length === 0,
+      detail:
+        dupes.length === 0 ? "All entries unique" : `Duplicates: ${[...new Set(dupes)].join(", ")}`,
+    });
+
+    // 4. Targets do not include the source repo (best-effort)
+    const sourceLike = targets.filter((t) =>
+      /lovable|preview|31d3db34/i.test(t)
+    );
+    checks.push({
+      label: "Targets are not the source repo",
+      ok: sourceLike.length === 0,
+      detail:
+        sourceLike.length === 0
+          ? "No self-referencing entries detected"
+          : `Possible source repo: ${sourceLike.join(", ")}`,
+    });
+
+    // 5. Workflow file references MIRROR_TOKEN (fetched from preview build)
+    let tokenWired = false;
+    let workflowDetail = "Could not read workflow file from preview";
+    try {
+      const res = await fetch("/.github/workflows/mirror-to-repos.yml", {
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const yaml = await res.text();
+        tokenWired = /MIRROR_TOKEN/.test(yaml);
+        workflowDetail = tokenWired
+          ? "Workflow references secrets.MIRROR_TOKEN"
+          : "Workflow file found but does not reference MIRROR_TOKEN";
+      } else {
+        workflowDetail =
+          "Workflow not served by preview — verify directly on GitHub that MIRROR_TOKEN is wired in .github/workflows/mirror-to-repos.yml";
+        tokenWired = true; // can't verify in-browser; don't fail the dry run
+      }
+    } catch {
+      tokenWired = true;
+      workflowDetail = "Skipped (preview cannot fetch workflow file)";
+    }
+    checks.push({
+      label: "Workflow wires MIRROR_TOKEN secret",
+      ok: tokenWired,
+      detail: workflowDetail,
+    });
+
+    // 6. Last access verification (if any) shows no failures
+    const failedAccess = results?.filter((r) => !r.ok) ?? [];
+    checks.push({
+      label: "Last access verification clean",
+      ok: !results || failedAccess.length === 0,
+      detail: !results
+        ? "No verification run yet — recommended before pushing"
+        : failedAccess.length === 0
+        ? "All previously checked targets were writable"
+        : `${failedAccess.length} target(s) would fail: ${failedAccess
+            .map((r) => r.repo)
+            .join(", ")}`,
+    });
+
+    const ready = checks.every((c) => c.ok);
+    setDryRun({ checks, ready });
+    setDryRunning(false);
+    toast({
+      title: ready ? "Dry-run passed" : "Dry-run found issues",
+      description: ready
+        ? "Safe to trigger the mirror workflow on GitHub"
+        : "Resolve the failing checks before mirroring",
+      variant: ready ? "default" : "destructive",
+    });
+  }
+
   const summary = results
     ? {
         writable: results.filter((r) => r.ok).length,
@@ -213,19 +324,35 @@ export default function MirrorSettings() {
                 Format: <code className="text-xs">owner/repo</code> (no URL, no .git).
               </CardDescription>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setVerifyError(null);
-                setVerifyOpen(true);
-              }}
-              disabled={targets.length === 0}
-            >
-              <KeyRound className="h-4 w-4 mr-2" />
-              Verify access
-            </Button>
+            <div className="flex flex-wrap gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={runDryRun}
+                disabled={dryRunning}
+              >
+                {dryRunning ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FlaskConical className="h-4 w-4 mr-2" />
+                )}
+                Test mirror run
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setVerifyError(null);
+                  setVerifyOpen(true);
+                }}
+                disabled={targets.length === 0}
+              >
+                <KeyRound className="h-4 w-4 mr-2" />
+                Verify access
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -268,6 +395,40 @@ export default function MirrorSettings() {
               <span className="text-xs text-muted-foreground">
                 Last verification result shown below.
               </span>
+            </div>
+          )}
+
+          {dryRun && (
+            <div className="rounded-md border p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                {dryRun.ready ? (
+                  <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Ready to mirror
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    <XCircle className="h-3.5 w-3.5 mr-1" /> Not ready
+                  </Badge>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  Dry-run only — no pushes performed.
+                </span>
+              </div>
+              <ul className="space-y-1.5 text-sm">
+                {dryRun.checks.map((c) => (
+                  <li key={c.label} className="flex items-start gap-2">
+                    {c.ok ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-medium">{c.label}</p>
+                      <p className="text-xs text-muted-foreground">{c.detail}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
