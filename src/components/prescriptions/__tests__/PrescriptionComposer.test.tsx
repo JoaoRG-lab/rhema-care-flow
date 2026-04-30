@@ -311,6 +311,12 @@ describe('PrescriptionComposer', () => {
     await user.type(drugs[1], 'Drug-B');
     await user.type(drugs[2], 'Drug-C');
 
+    // Doses are required by validation — fill all rows so save proceeds.
+    const doses = getDoseInputs();
+    await user.type(doses[0], '1 mg');
+    await user.type(doses[1], '2 mg');
+    await user.type(doses[2], '3 mg');
+
     const instructions = getInstructionInputs();
     expect(instructions).toHaveLength(3);
     await user.type(instructions[0], 'after-meal-A');
