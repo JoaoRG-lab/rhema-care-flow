@@ -161,6 +161,21 @@ export function generatePrescriptionPdf(
     itemCount: Array.isArray(rx?.items) ? rx.items.length : 0,
     patientCode,
   });
+
+  // ── Pre-flight validation ────────────────────────────────────────────────
+  // Stop generation early when required fields are missing or malformed so
+  // we never produce a PDF with empty drug rows, missing signatures, etc.
+  const validation = validatePrescriptionForExport(rx, patientCode);
+  if (!validation.ok) {
+    rxLog.error('pdf:failed', {
+      rxId: rx?.id,
+      patientCode,
+      reason: 'validation',
+      issues: validation.issues,
+    });
+    throw new PrescriptionValidationError(validation.issues);
+  }
+
   try {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const clinicianName = rx.signed_by_name ?? 'Profissional de Saúde';
