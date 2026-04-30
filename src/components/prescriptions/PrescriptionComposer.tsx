@@ -231,7 +231,7 @@ function validateItems(items: RowItem[]): Record<string, RowErrors> {
 
 
 export function PrescriptionComposer({
-  patientCode, onSaveDraft, onSaveAndSign, saving = false,
+  patientCode, onSaveDraft, onSaveAndSign, saving = false, onDirtyChange,
 }: PrescriptionComposerProps) {
   const [items, setItems] = useState<RowItem[]>(() => [emptyItem()]);
   const [cid10, setCid10] = useState('');
@@ -239,6 +239,13 @@ export function PrescriptionComposer({
   // Errors are only displayed after the first save attempt so users aren't
   // confronted with red fields on a brand-new empty form.
   const [showErrors, setShowErrors] = useState(false);
+
+  // Notify the host every time the dirty state flips, so it can decide
+  // whether to show an unsaved-changes confirmation on close.
+  const dirty = isComposerDirty(items, cid10, notes);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
 
   const resetForm = () => {
     setItems([emptyItem()]);
