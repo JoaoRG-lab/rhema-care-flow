@@ -200,42 +200,60 @@ const stripId = (rows: RowItem[]): PrescriptionItem[] =>
   rows.map(({ _id, ...rest }) => rest);
 
 
+// Per-row validation rules. Drug, dose and frequency are mandatory because
+// without them a prescription cannot be safely dispensed. Returns a map of
+// row `_id` → { field: message }.
+function validateItems(items: RowItem[]): Record<string, RowErrors> {
+  const out: Record<string, RowErrors> = {};
+  items.forEach((it) => {
+    const e: RowErrors = {};
+    if (!it.drug.trim())      e.drug = 'Informe o medicamento.';
+    if (!it.dose.trim())      e.dose = 'Informe a dose.';
+    if (!it.frequency.trim()) e.frequency = 'Selecione a frequência.';
+    if (e.drug || e.dose || e.frequency) out[it._id] = e;
+  });
+  return out;
+}
+
+
 export function PrescriptionComposer({
   patientCode, onSaveDraft, onSaveAndSign, saving = false,
 }: PrescriptionComposerProps) {
   const [items, setItems] = useState<RowItem[]>(() => [emptyItem()]);
   const [cid10, setCid10] = useState('');
   const [notes, setNotes] = useState('');
+  // Errors are only displayed after the first save attempt so users aren't
+  // confronted with red fields on a brand-new empty form.
+  const [showErrors, setShowErrors] = useState(false);
 
-  // Reset all local state to a clean slate. Used after a successful save so
-  // the next time the composer opens (or stays open) it doesn't show stale
-  // values, and so duplicate submissions can't reuse the same row ids.
   const resetForm = () => {
     setItems([emptyItem()]);
     setCid10('');
     setNotes('');
+    setShowErrors(false);
   };
 
   const addItem = () => setItems(v => [...v, emptyItem()]);
 
-  // Remove by stable id rather than index — using index together with
-  // `key={index}` caused React to recycle the wrong child component, which
-  // made fields appear to revert or duplicate after deleting a row.
   const removeItem = (id: string) =>
     setItems(v => v.filter(item => item._id !== id));
 
   const updateItem = (id: string, field: keyof PrescriptionItem, value: string) =>
     setItems(v => v.map(item => item._id === id ? { ...item, [field]: value } : item));
 
-  const hasItems = items.some(it => it.drug.trim());
+  const errorsByRow = validateItems(items);
+  const errorCount = Object.keys(errorsByRow).length;
+  const isValid = errorCount === 0;
 
   const handleSaveDraft = async () => {
+    if (!isValid) { setShowErrors(true); return; }
     const payload = stripId(items);
     await onSaveDraft(payload, notes, cid10);
     resetForm();
   };
 
   const handleSaveAndSign = async () => {
+    if (!isValid) { setShowErrors(true); return; }
     const payload = stripId(items);
     await onSaveAndSign(payload, notes, cid10);
     resetForm();
@@ -280,6 +298,8 @@ export function PrescriptionComposer({
                   onChange={(f, v) => updateItem(item._id, f, v)}
                   onRemove={() => removeItem(item._id)}
                   isOnly={items.length === 1}
+                  errors={errorsByRow[item._id] ?? {}}
+                  showErrors={showErrors}
                 />
               ))}
             </div>
@@ -296,11 +316,21 @@ export function PrescriptionComposer({
             className="mt-1 min-h-[72px] resize-none" />
         </div>
 
+        {/* Form-level error summary, visible only after a save attempt. */}
+        {showErrors && !isValid && (
+          <div
+            role="alert"
+            className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            Verifique {errorCount === 1 ? 'o medicamento destacado' : `os ${errorCount} medicamentos destacados`}: medicamento, dose e frequência são obrigatórios.
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <Button
             type="button" variant="outline" className="gap-2 flex-1"
-            disabled={!hasItems || saving}
+            disabled={saving}
             onClick={handleSaveDraft}
           >
             <Save className="h-4 w-4" />
@@ -308,7 +338,7 @@ export function PrescriptionComposer({
           </Button>
           <Button
             type="button" className="gap-2 flex-1 bg-gradient-to-r from-primary to-teal-500 hover:opacity-90"
-            disabled={!hasItems || saving}
+            disabled={saving}
             onClick={handleSaveAndSign}
           >
             <PenLine className="h-4 w-4" />
