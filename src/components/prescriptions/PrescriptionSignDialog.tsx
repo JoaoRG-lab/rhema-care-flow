@@ -49,22 +49,23 @@ export function PrescriptionSignDialog({
     setSigning(false);
   };
 
-  // Fully reset whenever the dialog reopens so a previous session's
-  // name/CRM/PIN/signature don't leak into the next prescription. Also
-  // pulls in `fullName` once the verification hook resolves async.
+  // Fully reset every local field whenever the dialog closes so a previous
+  // session's name/CRM/PIN/signature/step/error/signing flag cannot leak
+  // into the next prescription. We reset on close (rather than only on
+  // open) so the UI also clears immediately as the closing animation runs,
+  // and so a parent that keeps this component mounted across opens still
+  // sees a clean slate on the next open.
   useEffect(() => {
-    if (open) {
-      setStep('identity');
-      setPin('');
-      setPinConfirm('');
-      setSignatureDataUrl(null);
-      setError('');
-      setSigning(false);
-      // Only seed from verification profile if the user hasn't typed yet.
-      setName(prev => prev.trim() ? prev : (fullName ?? ''));
+    if (!open) {
+      reset();
+      return;
     }
+    // On open: seed `name` from the verification profile once it resolves,
+    // but only if the user hasn't already typed something this session.
+    setName(prev => prev.trim() ? prev : (fullName ?? ''));
     // We deliberately key on `open` and `fullName` only; `prescriptionId`
     // change while open should NOT clobber an in-progress signature.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, fullName]);
 
 
