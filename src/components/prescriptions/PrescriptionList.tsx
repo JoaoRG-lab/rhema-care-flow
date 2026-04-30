@@ -175,8 +175,31 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
           onSaveDraft={handleSaveDraft}
           onSaveAndSign={handleSaveAndSign}
           saving={saving}
+          onDirtyChange={setComposerDirty}
         />
       )}
+
+      {/* Unsaved-changes confirmation — fires only when the user closes the
+          composer with typed-but-unsaved edits. */}
+      <AlertDialog open={confirmDiscardOpen} onOpenChange={setConfirmDiscardOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem medicamentos, dose ou observações não salvos. Se fechar o editor agora, esses dados serão perdidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={discardAndClose}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Descartar e fechar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Skeleton */}
       {loading && (
