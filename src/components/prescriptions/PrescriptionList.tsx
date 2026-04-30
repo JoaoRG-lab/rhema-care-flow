@@ -136,7 +136,7 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
             </Badge>
           )}
         </div>
-        <Button size="sm" onClick={() => setComposerOpen(v => !v)} className="gap-2">
+        <Button size="sm" onClick={handleToggleComposer} className="gap-2">
           <ClipboardPlus className="h-4 w-4" />
           {composerOpen ? 'Fechar editor' : 'Nova prescrição'}
         </Button>
