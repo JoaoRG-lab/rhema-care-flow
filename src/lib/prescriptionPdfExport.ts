@@ -9,6 +9,10 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Prescription, PrescriptionItem } from '@/hooks/usePrescriptions';
 import { rxLog, describeError } from '@/lib/prescriptionLogger';
+import {
+  validatePrescriptionForExport,
+  PrescriptionValidationError,
+} from '@/lib/prescriptionValidation';
 
 const PRIMARY: [number, number, number] = [15, 118, 110];  // teal-700
 const WHITE:   [number, number, number] = [255, 255, 255];
