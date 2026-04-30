@@ -297,15 +297,6 @@ describe('PrescriptionComposer', () => {
     // Make sure stale values from the first submission did not leak through
     expect(items2.some((it: { drug: string }) => it.drug === 'Metotrexato')).toBe(false);
     expect(items2.some((it: { drug: string }) => it.drug === 'Ácido Fólico')).toBe(false);
-
-    expect(onSaveDraft).toHaveBeenCalledTimes(2);
-    const [items2] = onSaveDraft.mock.calls[1];
-    expect(items2).toHaveLength(1);
-    expect(items2[0].drug).toBe('Prednisona');
-    // Make sure stale values from the first submission did not leak through
-    expect(items2[0].dose).toBe('');
-    expect(items2.some((it: { drug: string }) => it.drug === 'Metotrexato')).toBe(false);
-    expect(items2.some((it: { drug: string }) => it.drug === 'Ácido Fólico')).toBe(false);
   });
 
   it('keeps per-row instructions independent (no field bleed across rows)', async () => {
