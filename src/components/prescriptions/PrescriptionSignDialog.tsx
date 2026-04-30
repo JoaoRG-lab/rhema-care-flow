@@ -3,7 +3,7 @@
  * Modal for digitally signing a prescription.
  * Steps: 1) Identify (name + CRM + PIN) → 2) Draw signature → 3) Confirm
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -40,12 +40,33 @@ export function PrescriptionSignDialog({
 
   const reset = () => {
     setStep('identity');
+    setName(fullName ?? '');
+    setCrm('');
     setPin('');
     setPinConfirm('');
     setSignatureDataUrl(null);
     setError('');
     setSigning(false);
   };
+
+  // Fully reset whenever the dialog reopens so a previous session's
+  // name/CRM/PIN/signature don't leak into the next prescription. Also
+  // pulls in `fullName` once the verification hook resolves async.
+  useEffect(() => {
+    if (open) {
+      setStep('identity');
+      setPin('');
+      setPinConfirm('');
+      setSignatureDataUrl(null);
+      setError('');
+      setSigning(false);
+      // Only seed from verification profile if the user hasn't typed yet.
+      setName(prev => prev.trim() ? prev : (fullName ?? ''));
+    }
+    // We deliberately key on `open` and `fullName` only; `prescriptionId`
+    // change while open should NOT clobber an in-progress signature.
+  }, [open, fullName]);
+
 
   const handleIdentityNext = () => {
     if (!name.trim()) { setError('Informe seu nome completo.'); return; }

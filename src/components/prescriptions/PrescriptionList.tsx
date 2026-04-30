@@ -36,21 +36,30 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
 
   useEffect(() => { fetchPrescriptions(); }, [fetchPrescriptions]);
 
-  // Save as draft
+  // Save as draft. Only close the composer on a successful insert — otherwise
+  // the user keeps their input and sees the toast error from the hook.
   const handleSaveDraft = async (items: PrescriptionItem[], notes: string, cid10: string) => {
     setSaving(true);
-    await createPrescription({ patient_id: patientId, items, notes, cid10, status: 'draft' });
-    setSaving(false);
-    setComposerOpen(false);
+    try {
+      const rx = await createPrescription({ patient_id: patientId, items, notes, cid10, status: 'draft' });
+      if (rx) setComposerOpen(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Save + open sign dialog immediately
+  // Save + open sign dialog immediately on success.
   const handleSaveAndSign = async (items: PrescriptionItem[], notes: string, cid10: string) => {
     setSaving(true);
-    const rx = await createPrescription({ patient_id: patientId, items, notes, cid10, status: 'draft' });
-    setSaving(false);
-    setComposerOpen(false);
-    if (rx) setPendingSign(rx.id);
+    try {
+      const rx = await createPrescription({ patient_id: patientId, items, notes, cid10, status: 'draft' });
+      if (rx) {
+        setComposerOpen(false);
+        setPendingSign(rx.id);
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSign = async (id: string, dataUrl: string, name: string, crm: string) => {

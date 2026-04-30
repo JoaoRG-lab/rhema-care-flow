@@ -4,7 +4,7 @@
  * – Dynamic drug items (add/remove)
  * – CID-10 field, notes, and draft/sign flow
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,9 +30,24 @@ const ROUTE_OPTIONS = ['Oral', 'IV', 'IM', 'SC', 'Tópico', 'Inalatório', 'Subl
 const FREQ_OPTIONS  = ['1x ao dia', '2x ao dia', '3x ao dia', '4x ao dia', 'Em dias alternados', '1x por semana', 'Dose única'];
 const DUR_OPTIONS   = ['7 dias', '14 dias', '30 dias', '60 dias', '90 dias', 'Uso contínuo', 'Conforme necessário'];
 
-const emptyItem = (): PrescriptionItem => ({
+/**
+ * Internal row representation. Each row carries a stable client-side `_id`
+ * so React can track it across add/remove without leaking child state
+ * (collapse flag, suggestion popover, focus) into the wrong row — that was
+ * the root cause of fields appearing to revert or duplicate after edits.
+ */
+type RowItem = PrescriptionItem & { _id: string };
+
+const newId = () =>
+  (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+    ? crypto.randomUUID()
+    : `row_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+const emptyItem = (): RowItem => ({
+  _id: newId(),
   drug: '', dose: '', route: 'Oral', frequency: '1x ao dia', duration: '30 dias', instructions: '',
 });
+
 
 interface PrescriptionComposerProps {
   patientCode: string;
@@ -44,7 +59,7 @@ interface PrescriptionComposerProps {
 function ItemRow({
   item, index, onChange, onRemove, isOnly,
 }: {
-  item: PrescriptionItem; index: number;
+  item: RowItem; index: number;
   onChange: (field: keyof PrescriptionItem, value: string) => void;
   onRemove: () => void; isOnly: boolean;
 }) {
@@ -148,19 +163,51 @@ function ItemRow({
   );
 }
 
+/** Strip the internal `_id` so callers receive the clean payload shape. */
+const stripId = (rows: RowItem[]): PrescriptionItem[] =>
+  rows.map(({ _id, ...rest }) => rest);
+
+
 export function PrescriptionComposer({
   patientCode, onSaveDraft, onSaveAndSign, saving = false,
 }: PrescriptionComposerProps) {
-  const [items, setItems] = useState<PrescriptionItem[]>([emptyItem()]);
+  const [items, setItems] = useState<RowItem[]>(() => [emptyItem()]);
   const [cid10, setCid10] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Reset all local state to a clean slate. Used after a successful save so
+  // the next time the composer opens (or stays open) it doesn't show stale
+  // values, and so duplicate submissions can't reuse the same row ids.
+  const resetForm = () => {
+    setItems([emptyItem()]);
+    setCid10('');
+    setNotes('');
+  };
+
   const addItem = () => setItems(v => [...v, emptyItem()]);
-  const removeItem = (i: number) => setItems(v => v.filter((_, idx) => idx !== i));
-  const updateItem = (i: number, field: keyof PrescriptionItem, value: string) =>
-    setItems(v => v.map((item, idx) => idx === i ? { ...item, [field]: value } : item));
+
+  // Remove by stable id rather than index — using index together with
+  // `key={index}` caused React to recycle the wrong child component, which
+  // made fields appear to revert or duplicate after deleting a row.
+  const removeItem = (id: string) =>
+    setItems(v => v.filter(item => item._id !== id));
+
+  const updateItem = (id: string, field: keyof PrescriptionItem, value: string) =>
+    setItems(v => v.map(item => item._id === id ? { ...item, [field]: value } : item));
 
   const hasItems = items.some(it => it.drug.trim());
+
+  const handleSaveDraft = async () => {
+    const payload = stripId(items);
+    await onSaveDraft(payload, notes, cid10);
+    resetForm();
+  };
+
+  const handleSaveAndSign = async () => {
+    const payload = stripId(items);
+    await onSaveAndSign(payload, notes, cid10);
+    resetForm();
+  };
 
   return (
     <Card className="shadow-sm">
@@ -187,7 +234,7 @@ export function PrescriptionComposer({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-semibold">Medicamentos</Label>
-            <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-1.5">
+            <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-1.5" disabled={saving}>
               <Plus className="h-3.5 w-3.5" /> Adicionar item
             </Button>
           </div>
@@ -195,9 +242,11 @@ export function PrescriptionComposer({
             <div className="space-y-3">
               {items.map((item, i) => (
                 <ItemRow
-                  key={i} item={item} index={i}
-                  onChange={(f, v) => updateItem(i, f, v)}
-                  onRemove={() => removeItem(i)}
+                  key={item._id}
+                  item={item}
+                  index={i}
+                  onChange={(f, v) => updateItem(item._id, f, v)}
+                  onRemove={() => removeItem(item._id)}
                   isOnly={items.length === 1}
                 />
               ))}
@@ -220,7 +269,7 @@ export function PrescriptionComposer({
           <Button
             type="button" variant="outline" className="gap-2 flex-1"
             disabled={!hasItems || saving}
-            onClick={() => onSaveDraft(items, notes, cid10)}
+            onClick={handleSaveDraft}
           >
             <Save className="h-4 w-4" />
             Salvar Rascunho
@@ -228,7 +277,7 @@ export function PrescriptionComposer({
           <Button
             type="button" className="gap-2 flex-1 bg-gradient-to-r from-primary to-teal-500 hover:opacity-90"
             disabled={!hasItems || saving}
-            onClick={() => onSaveAndSign(items, notes, cid10)}
+            onClick={handleSaveAndSign}
           >
             <PenLine className="h-4 w-4" />
             Salvar e Assinar
@@ -238,3 +287,4 @@ export function PrescriptionComposer({
     </Card>
   );
 }
+
