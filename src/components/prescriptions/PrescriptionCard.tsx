@@ -33,13 +33,23 @@ interface PrescriptionCardProps {
   onSign: (id: string, dataUrl: string, name: string, crm: string) => Promise<boolean>;
   onCancel: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onPdfError?: (rxId: string, message: string) => void;
 }
 
-export function PrescriptionCard({ rx, patientCode, onSign, onCancel, onDelete }: PrescriptionCardProps) {
+export function PrescriptionCard({ rx, patientCode, onSign, onCancel, onDelete, onPdfError }: PrescriptionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [signOpen, setSignOpen] = useState(false);
   const cfg = STATUS_CONFIG[rx.status];
   const Icon = cfg.icon;
+
+  const handleDownloadPdf = () => {
+    try {
+      generatePrescriptionPdf(rx, patientCode);
+    } catch (e: any) {
+      const message = e?.message ?? 'Falha ao gerar PDF';
+      onPdfError?.(rx.id, message);
+    }
+  };
 
   return (
     <>
@@ -89,7 +99,7 @@ export function PrescriptionCard({ rx, patientCode, onSign, onCancel, onDelete }
                       <PenLine className="h-4 w-4" /> Assinar
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => generatePrescriptionPdf(rx, patientCode)} className="gap-2">
+                  <DropdownMenuItem onClick={handleDownloadPdf} className="gap-2">
                     <Download className="h-4 w-4" /> Baixar PDF
                   </DropdownMenuItem>
                   {rx.status !== 'cancelled' && (
