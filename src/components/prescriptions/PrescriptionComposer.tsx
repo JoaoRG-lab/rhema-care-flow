@@ -59,7 +59,7 @@ interface PrescriptionComposerProps {
 function ItemRow({
   item, index, onChange, onRemove, isOnly,
 }: {
-  item: PrescriptionItem; index: number;
+  item: RowItem; index: number;
   onChange: (field: keyof PrescriptionItem, value: string) => void;
   onRemove: () => void; isOnly: boolean;
 }) {
@@ -162,6 +162,11 @@ function ItemRow({
     </div>
   );
 }
+
+/** Strip the internal `_id` so callers receive the clean payload shape. */
+const stripId = (rows: RowItem[]): PrescriptionItem[] =>
+  rows.map(({ _id, ...rest }) => rest);
+
 
 export function PrescriptionComposer({
   patientCode, onSaveDraft, onSaveAndSign, saving = false,
