@@ -12,7 +12,7 @@ import type { PrescriptionItem } from '@/hooks/usePrescriptions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ClipboardPlus, ChevronDown, ChevronUp, ClipboardList, ShieldAlert } from 'lucide-react';
+import { ClipboardPlus, ChevronDown, ChevronUp, ClipboardList, ShieldAlert, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PrescriptionListProps {
@@ -23,6 +23,7 @@ interface PrescriptionListProps {
 export function PrescriptionList({ patientId, patientCode }: PrescriptionListProps) {
   const {
     prescriptions, loading,
+    lastError, clearLastError,
     fetchPrescriptions,
     createPrescription,
     signPrescription,
@@ -33,8 +34,19 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
   const [composerOpen, setComposerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingSign, setPendingSign] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<{ rxId: string; message: string } | null>(null);
 
   useEffect(() => { fetchPrescriptions(); }, [fetchPrescriptions]);
+
+  const handlePdfError = (rxId: string, message: string) => {
+    setPdfError({ rxId, message });
+  };
+
+  const banner = pdfError
+    ? { stage: 'pdf', message: pdfError.message, onDismiss: () => setPdfError(null) }
+    : lastError
+    ? { stage: lastError.stage, message: lastError.message, onDismiss: clearLastError }
+    : null;
 
   // Save as draft. Only close the composer on a successful insert — otherwise
   // the user keeps their input and sees the toast error from the hook.
@@ -92,6 +104,32 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
         </Button>
       </div>
 
+      {/* Error banner — surfaces last hook error or PDF generation failure */}
+      {banner && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm"
+        >
+          <AlertTriangle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-destructive">
+              Falha em prescrição ({banner.stage})
+            </p>
+            <p className="text-destructive/90 break-words">{banner.message}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Detalhes completos no console do navegador (filtre por <code>[Rx:</code>).
+            </p>
+          </div>
+          <button
+            onClick={banner.onDismiss}
+            className="text-destructive/70 hover:text-destructive shrink-0"
+            aria-label="Fechar aviso"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Composer */}
       {composerOpen && (
         <PrescriptionComposer
@@ -125,7 +163,8 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
         <Section title="Rascunhos" icon={<ShieldAlert className="h-4 w-4 text-amber-500" />} defaultOpen count={draft.length}>
           {draft.map(rx => (
             <PrescriptionCard key={rx.id} rx={rx} patientCode={patientCode}
-              onSign={handleSign} onCancel={cancelPrescription} onDelete={deletePrescription} />
+              onSign={handleSign} onCancel={cancelPrescription} onDelete={deletePrescription}
+              onPdfError={handlePdfError} />
           ))}
         </Section>
       )}
@@ -135,7 +174,8 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
         <Section title="Prescrições Assinadas" icon={<ClipboardList className="h-4 w-4 text-primary" />} defaultOpen count={active.length}>
           {active.map(rx => (
             <PrescriptionCard key={rx.id} rx={rx} patientCode={patientCode}
-              onSign={handleSign} onCancel={cancelPrescription} onDelete={deletePrescription} />
+              onSign={handleSign} onCancel={cancelPrescription} onDelete={deletePrescription}
+              onPdfError={handlePdfError} />
           ))}
         </Section>
       )}
@@ -145,12 +185,11 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
         <Section title="Canceladas" icon={<ClipboardList className="h-4 w-4 text-muted-foreground" />} defaultOpen={false} count={archived.length}>
           {archived.map(rx => (
             <PrescriptionCard key={rx.id} rx={rx} patientCode={patientCode}
-              onSign={handleSign} onCancel={cancelPrescription} onDelete={deletePrescription} />
+              onSign={handleSign} onCancel={cancelPrescription} onDelete={deletePrescription}
+              onPdfError={handlePdfError} />
           ))}
         </Section>
       )}
-
-      {/* Deferred sign dialog (after save-and-sign) */}
       {pendingSign && (
         <PrescriptionSignDialog
           open={!!pendingSign}

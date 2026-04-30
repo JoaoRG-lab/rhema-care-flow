@@ -8,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Prescription, PrescriptionItem } from '@/hooks/usePrescriptions';
+import { rxLog, describeError } from '@/lib/prescriptionLogger';
 
 const PRIMARY: [number, number, number] = [15, 118, 110];  // teal-700
 const WHITE:   [number, number, number] = [255, 255, 255];
@@ -150,45 +151,57 @@ export function generatePrescriptionPdf(
   rx: Prescription,
   patientCode: string,
 ): void {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const clinicianName = rx.signed_by_name ?? 'Profissional de Saúde';
-  const crm = rx.signed_by_crm ?? '';
-
-  let y = drawHeader(doc, patientCode, clinicianName, crm);
-
-  // CID-10 if present
-  if (rx.cid10) {
-    doc.setFontSize(8.5);
-    doc.setTextColor(...GRAY);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`Diagnóstico (CID-10): ${rx.cid10}`, 14, y);
-    y += 8;
-  }
-
-  // Items
-  doc.setFont('helvetica', 'normal');
-  (rx.items ?? []).forEach((item, i) => {
-    if (y > 250) { doc.addPage(); y = 20; }
-    y = drawItem(doc, item, i, y);
+  rxLog.info('pdf:start', {
+    rxId: rx?.id,
+    status: rx?.status,
+    itemCount: Array.isArray(rx?.items) ? rx.items.length : 0,
+    patientCode,
   });
+  try {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const clinicianName = rx.signed_by_name ?? 'Profissional de Saúde';
+    const crm = rx.signed_by_crm ?? '';
 
-  // Notes
-  if (rx.notes?.trim()) {
-    y += 4;
-    doc.setFillColor(...LIGHT);
-    const w = doc.internal.pageSize.getWidth();
-    doc.roundedRect(14, y, w - 28, 16, 1.5, 1.5, 'F');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...GRAY);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Observações:', 18, y + 5.5);
+    let y = drawHeader(doc, patientCode, clinicianName, crm);
+
+    // CID-10 if present
+    if (rx.cid10) {
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`Diagnóstico (CID-10): ${rx.cid10}`, 14, y);
+      y += 8;
+    }
+
+    // Items
     doc.setFont('helvetica', 'normal');
-    doc.text(rx.notes, 18, y + 11, { maxWidth: w - 40 });
-    y += 22;
+    (rx.items ?? []).forEach((item, i) => {
+      if (y > 250) { doc.addPage(); y = 20; }
+      y = drawItem(doc, item, i, y);
+    });
+
+    // Notes
+    if (rx.notes?.trim()) {
+      y += 4;
+      doc.setFillColor(...LIGHT);
+      const w = doc.internal.pageSize.getWidth();
+      doc.roundedRect(14, y, w - 28, 16, 1.5, 1.5, 'F');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Observações:', 18, y + 5.5);
+      doc.setFont('helvetica', 'normal');
+      doc.text(rx.notes, 18, y + 11, { maxWidth: w - 40 });
+      y += 22;
+    }
+
+    drawSignatureBlock(doc, rx, y);
+
+    const filename = `prescricao_${patientCode}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`;
+    doc.save(filename);
+    rxLog.info('pdf:success', { rxId: rx?.id, filename });
+  } catch (e) {
+    rxLog.error('pdf:failed', { rxId: rx?.id, patientCode, error: describeError(e) });
+    throw e;
   }
-
-  drawSignatureBlock(doc, rx, y);
-
-  const filename = `prescricao_${patientCode}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`;
-  doc.save(filename);
 }
