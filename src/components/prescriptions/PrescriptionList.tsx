@@ -39,8 +39,42 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
   const [saving, setSaving] = useState(false);
   const [pendingSign, setPendingSign] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<{ rxId: string; message: string } | null>(null);
+  // Dirty flag is reported by the composer whenever the user has typed
+  // something that would be lost on close. Used to gate close attempts.
+  const [composerDirty, setComposerDirty] = useState(false);
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
   useEffect(() => { fetchPrescriptions(); }, [fetchPrescriptions]);
+
+  // Browser-level guard: if the user reloads or closes the tab with
+  // unsaved composer edits, show the native confirmation prompt.
+  useEffect(() => {
+    if (!composerOpen || !composerDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Most modern browsers ignore the custom string but require returnValue.
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [composerOpen, composerDirty]);
+
+  // Toolbar toggle: opens immediately, but on close asks for confirmation
+  // when the composer has unsaved edits.
+  const handleToggleComposer = () => {
+    if (composerOpen) {
+      if (composerDirty) { setConfirmDiscardOpen(true); return; }
+      setComposerOpen(false);
+    } else {
+      setComposerOpen(true);
+    }
+  };
+
+  const discardAndClose = () => {
+    setConfirmDiscardOpen(false);
+    setComposerDirty(false);
+    setComposerOpen(false);
+  };
 
   const handlePdfError = (rxId: string, message: string) => {
     setPdfError({ rxId, message });
