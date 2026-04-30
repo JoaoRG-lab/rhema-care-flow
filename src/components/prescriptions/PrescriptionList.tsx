@@ -12,6 +12,10 @@ import type { PrescriptionItem } from '@/hooks/usePrescriptions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ClipboardPlus, ChevronDown, ChevronUp, ClipboardList, ShieldAlert, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
