@@ -4,7 +4,7 @@
  * – Dynamic drug items (add/remove)
  * – CID-10 field, notes, and draft/sign flow
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,9 +30,24 @@ const ROUTE_OPTIONS = ['Oral', 'IV', 'IM', 'SC', 'Tópico', 'Inalatório', 'Subl
 const FREQ_OPTIONS  = ['1x ao dia', '2x ao dia', '3x ao dia', '4x ao dia', 'Em dias alternados', '1x por semana', 'Dose única'];
 const DUR_OPTIONS   = ['7 dias', '14 dias', '30 dias', '60 dias', '90 dias', 'Uso contínuo', 'Conforme necessário'];
 
-const emptyItem = (): PrescriptionItem => ({
+/**
+ * Internal row representation. Each row carries a stable client-side `_id`
+ * so React can track it across add/remove without leaking child state
+ * (collapse flag, suggestion popover, focus) into the wrong row — that was
+ * the root cause of fields appearing to revert or duplicate after edits.
+ */
+type RowItem = PrescriptionItem & { _id: string };
+
+const newId = () =>
+  (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+    ? crypto.randomUUID()
+    : `row_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+const emptyItem = (): RowItem => ({
+  _id: newId(),
   drug: '', dose: '', route: 'Oral', frequency: '1x ao dia', duration: '30 dias', instructions: '',
 });
+
 
 interface PrescriptionComposerProps {
   patientCode: string;
