@@ -286,7 +286,17 @@ describe('PrescriptionComposer', () => {
 
     // And the second save must NOT include any of the previous values
     await user.type(getDrugInputs()[0], 'Prednisona');
+    await user.type(getDoseInputs()[0], '20 mg');
     await user.click(screen.getByRole('button', { name: /Salvar Rascunho/i }));
+
+    expect(onSaveDraft).toHaveBeenCalledTimes(2);
+    const [items2] = onSaveDraft.mock.calls[1];
+    expect(items2).toHaveLength(1);
+    expect(items2[0].drug).toBe('Prednisona');
+    expect(items2[0].dose).toBe('20 mg');
+    // Make sure stale values from the first submission did not leak through
+    expect(items2.some((it: { drug: string }) => it.drug === 'Metotrexato')).toBe(false);
+    expect(items2.some((it: { drug: string }) => it.drug === 'Ácido Fólico')).toBe(false);
 
     expect(onSaveDraft).toHaveBeenCalledTimes(2);
     const [items2] = onSaveDraft.mock.calls[1];
