@@ -54,6 +54,20 @@ interface PrescriptionComposerProps {
   onSaveDraft: (items: PrescriptionItem[], notes: string, cid10: string) => Promise<void>;
   onSaveAndSign: (items: PrescriptionItem[], notes: string, cid10: string) => Promise<void>;
   saving?: boolean;
+  /**
+   * Fires whenever the composer transitions between "clean" (matches the
+   * pristine empty state) and "dirty" (has user-typed values). The host
+   * uses this to gate the close action with an unsaved-changes prompt.
+   */
+  onDirtyChange?: (dirty: boolean) => void;
+}
+
+/** True when the user has typed anything that would be lost on close. */
+function isComposerDirty(items: RowItem[], cid10: string, notes: string) {
+  if (cid10.trim() || notes.trim()) return true;
+  return items.some(it =>
+    it.drug.trim() || it.dose.trim() || it.instructions.trim(),
+  );
 }
 
 type RowErrors = { drug?: string; dose?: string; frequency?: string };
@@ -217,7 +231,7 @@ function validateItems(items: RowItem[]): Record<string, RowErrors> {
 
 
 export function PrescriptionComposer({
-  patientCode, onSaveDraft, onSaveAndSign, saving = false,
+  patientCode, onSaveDraft, onSaveAndSign, saving = false, onDirtyChange,
 }: PrescriptionComposerProps) {
   const [items, setItems] = useState<RowItem[]>(() => [emptyItem()]);
   const [cid10, setCid10] = useState('');
@@ -225,6 +239,13 @@ export function PrescriptionComposer({
   // Errors are only displayed after the first save attempt so users aren't
   // confronted with red fields on a brand-new empty form.
   const [showErrors, setShowErrors] = useState(false);
+
+  // Notify the host every time the dirty state flips, so it can decide
+  // whether to show an unsaved-changes confirmation on close.
+  const dirty = isComposerDirty(items, cid10, notes);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
 
   const resetForm = () => {
     setItems([emptyItem()]);

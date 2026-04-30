@@ -12,6 +12,10 @@ import type { PrescriptionItem } from '@/hooks/usePrescriptions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ClipboardPlus, ChevronDown, ChevronUp, ClipboardList, ShieldAlert, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,8 +39,42 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
   const [saving, setSaving] = useState(false);
   const [pendingSign, setPendingSign] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<{ rxId: string; message: string } | null>(null);
+  // Dirty flag is reported by the composer whenever the user has typed
+  // something that would be lost on close. Used to gate close attempts.
+  const [composerDirty, setComposerDirty] = useState(false);
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
   useEffect(() => { fetchPrescriptions(); }, [fetchPrescriptions]);
+
+  // Browser-level guard: if the user reloads or closes the tab with
+  // unsaved composer edits, show the native confirmation prompt.
+  useEffect(() => {
+    if (!composerOpen || !composerDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Most modern browsers ignore the custom string but require returnValue.
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [composerOpen, composerDirty]);
+
+  // Toolbar toggle: opens immediately, but on close asks for confirmation
+  // when the composer has unsaved edits.
+  const handleToggleComposer = () => {
+    if (composerOpen) {
+      if (composerDirty) { setConfirmDiscardOpen(true); return; }
+      setComposerOpen(false);
+    } else {
+      setComposerOpen(true);
+    }
+  };
+
+  const discardAndClose = () => {
+    setConfirmDiscardOpen(false);
+    setComposerDirty(false);
+    setComposerOpen(false);
+  };
 
   const handlePdfError = (rxId: string, message: string) => {
     setPdfError({ rxId, message });
@@ -98,7 +136,7 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
             </Badge>
           )}
         </div>
-        <Button size="sm" onClick={() => setComposerOpen(v => !v)} className="gap-2">
+        <Button size="sm" onClick={handleToggleComposer} className="gap-2">
           <ClipboardPlus className="h-4 w-4" />
           {composerOpen ? 'Fechar editor' : 'Nova prescrição'}
         </Button>
@@ -137,8 +175,31 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
           onSaveDraft={handleSaveDraft}
           onSaveAndSign={handleSaveAndSign}
           saving={saving}
+          onDirtyChange={setComposerDirty}
         />
       )}
+
+      {/* Unsaved-changes confirmation — fires only when the user closes the
+          composer with typed-but-unsaved edits. */}
+      <AlertDialog open={confirmDiscardOpen} onOpenChange={setConfirmDiscardOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem medicamentos, dose ou observações não salvos. Se fechar o editor agora, esses dados serão perdidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={discardAndClose}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Descartar e fechar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Skeleton */}
       {loading && (
