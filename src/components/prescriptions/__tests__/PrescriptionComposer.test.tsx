@@ -14,10 +14,9 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PrescriptionComposer } from '../PrescriptionComposer';
 
-// jsdom doesn't implement scrollIntoView used by Radix ScrollArea
+// jsdom doesn't implement scrollIntoView used by some Radix primitives
 beforeEach(() => {
-  // @ts-expect-error - polyfill
-  Element.prototype.scrollIntoView = vi.fn();
+  (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView = vi.fn();
 });
 
 function setup(overrides: Partial<React.ComponentProps<typeof PrescriptionComposer>> = {}) {
