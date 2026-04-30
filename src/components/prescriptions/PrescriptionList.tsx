@@ -12,7 +12,7 @@ import type { PrescriptionItem } from '@/hooks/usePrescriptions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ClipboardPlus, ChevronDown, ChevronUp, ClipboardList, ShieldAlert } from 'lucide-react';
+import { ClipboardPlus, ChevronDown, ChevronUp, ClipboardList, ShieldAlert, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PrescriptionListProps {
@@ -23,6 +23,7 @@ interface PrescriptionListProps {
 export function PrescriptionList({ patientId, patientCode }: PrescriptionListProps) {
   const {
     prescriptions, loading,
+    lastError, clearLastError,
     fetchPrescriptions,
     createPrescription,
     signPrescription,
@@ -33,8 +34,19 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
   const [composerOpen, setComposerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingSign, setPendingSign] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<{ rxId: string; message: string } | null>(null);
 
   useEffect(() => { fetchPrescriptions(); }, [fetchPrescriptions]);
+
+  const handlePdfError = (rxId: string, message: string) => {
+    setPdfError({ rxId, message });
+  };
+
+  const banner = pdfError
+    ? { stage: 'pdf', message: pdfError.message, onDismiss: () => setPdfError(null) }
+    : lastError
+    ? { stage: lastError.stage, message: lastError.message, onDismiss: clearLastError }
+    : null;
 
   // Save as draft. Only close the composer on a successful insert — otherwise
   // the user keeps their input and sees the toast error from the hook.
