@@ -9,6 +9,10 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Prescription, PrescriptionItem } from '@/hooks/usePrescriptions';
 import { rxLog, describeError } from '@/lib/prescriptionLogger';
+import {
+  validatePrescriptionForExport,
+  PrescriptionValidationError,
+} from '@/lib/prescriptionValidation';
 
 const PRIMARY: [number, number, number] = [15, 118, 110];  // teal-700
 const WHITE:   [number, number, number] = [255, 255, 255];
@@ -157,6 +161,21 @@ export function generatePrescriptionPdf(
     itemCount: Array.isArray(rx?.items) ? rx.items.length : 0,
     patientCode,
   });
+
+  // ── Pre-flight validation ────────────────────────────────────────────────
+  // Stop generation early when required fields are missing or malformed so
+  // we never produce a PDF with empty drug rows, missing signatures, etc.
+  const validation = validatePrescriptionForExport(rx, patientCode);
+  if (validation.ok === false) {
+    rxLog.error('pdf:failed', {
+      rxId: rx?.id,
+      patientCode,
+      reason: 'validation',
+      issues: validation.issues,
+    });
+    throw new PrescriptionValidationError(validation.issues);
+  }
+
   try {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const clinicianName = rx.signed_by_name ?? 'Profissional de Saúde';
