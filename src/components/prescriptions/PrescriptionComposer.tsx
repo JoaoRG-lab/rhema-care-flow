@@ -54,6 +54,20 @@ interface PrescriptionComposerProps {
   onSaveDraft: (items: PrescriptionItem[], notes: string, cid10: string) => Promise<void>;
   onSaveAndSign: (items: PrescriptionItem[], notes: string, cid10: string) => Promise<void>;
   saving?: boolean;
+  /**
+   * Fires whenever the composer transitions between "clean" (matches the
+   * pristine empty state) and "dirty" (has user-typed values). The host
+   * uses this to gate the close action with an unsaved-changes prompt.
+   */
+  onDirtyChange?: (dirty: boolean) => void;
+}
+
+/** True when the user has typed anything that would be lost on close. */
+function isComposerDirty(items: RowItem[], cid10: string, notes: string) {
+  if (cid10.trim() || notes.trim()) return true;
+  return items.some(it =>
+    it.drug.trim() || it.dose.trim() || it.instructions.trim(),
+  );
 }
 
 type RowErrors = { drug?: string; dose?: string; frequency?: string };
