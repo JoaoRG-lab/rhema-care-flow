@@ -105,6 +105,7 @@ describe('PrescriptionComposer', () => {
     const { onSaveAndSign } = setup();
 
     await user.type(screen.getByPlaceholderText(/Nome do medicamento/i), 'Prednisona');
+    await user.type(screen.getByPlaceholderText(/ex: 7,5 mg/i), '20 mg');
     await user.click(screen.getByRole('button', { name: /Salvar e Assinar/i }));
 
     expect(onSaveAndSign).toHaveBeenCalledTimes(1);
