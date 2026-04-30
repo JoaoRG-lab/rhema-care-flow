@@ -154,6 +154,15 @@ export function PrescriptionCard({ rx, patientCode, onSign, onCancel, onDelete, 
               )}
             </div>
           )}
+
+          {/* Debug panel — only when ?debug=1 or localStorage.rxDebug='1' */}
+          {debugEnabled && (
+            <PrescriptionDebugPanel
+              rx={rx}
+              source="db-row"
+              context={{ patientCode }}
+            />
+          )}
         </CardContent>
       </Card>
 
