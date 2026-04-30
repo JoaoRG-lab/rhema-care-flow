@@ -39,21 +39,33 @@ describe('PrescriptionComposer', () => {
     expect(screen.getByText(/Nova Prescrição — PT-0001/)).toBeInTheDocument();
   });
 
-  it('disables save buttons until a drug is named', async () => {
+  it('blocks save with inline errors when drug, dose or frequency are missing', async () => {
     const user = userEvent.setup();
-    setup();
+    const { onSaveDraft } = setup();
 
     const draftBtn = screen.getByRole('button', { name: /Salvar Rascunho/i });
     const signBtn = screen.getByRole('button', { name: /Salvar e Assinar/i });
 
-    expect(draftBtn).toBeDisabled();
-    expect(signBtn).toBeDisabled();
+    // Buttons stay enabled, but clicking with empty fields must NOT save
+    // and must surface inline error messages.
+    await user.click(draftBtn);
+    expect(onSaveDraft).not.toHaveBeenCalled();
+    expect(screen.getByText(/Informe o medicamento\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Informe a dose\./i)).toBeInTheDocument();
 
+    // Fill only the drug — dose error must remain
     const drugInput = screen.getByPlaceholderText(/Nome do medicamento/i);
     await user.type(drugInput, 'Metotrexato');
+    await user.click(draftBtn);
+    expect(onSaveDraft).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Informe o medicamento\./i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Informe a dose\./i)).toBeInTheDocument();
 
-    expect(draftBtn).toBeEnabled();
-    expect(signBtn).toBeEnabled();
+    // Fill the dose — now save proceeds (default frequency is preset)
+    await user.type(screen.getByPlaceholderText(/ex: 7,5 mg/i), '15 mg');
+    await user.click(signBtn);
+    // signBtn calls onSaveAndSign, not onSaveDraft — but draft remains uncalled
+    expect(onSaveDraft).not.toHaveBeenCalled();
   });
 
   it('calls onSaveDraft with the composed items, notes and CID-10', async () => {
@@ -93,6 +105,7 @@ describe('PrescriptionComposer', () => {
     const { onSaveAndSign } = setup();
 
     await user.type(screen.getByPlaceholderText(/Nome do medicamento/i), 'Prednisona');
+    await user.type(screen.getByPlaceholderText(/ex: 7,5 mg/i), '20 mg');
     await user.click(screen.getByRole('button', { name: /Salvar e Assinar/i }));
 
     expect(onSaveAndSign).toHaveBeenCalledTimes(1);
@@ -273,14 +286,15 @@ describe('PrescriptionComposer', () => {
 
     // And the second save must NOT include any of the previous values
     await user.type(getDrugInputs()[0], 'Prednisona');
+    await user.type(getDoseInputs()[0], '20 mg');
     await user.click(screen.getByRole('button', { name: /Salvar Rascunho/i }));
 
     expect(onSaveDraft).toHaveBeenCalledTimes(2);
     const [items2] = onSaveDraft.mock.calls[1];
     expect(items2).toHaveLength(1);
     expect(items2[0].drug).toBe('Prednisona');
+    expect(items2[0].dose).toBe('20 mg');
     // Make sure stale values from the first submission did not leak through
-    expect(items2[0].dose).toBe('');
     expect(items2.some((it: { drug: string }) => it.drug === 'Metotrexato')).toBe(false);
     expect(items2.some((it: { drug: string }) => it.drug === 'Ácido Fólico')).toBe(false);
   });
@@ -296,6 +310,12 @@ describe('PrescriptionComposer', () => {
     await user.type(drugs[0], 'Drug-A');
     await user.type(drugs[1], 'Drug-B');
     await user.type(drugs[2], 'Drug-C');
+
+    // Doses are required by validation — fill all rows so save proceeds.
+    const doses = getDoseInputs();
+    await user.type(doses[0], '1 mg');
+    await user.type(doses[1], '2 mg');
+    await user.type(doses[2], '3 mg');
 
     const instructions = getInstructionInputs();
     expect(instructions).toHaveLength(3);
