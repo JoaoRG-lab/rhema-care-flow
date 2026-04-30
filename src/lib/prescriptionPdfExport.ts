@@ -166,7 +166,7 @@ export function generatePrescriptionPdf(
   // Stop generation early when required fields are missing or malformed so
   // we never produce a PDF with empty drug rows, missing signatures, etc.
   const validation = validatePrescriptionForExport(rx, patientCode);
-  if (!validation.ok) {
+  if (validation.ok === false) {
     rxLog.error('pdf:failed', {
       rxId: rx?.id,
       patientCode,
