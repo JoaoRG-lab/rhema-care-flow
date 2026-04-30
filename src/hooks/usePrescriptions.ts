@@ -7,6 +7,13 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { rxLog, describeError } from '@/lib/prescriptionLogger';
+
+export interface RxError {
+  stage: string;
+  message: string;
+  at: string;
+}
 
 export type PrescriptionStatus = 'draft' | 'signed' | 'dispensed' | 'cancelled';
 
@@ -105,10 +112,19 @@ export function usePrescriptions(patientId?: string) {
   const { user } = useAuth();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lastError, setLastError] = useState<RxError | null>(null);
+
+  const recordError = useCallback((stage: string, e: unknown) => {
+    const { message } = describeError(e);
+    setLastError({ stage, message, at: new Date().toISOString() });
+  }, []);
+
+  const clearLastError = useCallback(() => setLastError(null), []);
 
   const fetchPrescriptions = useCallback(async () => {
     if (!user || !patientId) return;
     setLoading(true);
+    rxLog.info('fetch:start', { patientId });
     try {
       const { data, error } = await prescriptionsTable().selectAllForPatient(
         patientId,
@@ -116,16 +132,25 @@ export function usePrescriptions(patientId?: string) {
       );
       if (error) throw error;
       setPrescriptions(data ?? []);
+      rxLog.info('fetch:success', { patientId, count: data?.length ?? 0 });
     } catch (e: any) {
+      rxLog.error('fetch:failed', { patientId, error: describeError(e) });
+      recordError('fetch', e);
       toast.error('Erro ao carregar prescrições: ' + e.message);
     } finally {
       setLoading(false);
     }
-  }, [user, patientId]);
+  }, [user, patientId, recordError]);
 
   const createPrescription = useCallback(
     async (input: CreatePrescriptionInput): Promise<Prescription | null> => {
       if (!user) return null;
+      rxLog.info('create:start', {
+        patientId: input.patient_id,
+        itemCount: input.items?.length ?? 0,
+        hasCid10: !!input.cid10,
+        status: input.status ?? 'draft',
+      });
       try {
         const { data, error } = await prescriptionsTable().insertOne({
           ...input,
@@ -133,15 +158,22 @@ export function usePrescriptions(patientId?: string) {
           status: input.status ?? 'draft',
         });
         if (error) throw error;
+        rxLog.info('create:success', { rxId: data?.id, patientId: input.patient_id });
         await fetchPrescriptions();
         toast.success('Prescrição criada com sucesso');
         return data;
       } catch (e: any) {
+        rxLog.error('create:failed', {
+          patientId: input.patient_id,
+          itemCount: input.items?.length ?? 0,
+          error: describeError(e),
+        });
+        recordError('create', e);
         toast.error('Erro ao criar prescrição: ' + e.message);
         return null;
       }
     },
-    [user, fetchPrescriptions],
+    [user, fetchPrescriptions, recordError],
   );
 
   const signPrescription = useCallback(
@@ -151,6 +183,12 @@ export function usePrescriptions(patientId?: string) {
       options: { name: string; crm: string },
     ): Promise<boolean> => {
       if (!user) return false;
+      rxLog.info('sign:start', {
+        rxId: id,
+        signatureBytes: signatureDataUrl?.length ?? 0,
+        hasName: !!options.name,
+        hasCrm: !!options.crm,
+      });
       try {
         const encoder = new TextEncoder();
         const buf = await crypto.subtle.digest(
@@ -170,52 +208,65 @@ export function usePrescriptions(patientId?: string) {
           signed_by_crm: options.crm,
         });
         if (error) throw error;
+        rxLog.info('sign:success', { rxId: id, hashPrefix: hash.slice(0, 12) });
         await fetchPrescriptions();
         toast.success('Prescrição assinada com sucesso');
         return true;
       } catch (e: any) {
+        rxLog.error('sign:failed', { rxId: id, error: describeError(e) });
+        recordError('sign', e);
         toast.error('Erro ao assinar: ' + e.message);
         return false;
       }
     },
-    [user, fetchPrescriptions],
+    [user, fetchPrescriptions, recordError],
   );
 
   const cancelPrescription = useCallback(
     async (id: string): Promise<void> => {
       if (!user) return;
+      rxLog.info('cancel:start', { rxId: id });
       try {
         const { error } = await prescriptionsTable().updateForUser(id, user.id, {
           status: 'cancelled',
         });
         if (error) throw error;
+        rxLog.info('cancel:success', { rxId: id });
         await fetchPrescriptions();
         toast.success('Prescrição cancelada');
       } catch (e: any) {
+        rxLog.error('cancel:failed', { rxId: id, error: describeError(e) });
+        recordError('cancel', e);
         toast.error('Erro ao cancelar: ' + e.message);
       }
     },
-    [user, fetchPrescriptions],
+    [user, fetchPrescriptions, recordError],
   );
 
   const deletePrescription = useCallback(
     async (id: string): Promise<void> => {
       if (!user) return;
+      rxLog.info('delete:start', { rxId: id });
       try {
         const { error } = await prescriptionsTable().deleteForUser(id, user.id);
         if (error) throw error;
+        rxLog.info('delete:success', { rxId: id });
         await fetchPrescriptions();
         toast.success('Prescrição removida');
       } catch (e: any) {
+        rxLog.error('delete:failed', { rxId: id, error: describeError(e) });
+        recordError('delete', e);
         toast.error('Erro ao remover: ' + e.message);
       }
     },
-    [user, fetchPrescriptions],
+    [user, fetchPrescriptions, recordError],
   );
 
   return {
     prescriptions,
     loading,
+    lastError,
+    clearLastError,
     fetchPrescriptions,
     createPrescription,
     signPrescription,
