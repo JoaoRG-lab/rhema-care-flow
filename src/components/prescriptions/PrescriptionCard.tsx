@@ -10,6 +10,10 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { PrescriptionSignDialog } from './PrescriptionSignDialog';
+import {
+  PrescriptionDebugPanel,
+  isPrescriptionDebugEnabled,
+} from './PrescriptionDebugPanel';
 import { generatePrescriptionPdf } from '@/lib/prescriptionPdfExport';
 import type { Prescription } from '@/hooks/usePrescriptions';
 import {
@@ -39,6 +43,7 @@ interface PrescriptionCardProps {
 export function PrescriptionCard({ rx, patientCode, onSign, onCancel, onDelete, onPdfError }: PrescriptionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [signOpen, setSignOpen] = useState(false);
+  const debugEnabled = isPrescriptionDebugEnabled();
   const cfg = STATUS_CONFIG[rx.status];
   const Icon = cfg.icon;
 
@@ -148,6 +153,15 @@ export function PrescriptionCard({ rx, patientCode, onSign, onCancel, onDelete, 
                 </div>
               )}
             </div>
+          )}
+
+          {/* Debug panel — only when ?debug=1 or localStorage.rxDebug='1' */}
+          {debugEnabled && (
+            <PrescriptionDebugPanel
+              rx={rx}
+              source="db-row"
+              context={{ patientCode }}
+            />
           )}
         </CardContent>
       </Card>
