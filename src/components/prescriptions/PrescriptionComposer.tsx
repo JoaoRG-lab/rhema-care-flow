@@ -56,12 +56,15 @@ interface PrescriptionComposerProps {
   saving?: boolean;
 }
 
+type RowErrors = { drug?: string; dose?: string; frequency?: string };
+
 function ItemRow({
-  item, index, onChange, onRemove, isOnly,
+  item, index, onChange, onRemove, isOnly, errors, showErrors,
 }: {
   item: RowItem; index: number;
   onChange: (field: keyof PrescriptionItem, value: string) => void;
   onRemove: () => void; isOnly: boolean;
+  errors: RowErrors; showErrors: boolean;
 }) {
   const [expanded, setExpanded] = useState(true);
   const [showSugg, setShowSugg] = useState(false);
@@ -69,12 +72,24 @@ function ItemRow({
     item.drug && d.toLowerCase().includes(item.drug.toLowerCase()) && d !== item.drug,
   );
 
+  // Only surface field errors after the user has attempted to save at least
+  // once (`showErrors`), so a freshly added empty row doesn't immediately
+  // light up red.
+  const err = showErrors ? errors : {};
+  const hasAnyErr = !!(err.drug || err.dose || err.frequency);
+
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div className={cn(
+      'rounded-xl border bg-card transition-colors',
+      hasAnyErr ? 'border-destructive/60' : 'border-border',
+    )}>
       {/* Item header */}
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+          <div className={cn(
+            'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
+            hasAnyErr ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary',
+          )}>
             {index + 1}
           </div>
           <span className="text-sm font-medium text-foreground truncate max-w-[180px]">
@@ -104,8 +119,10 @@ function ItemRow({
               onBlur={() => setTimeout(() => setShowSugg(false), 150)}
               onFocus={() => setShowSugg(true)}
               placeholder="Nome do medicamento ou princípio ativo"
-              className="mt-1"
+              aria-invalid={!!err.drug}
+              className={cn('mt-1', err.drug && 'border-destructive focus-visible:ring-destructive')}
             />
+            {err.drug && <p className="mt-1 text-xs text-destructive">{err.drug}</p>}
             {showSugg && filtered.length > 0 && (
               <div className="absolute z-20 top-full mt-1 left-0 right-0 rounded-lg border bg-popover shadow-md max-h-36 overflow-y-auto">
                 {filtered.slice(0, 6).map(d => (
@@ -121,8 +138,15 @@ function ItemRow({
           {/* Dose + Route */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Dose</Label>
-              <Input value={item.dose} onChange={e => onChange('dose', e.target.value)} placeholder="ex: 7,5 mg" className="mt-1" />
+              <Label className="text-xs">Dose *</Label>
+              <Input
+                value={item.dose}
+                onChange={e => onChange('dose', e.target.value)}
+                placeholder="ex: 7,5 mg"
+                aria-invalid={!!err.dose}
+                className={cn('mt-1', err.dose && 'border-destructive focus-visible:ring-destructive')}
+              />
+              {err.dose && <p className="mt-1 text-xs text-destructive">{err.dose}</p>}
             </div>
             <div>
               <Label className="text-xs">Via</Label>
@@ -136,11 +160,19 @@ function ItemRow({
           {/* Frequency + Duration */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Frequência</Label>
-              <select value={item.frequency} onChange={e => onChange('frequency', e.target.value)}
-                className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
+              <Label className="text-xs">Frequência *</Label>
+              <select
+                value={item.frequency}
+                onChange={e => onChange('frequency', e.target.value)}
+                aria-invalid={!!err.frequency}
+                className={cn(
+                  'mt-1 w-full h-9 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring',
+                  err.frequency ? 'border-destructive focus:ring-destructive' : 'border-input',
+                )}>
+                <option value="">Selecione…</option>
                 {FREQ_OPTIONS.map(f => <option key={f}>{f}</option>)}
               </select>
+              {err.frequency && <p className="mt-1 text-xs text-destructive">{err.frequency}</p>}
             </div>
             <div>
               <Label className="text-xs">Duração</Label>
