@@ -206,6 +206,60 @@ export function FibromyalgiaCalculator() {
           </AlertDescription>
         </Alert>
 
+        {/* Patient & visit linking (de-identified) */}
+        {user && (
+          <section className="rounded-lg border p-3 bg-muted/30 space-y-3">
+            <div className="flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-primary" />
+              <Label className="text-sm font-semibold">Vincular a paciente / consulta</Label>
+              <span className="text-[10px] text-muted-foreground">(opcional, de-identificado)</span>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Paciente (código)</Label>
+                <Select value={patientId || 'none'} onValueChange={(v) => setPatientId(v === 'none' ? '' : v)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecionar paciente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum (salvar avulso)</SelectItem>
+                    {patients.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.patient_code}{p.mrn_last4 ? ` · ****${p.mrn_last4}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Consulta</Label>
+                <Select
+                  value={visitId || 'none'}
+                  onValueChange={(v) => setVisitId(v === 'none' ? '' : v)}
+                  disabled={!patientId}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder={patientId ? 'Selecionar consulta' : 'Selecione um paciente'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem consulta específica</SelectItem>
+                    {visits.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {new Date(v.visit_date).toLocaleDateString('pt-BR')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {patientId && visits.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                Este paciente ainda não possui consultas. O resultado ficará vinculado ao paciente.
+              </p>
+            )}
+          </section>
+        )}
+
         {/* WPI */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
