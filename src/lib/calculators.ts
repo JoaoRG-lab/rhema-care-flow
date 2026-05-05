@@ -287,7 +287,7 @@
      description: 'Revised Fibromyalgia Impact Questionnaire',
      category: 'functional',
      diseases: ['fm'],
-     implemented: false,
+     implemented: true,
    },
    
    // Prognosis & Risk

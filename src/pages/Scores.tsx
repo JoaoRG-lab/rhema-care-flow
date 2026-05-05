@@ -68,6 +68,7 @@ import { BiophysicalProfileCalculator } from '@/components/scores/BiophysicalPro
 import { PretermRiskCalculator } from '@/components/scores/PretermRiskCalculator';
 import { AmniotiFluidCalculator } from '@/components/scores/AmniotiFluidCalculator';
 import { FibromyalgiaCalculator } from '@/components/scores/FibromyalgiaCalculator';
+import { FIQRCalculator } from '@/components/scores/FIQRCalculator';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
@@ -221,6 +222,8 @@ import { toast } from 'sonner';
         return <AmniotiFluidCalculator />;
       case 'acr-fibromyalgia':
         return <FibromyalgiaCalculator />;
+      case 'fiq-r':
+        return <FIQRCalculator />;
       default:
         return null;
     }
