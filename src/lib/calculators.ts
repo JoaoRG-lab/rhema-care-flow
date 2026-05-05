@@ -289,6 +289,15 @@
      diseases: ['fm'],
      implemented: true,
    },
+   {
+     id: 'fm-combined',
+     name: 'FM Combined (ACR + FIQR)',
+     shortName: 'FM Combined',
+     description: 'Avaliação combinada ACR 2016 + FIQR vinculada à consulta',
+     category: 'monitoring',
+     diseases: ['fm'],
+     implemented: true,
+   },
    
    // Prognosis & Risk
    {
