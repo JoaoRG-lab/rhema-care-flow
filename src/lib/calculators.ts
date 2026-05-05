@@ -230,7 +230,7 @@
      description: 'Fibromyalgia diagnostic criteria (WPI + SSS)',
      category: 'classification',
      diseases: ['fm'],
-     implemented: false,
+     implemented: true,
    },
    {
      id: 'acr-eular-gout',
