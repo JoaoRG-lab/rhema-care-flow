@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Save, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Save, CheckCircle, AlertTriangle, Info, Link2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -100,6 +101,35 @@ export function FibromyalgiaCalculator() {
   const [excluded, setExcluded] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Patient / visit linking
+  const [patients, setPatients] = useState<Array<{ id: string; patient_code: string; mrn_last4: string | null }>>([]);
+  const [visits, setVisits] = useState<Array<{ id: string; visit_date: string }>>([]);
+  const [patientId, setPatientId] = useState<string>('');
+  const [visitId, setVisitId] = useState<string>('');
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('patient_cards_secure')
+      .select('id, patient_code, mrn_last4')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setPatients((data as any) || []));
+  }, [user]);
+
+  useEffect(() => {
+    setVisitId('');
+    setVisits([]);
+    if (!user || !patientId) return;
+    supabase
+      .from('visits_secure')
+      .select('id, visit_date')
+      .eq('user_id', user.id)
+      .eq('patient_card_id', patientId)
+      .order('visit_date', { ascending: false })
+      .then(({ data }) => setVisits((data as any) || []));
+  }, [user, patientId]);
+
   const toggleSite = (id: string) => setSites((s) => ({ ...s, [id]: !s[id] }));
   const toggleSomatic = (k: string) => setSomatic((s) => ({ ...s, [k]: !s[k] }));
 
@@ -137,14 +167,22 @@ export function FibromyalgiaCalculator() {
     try {
       const { error } = await supabase.from('score_entries').insert({
         user_id: user.id,
+        patient_card_id: patientId || null,
+        visit_id: visitId || null,
         score_type: 'ACR-FM-2016',
-        data_json: { sites, sss, somatic, duration3m, excluded, wpi, sssTotal, regionsWithPain } as any,
+        data_json: { sites, sss, somatic, duration3m, excluded, wpi, sssTotal, regionsWithPain, meetsDiagnosis } as any,
         calculated_score: fsScore,
       });
       if (error) throw error;
-      toast.success('Critérios FM salvos');
-    } catch {
-      toast.error('Erro ao salvar');
+      toast.success(
+        patientId
+          ? visitId
+            ? 'Salvo no histórico da consulta'
+            : 'Salvo no paciente (sem consulta vinculada)'
+          : 'Critérios FM salvos'
+      );
+    } catch (e: any) {
+      toast.error('Erro ao salvar' + (e?.message ? `: ${e.message}` : ''));
     } finally {
       setIsSaving(false);
     }
