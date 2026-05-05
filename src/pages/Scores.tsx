@@ -69,6 +69,7 @@ import { PretermRiskCalculator } from '@/components/scores/PretermRiskCalculator
 import { AmniotiFluidCalculator } from '@/components/scores/AmniotiFluidCalculator';
 import { FibromyalgiaCalculator } from '@/components/scores/FibromyalgiaCalculator';
 import { FIQRCalculator } from '@/components/scores/FIQRCalculator';
+import { FibromyalgiaCombinedAssessment } from '@/components/scores/FibromyalgiaCombinedAssessment';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
@@ -224,6 +225,8 @@ import { toast } from 'sonner';
         return <FibromyalgiaCalculator />;
       case 'fiq-r':
         return <FIQRCalculator />;
+      case 'fm-combined':
+        return <FibromyalgiaCombinedAssessment />;
       default:
         return null;
     }
