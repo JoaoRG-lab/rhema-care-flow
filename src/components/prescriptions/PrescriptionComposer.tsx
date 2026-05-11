@@ -230,12 +230,62 @@ function validateItems(items: RowItem[]): Record<string, RowErrors> {
 }
 
 
+// ── Autosave (localStorage) ──────────────────────────────────────────────────
+// Persist the composer's working state per patient so meds, dose, frequency,
+// CID-10 and notes survive accidental dialog closes, refreshes, or tab
+// switches. Cleared on successful save/sign.
+const AUTOSAVE_PREFIX = 'rx-composer-draft:';
+const AUTOSAVE_VERSION = 1;
+const autosaveKey = (patientCode: string) => `${AUTOSAVE_PREFIX}${patientCode}`;
+
+type AutosavePayload = {
+  v: number;
+  items: RowItem[];
+  cid10: string;
+  notes: string;
+  savedAt: number;
+};
+
+function readAutosave(patientCode: string): AutosavePayload | null {
+  try {
+    const raw = localStorage.getItem(autosaveKey(patientCode));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AutosavePayload;
+    if (parsed?.v !== AUTOSAVE_VERSION || !Array.isArray(parsed.items)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeAutosave(patientCode: string, payload: Omit<AutosavePayload, 'v' | 'savedAt'>) {
+  try {
+    localStorage.setItem(
+      autosaveKey(patientCode),
+      JSON.stringify({ v: AUTOSAVE_VERSION, savedAt: Date.now(), ...payload }),
+    );
+  } catch {
+    /* quota / private mode — silently ignore */
+  }
+}
+
+function clearAutosave(patientCode: string) {
+  try { localStorage.removeItem(autosaveKey(patientCode)); } catch { /* noop */ }
+}
+
+
 export function PrescriptionComposer({
   patientCode, onSaveDraft, onSaveAndSign, saving = false, onDirtyChange,
 }: PrescriptionComposerProps) {
-  const [items, setItems] = useState<RowItem[]>(() => [emptyItem()]);
-  const [cid10, setCid10] = useState('');
-  const [notes, setNotes] = useState('');
+  // Restore any in-progress draft for this patient on first render so users
+  // never lose typed meds/frequencies when the dialog is reopened.
+  const [items, setItems] = useState<RowItem[]>(() => {
+    const restored = readAutosave(patientCode);
+    return restored && restored.items.length > 0 ? restored.items : [emptyItem()];
+  });
+  const [cid10, setCid10] = useState(() => readAutosave(patientCode)?.cid10 ?? '');
+  const [notes, setNotes] = useState(() => readAutosave(patientCode)?.notes ?? '');
+  const [restoredAt] = useState<number | null>(() => readAutosave(patientCode)?.savedAt ?? null);
   // Errors are only displayed after the first save attempt so users aren't
   // confronted with red fields on a brand-new empty form.
   const [showErrors, setShowErrors] = useState(false);
@@ -247,11 +297,25 @@ export function PrescriptionComposer({
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
 
+  // Debounced autosave: writes the working draft whenever the user edits
+  // anything. Empty/pristine forms clear the slot to avoid stale leftovers.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (dirty) {
+        writeAutosave(patientCode, { items, cid10, notes });
+      } else {
+        clearAutosave(patientCode);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [items, cid10, notes, dirty, patientCode]);
+
   const resetForm = () => {
     setItems([emptyItem()]);
     setCid10('');
     setNotes('');
     setShowErrors(false);
+    clearAutosave(patientCode);
   };
 
   const addItem = () => setItems(v => [...v, emptyItem()]);
@@ -280,6 +344,14 @@ export function PrescriptionComposer({
     resetForm();
   };
 
+  const discardDraft = () => {
+    clearAutosave(patientCode);
+    setItems([emptyItem()]);
+    setCid10('');
+    setNotes('');
+    setShowErrors(false);
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
@@ -292,6 +364,18 @@ export function PrescriptionComposer({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {restoredAt && dirty && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="text-foreground/80">
+              Rascunho restaurado automaticamente
+              <span className="text-muted-foreground"> · {new Date(restoredAt).toLocaleString('pt-BR')}</span>
+            </span>
+            <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={discardDraft}>
+              Descartar
+            </Button>
+          </div>
+        )}
+
         {/* CID-10 */}
         <div>
           <Label className="text-xs font-medium">CID-10 (diagnóstico)</Label>
