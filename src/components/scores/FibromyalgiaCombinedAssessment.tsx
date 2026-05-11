@@ -185,26 +185,36 @@ export function FibromyalgiaCombinedAssessment() {
 
   // Combined interpretation
   const combinedSummary = useMemo(() => {
+    const acrAnswered = wpi > 0 || sssTotal > 0 || duration3m || excluded;
+    const anyInput = acrAnswered || fiqrAnswered > 0;
     const concordant = meetsAcr && fiqrTotal >= 39;
     const acrPosOnly = meetsAcr && fiqrTotal < 39;
-    const fiqrPosOnly = !meetsAcr && fiqrTotal >= 59;
-    let label = 'Sem fibromialgia clinicamente significativa';
-    let tone: 'success' | 'warning' | 'destructive' | 'muted' = 'success';
-    if (concordant) {
+    const fiqrModerateNoAcr = !meetsAcr && fiqrTotal >= 39 && fiqrTotal < 59;
+    const fiqrHighNoAcr = !meetsAcr && fiqrTotal >= 59;
+
+    let label = 'Preencha os critérios ACR e/ou itens do FIQR para avaliar';
+    let tone: 'success' | 'warning' | 'destructive' | 'muted' = 'muted';
+
+    if (!anyInput) {
+      // keep default muted prompt
+    } else if (concordant) {
       label = `FM confirmada (ACR+) com impacto ${fiqrInterp.label.toLowerCase()} (FIQR ${fiqrTotal})`;
       tone = fiqrTotal >= 59 ? 'destructive' : 'warning';
     } else if (acrPosOnly) {
       label = 'FM por critérios ACR, porém impacto funcional baixo (FIQR < 39)';
       tone = 'warning';
-    } else if (fiqrPosOnly) {
+    } else if (fiqrHighNoAcr) {
       label = 'Alto impacto funcional (FIQR ≥ 59) sem preencher ACR — reavaliar critérios';
       tone = 'warning';
-    } else if (!meetsAcr && fiqrAnswered > 0) {
-      label = 'Critérios ACR não atendidos; impacto FIQR não significativo';
-      tone = 'muted';
+    } else if (fiqrModerateNoAcr) {
+      label = 'Impacto FIQR moderado (39–58) sem preencher ACR — monitorar';
+      tone = 'warning';
+    } else if (acrAnswered || fiqrAnswered > 0) {
+      label = 'Critérios ACR não atendidos e impacto FIQR baixo (< 39)';
+      tone = 'success';
     }
-    return { label, tone, concordant, acrPosOnly, fiqrPosOnly };
-  }, [meetsAcr, fiqrTotal, fiqrAnswered, fiqrInterp.label]);
+    return { label, tone, concordant, acrPosOnly, fiqrPosOnly: fiqrHighNoAcr };
+  }, [meetsAcr, fiqrTotal, fiqrAnswered, fiqrInterp.label, wpi, sssTotal, duration3m, excluded]);
 
   const performSave = async () => {
     if (!user) return;
