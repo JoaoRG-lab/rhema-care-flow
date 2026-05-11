@@ -364,6 +364,18 @@ export function PrescriptionComposer({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {restoredAt && dirty && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="text-foreground/80">
+              Rascunho restaurado automaticamente
+              <span className="text-muted-foreground"> · {new Date(restoredAt).toLocaleString('pt-BR')}</span>
+            </span>
+            <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={discardDraft}>
+              Descartar
+            </Button>
+          </div>
+        )}
+
         {/* CID-10 */}
         <div>
           <Label className="text-xs font-medium">CID-10 (diagnóstico)</Label>
