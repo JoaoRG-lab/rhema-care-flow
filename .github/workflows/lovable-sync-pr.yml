@@ -1,0 +1,100 @@
+name: Lovable Sync → PR to main
+
+# Automatically opens or updates a pull request from the Lovable sync branch
+# into the protected `main` branch every time Lovable pushes new commits.
+#
+# Branch protection on `main` is respected: this workflow only opens the PR —
+# it never bypasses required reviews or status checks.
+
+on:
+  push:
+    branches:
+      - lovable
+      - lovable-sync
+      - 'lovable/**'
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: 'Source branch to open the PR from'
+        required: false
+        default: 'lovable'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-or-update-pr:
+    name: Open or update PR into main
+    runs-on: ubuntu-latest
+    # Skip if the push is already on main (defensive)
+    if: github.ref != 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve source branch
+        id: src
+        run: |
+          if [ -n "${{ github.event.inputs.source_branch }}" ]; then
+            echo "branch=${{ github.event.inputs.source_branch }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for diff against main
+        id: diff
+        run: |
+          git fetch origin main --depth=1
+          if git diff --quiet origin/main...HEAD; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update pull request
+        if: steps.diff.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SRC: ${{ steps.src.outputs.branch }}
+        run: |
+          set -euo pipefail
+
+          TITLE="chore(lovable): sync ${SRC} → main"
+          BODY=$(cat <<EOF
+          Automated PR from the Lovable sync branch \`${SRC}\` into \`main\`.
+
+          - Source: \`${SRC}\` @ ${GITHUB_SHA}
+          - Triggered by: ${GITHUB_EVENT_NAME}
+
+          This PR is opened automatically by \`.github/workflows/lovable-sync-pr.yml\`
+          whenever Lovable pushes new commits. Branch protection on \`main\` still
+          applies — required reviews and status checks must pass before merge.
+          EOF
+          )
+
+          EXISTING=$(gh pr list \
+            --base main \
+            --head "${SRC}" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -z "${EXISTING}" ]; then
+            echo "No open PR found — creating a new one."
+            gh pr create \
+              --base main \
+              --head "${SRC}" \
+              --title "${TITLE}" \
+              --body "${BODY}"
+          else
+            echo "Existing PR #${EXISTING} found — updating description."
+            gh pr edit "${EXISTING}" --title "${TITLE}" --body "${BODY}"
+          fi
+
+      - name: No diff — nothing to do
+        if: steps.diff.outputs.has_changes != 'true'
+        run: echo "No diff between source branch and main. Skipping PR."
