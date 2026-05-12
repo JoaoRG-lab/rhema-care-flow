@@ -33,8 +33,22 @@ const DEFAULT_WINDOW_MS = 1000;
 const DEFAULT_THRESHOLD = 25;        // hits per window before we shout
 const WARN_COOLDOWN_MS = 2000;       // don't spam the console
 const MAX_TIMESTAMPS = 200;          // hard cap per bucket
+const MAX_WARN_HISTORY = 50;
+
+export interface WarnEntry {
+  label: string;
+  hitsInWindow: number;
+  windowMs: number;
+  threshold: number;
+  at: number;            // epoch ms
+  context?: Record<string, unknown>;
+}
 
 const buckets = new Map<string, Bucket>();
+const warnHistory: WarnEntry[] = [];
+type Listener = () => void;
+const listeners = new Set<Listener>();
+function notify() { listeners.forEach((l) => { try { l(); } catch { /* noop */ } }); }
 
 function isEnabled(): boolean {
   if (typeof window === 'undefined') return false;
