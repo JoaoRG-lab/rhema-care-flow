@@ -72,6 +72,7 @@ const Teleconsulta = lazy(() => import("./pages/Teleconsulta"));
 const ProntuarioIntegrado = lazy(() => import("./pages/ProntuarioIntegrado"));
 const ResearchHub = lazy(() => import("./pages/ResearchHub"));
 const MirrorSettings = lazy(() => import("./pages/MirrorSettings"));
+const LoopDebug = lazy(() => import("./pages/LoopDebug"));
 const queryClient = new QueryClient();
 
  const PageLoader = () => (
@@ -185,6 +186,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
                     <Route path="/prontuario" element={<ProtectedRoute><ProntuarioIntegrado /></ProtectedRoute>} />
                     <Route path="/research-hub" element={<ProtectedRoute><ResearchHub /></ProtectedRoute>} />
                     <Route path="/settings/mirror" element={<ProtectedRoute><MirrorSettings /></ProtectedRoute>} />
+                    <Route path="/debug/loops" element={<LoopDebug />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>

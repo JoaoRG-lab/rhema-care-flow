@@ -33,8 +33,22 @@ const DEFAULT_WINDOW_MS = 1000;
 const DEFAULT_THRESHOLD = 25;        // hits per window before we shout
 const WARN_COOLDOWN_MS = 2000;       // don't spam the console
 const MAX_TIMESTAMPS = 200;          // hard cap per bucket
+const MAX_WARN_HISTORY = 50;
+
+export interface WarnEntry {
+  label: string;
+  hitsInWindow: number;
+  windowMs: number;
+  threshold: number;
+  at: number;            // epoch ms
+  context?: Record<string, unknown>;
+}
 
 const buckets = new Map<string, Bucket>();
+const warnHistory: WarnEntry[] = [];
+type Listener = () => void;
+const listeners = new Set<Listener>();
+function notify() { listeners.forEach((l) => { try { l(); } catch { /* noop */ } }); }
 
 function isEnabled(): boolean {
   if (typeof window === 'undefined') return false;
@@ -59,24 +73,29 @@ export interface LoopDetectorOptions {
 
 function emitWarn(b: Bucket, hitsInWindow: number, opts: LoopDetectorOptions) {
   b.totalWarns += 1;
-  // eslint-disable-next-line no-console
-  console.warn('[LoopDetector] recurrence detected', {
-    ns: 'LoopDetector',
+  const entry: WarnEntry = {
     label: b.label,
     hitsInWindow,
     windowMs: opts.windowMs ?? DEFAULT_WINDOW_MS,
     threshold: opts.threshold ?? DEFAULT_THRESHOLD,
+    at: Date.now(),
+    context: opts.context,
+  };
+  warnHistory.push(entry);
+  if (warnHistory.length > MAX_WARN_HISTORY) {
+    warnHistory.splice(0, warnHistory.length - MAX_WARN_HISTORY);
+  }
+  // eslint-disable-next-line no-console
+  console.warn('[LoopDetector] recurrence detected', {
+    ns: 'LoopDetector',
     totalWarns: b.totalWarns,
-    ts: new Date().toISOString(),
-    ...(opts.context ?? {}),
+    ts: new Date(entry.at).toISOString(),
+    ...entry,
   });
+  notify();
 }
 
 export const loopDetector = {
-  /**
-   * Record one occurrence of `label`. Warns when the sliding-window count
-   * exceeds `threshold`. No-op when debug mode is off.
-   */
   track(label: string, opts: LoopDetectorOptions = {}): void {
     if (!isEnabled()) return;
     const windowMs = opts.windowMs ?? DEFAULT_WINDOW_MS;
@@ -90,7 +109,6 @@ export const loopDetector = {
     }
 
     b.timestamps.push(now);
-    // Trim old timestamps out of the window.
     const cutoff = now - windowMs;
     while (b.timestamps.length && b.timestamps[0] < cutoff) b.timestamps.shift();
     if (b.timestamps.length > MAX_TIMESTAMPS) {
@@ -103,19 +121,28 @@ export const loopDetector = {
     }
   },
 
-  /** Inspect current buckets — useful from the DevTools console. */
-  snapshot(): Array<{ label: string; recent: number; totalWarns: number }> {
+  snapshot(): Array<{ label: string; recent: number; totalWarns: number; lastWarnAt: number }> {
     return Array.from(buckets.values()).map((b) => ({
       label: b.label,
       recent: b.timestamps.length,
       totalWarns: b.totalWarns,
+      lastWarnAt: b.lastWarnAt,
     }));
   },
 
-  /** Clear all tracking state. */
+  warnings(): WarnEntry[] {
+    return warnHistory.slice().reverse();
+  },
+
+  subscribe(fn: Listener): () => void {
+    listeners.add(fn);
+    return () => { listeners.delete(fn); };
+  },
+
   reset(label?: string): void {
     if (label) buckets.delete(label);
-    else buckets.clear();
+    else { buckets.clear(); warnHistory.length = 0; }
+    notify();
   },
 
   isEnabled,
