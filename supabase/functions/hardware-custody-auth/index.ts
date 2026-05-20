@@ -24,7 +24,7 @@ function base58Decode(input: string): Uint8Array {
   const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   const base = 58;
 
-  let bytes: number[] = [0];
+  const bytes: number[] = [0];
   for (const char of input) {
     const value = alphabet.indexOf(char);
     if (value < 0) throw new Error('Invalid base58 character');
@@ -356,7 +356,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             success: true,
-            message: "✅ Ultimate User token PERMANENTLY installed on hardware wallet. This device is now the ONLY way to access Ultimate privileges.",
+            message: "âœ… Ultimate User token PERMANENTLY installed on hardware wallet. This device is now the ONLY way to access Ultimate privileges.",
             status: "active",
             hardware_type: custody.hardware_type,
             installed_at: new Date().toISOString(),
