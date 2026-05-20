@@ -1,0 +1,58 @@
+{
+  "project": "Rhema Care Flow",
+  "canonical": {
+    "github_owner": "JoaoRG-lab",
+    "github_repo": "rhema-care-flow",
+    "github_full_name": "JoaoRG-lab/rhema-care-flow",
+    "github_url": "https://github.com/JoaoRG-lab/rhema-care-flow",
+    "branch": "main",
+    "framework": "vite",
+    "install_command": "npm install",
+    "build_command": "npm run build",
+    "output_directory": "dist"
+  },
+  "integrations": {
+    "lovable": {
+      "mode": "connect_existing_repository_only",
+      "repository": "JoaoRG-lab/rhema-care-flow",
+      "branch": "main",
+      "do_not_create_or_clone": true
+    },
+    "vercel": {
+      "project_name": "rhema-care-flow",
+      "repository": "JoaoRG-lab/rhema-care-flow",
+      "production_branch": "main",
+      "framework_preset": "Vite",
+      "install_command": "npm install",
+      "build_command": "npm run build",
+      "output_directory": "dist"
+    },
+    "supabase": {
+      "project_name": "Rhema-care-flow",
+      "project_ref": "rfsaxstpfpigrjyiochi",
+      "public_url": "https://rfsaxstpfpigrjyiochi.supabase.co",
+      "frontend_env_keys": [
+        "VITE_SUPABASE_URL",
+        "VITE_SUPABASE_PUBLISHABLE_KEY"
+      ]
+    }
+  },
+  "do_not_use": {
+    "repositories": [
+      "JoaoRG-lab/rhema-care-flow-65f281f9",
+      "joaooz123-png/rhema-care-flow",
+      "joaooz123-png/medconsult-os-starter",
+      "joaooz123-png/vida-clinica-os",
+      "joaooz123-png/vida-clinica-os-bc012bad"
+    ],
+    "branches": ["mainn", "Mainn"],
+    "frameworks": ["nextjs"]
+  },
+  "deployment_success_criteria": {
+    "github_org": "JoaoRG-lab",
+    "github_repo": "rhema-care-flow",
+    "github_ref": "main",
+    "framework": "vite",
+    "ready_state": "READY"
+  }
+}
