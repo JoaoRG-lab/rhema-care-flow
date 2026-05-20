@@ -6,6 +6,64 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-signature, x-request-id",
 };
 
+function parseSignatureHeader(header: string): Record<string, string> {
+  return Object.fromEntries(
+    header.split(",").map((part) => {
+      const [key, ...valueParts] = part.trim().split("=");
+      return [key, valueParts.join("=")];
+    })
+  );
+}
+
+function toHex(bytes: ArrayBuffer): string {
+  return Array.from(new Uint8Array(bytes))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  return toHex(await crypto.subtle.sign("HMAC", key, encoder.encode(message)));
+}
+
+async function verifyMercadoPagoSignature(req: Request, dataId: string): Promise<boolean> {
+  const webhookSecret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
+  if (!webhookSecret) {
+    console.error("MERCADOPAGO_WEBHOOK_SECRET not configured");
+    return false;
+  }
+
+  const xSignature = req.headers.get("x-signature");
+  const xRequestId = req.headers.get("x-request-id");
+  if (!xSignature || !xRequestId) return false;
+
+  const parts = parseSignatureHeader(xSignature);
+  const ts = parts.ts;
+  const v1 = parts.v1;
+  if (!ts || !v1) return false;
+
+  const normalizedId = /^[a-zA-Z0-9]+$/.test(dataId) ? dataId.toLowerCase() : dataId;
+  const manifest = `id:${normalizedId};request-id:${xRequestId};ts:${ts};`;
+  const expected = await hmacSha256Hex(webhookSecret, manifest);
+  return timingSafeEqual(expected, v1);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -30,6 +88,14 @@ serve(async (req) => {
 
     if (!paymentId || (topic && topic !== "payment")) {
       return new Response(JSON.stringify({ ok: true, ignored: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const validSignature = await verifyMercadoPagoSignature(req, String(paymentId));
+    if (!validSignature) {
+      return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
