@@ -7,6 +7,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -32,26 +41,30 @@ serve(async (req) => {
     }
 
     const categoryEmoji: Record<string, string> = {
-      criticism: "🔥 Criticism",
-      suggestion: "💡 Suggestion",
-      praise: "🌟 Praise",
-      lottery: "🎰 Lottery Numbers",
-      kidding: "😜 Just Kidding",
+      criticism: "ðŸ”¥ Criticism",
+      suggestion: "ðŸ’¡ Suggestion",
+      praise: "ðŸŒŸ Praise",
+      lottery: "ðŸŽ° Lottery Numbers",
+      kidding: "ðŸ˜œ Just Kidding",
     };
 
+    const safeCategory = escapeHtml(categoryEmoji[category] || category);
+    const safeName = name ? escapeHtml(name) : "Anonymous";
+    const safeEmail = email ? escapeHtml(email) : "Not provided";
+    const safeMessage = escapeHtml(message);
     const subject = `[UHS Tell Us] ${categoryEmoji[category] || category} from ${name || "Anonymous"}`;
     const htmlBody = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1a1a1a;">New Feedback Received</h2>
         <table style="width: 100%; border-collapse: collapse;">
-          <tr><td style="padding: 8px; font-weight: bold; color: #555;">Category:</td><td style="padding: 8px;">${categoryEmoji[category] || category}</td></tr>
-          <tr><td style="padding: 8px; font-weight: bold; color: #555;">Name:</td><td style="padding: 8px;">${name || "Anonymous"}</td></tr>
-          <tr><td style="padding: 8px; font-weight: bold; color: #555;">Email:</td><td style="padding: 8px;">${email || "Not provided"}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold; color: #555;">Category:</td><td style="padding: 8px;">${safeCategory}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold; color: #555;">Name:</td><td style="padding: 8px;">${safeName}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold; color: #555;">Email:</td><td style="padding: 8px;">${safeEmail}</td></tr>
         </table>
         <div style="margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 8px;">
-          <p style="margin: 0; white-space: pre-wrap;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          <p style="margin: 0; white-space: pre-wrap;">${safeMessage}</p>
         </div>
-        <p style="margin-top: 24px; color: #999; font-size: 12px;">Sent from UHS Health OS — Tell Us section</p>
+        <p style="margin-top: 24px; color: #999; font-size: 12px;">Sent from UHS Health OS â€” Tell Us section</p>
       </div>
     `;
 
