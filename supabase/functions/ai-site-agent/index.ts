@@ -117,6 +117,23 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Invalid session" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { task_type = "all" } = await req.json().catch(() => ({}));
 
     const results: { [key: string]: any } = {};
@@ -175,7 +192,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Log agent activity (non-critical)
     try {
       await supabase.from("audit_logs").insert({
-        user_id: "00000000-0000-0000-0000-000000000000",
+        user_id: userData.user.id,
         action: "ai_agent_run",
         resource_type: "site_improvement",
         resource_id: null,
