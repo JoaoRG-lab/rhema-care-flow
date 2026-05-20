@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createResendClient, sendEmail } from "../_shared/resend.ts";
 
 const resend = createResendClient();
@@ -20,12 +21,43 @@ interface SendReportRequest {
   additionalMessage?: string;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid session" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const {
       recipientEmail,
       recipientName,
@@ -54,11 +86,17 @@ const handler = async (req: Request): Promise<Response> => {
       ? `Your ${reportType} Report from RheumaFlow`
       : `Patient Report: ${patientName} - ${reportType}`;
 
-    const greeting = recipientName ? `Dear ${recipientName},` : 'Hello,';
+    const safeRecipientName = recipientName ? escapeHtml(recipientName) : "";
+    const safePatientName = escapeHtml(patientName);
+    const safeReportType = escapeHtml(reportType);
+    const safeSenderName = senderName ? escapeHtml(senderName) : "";
+    const safeAdditionalMessage = additionalMessage ? escapeHtml(additionalMessage) : "";
+
+    const greeting = safeRecipientName ? `Dear ${safeRecipientName},` : 'Hello,';
     
     const bodyIntro = isPatient
-      ? `Please find attached your ${reportType} report.`
-      : `Please find attached the ${reportType} report for patient ${patientName}.`;
+      ? `Please find attached your ${safeReportType} report.`
+      : `Please find attached the ${safeReportType} report for patient ${safePatientName}.`;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -115,19 +153,19 @@ const handler = async (req: Request): Promise<Response> => {
         <body>
           <div class="header">
             <h1 style="margin: 0; font-size: 24px;">RheumaFlow</h1>
-            <p style="margin: 8px 0 0 0; opacity: 0.9;">${reportType} Report</p>
+            <p style="margin: 8px 0 0 0; opacity: 0.9;">${safeReportType} Report</p>
           </div>
           <div class="content">
             <p>${greeting}</p>
             <p>${bodyIntro}</p>
-            ${additionalMessage ? `
+            ${safeAdditionalMessage ? `
               <div class="message-box">
                 <strong>Message from your healthcare provider:</strong>
-                <p style="margin: 8px 0 0 0;">${additionalMessage}</p>
+                <p style="margin: 8px 0 0 0;">${safeAdditionalMessage}</p>
               </div>
             ` : ''}
             <p>The PDF report is attached to this email for your records.</p>
-            ${senderName ? `<p>Best regards,<br><strong>${senderName}</strong></p>` : '<p>Best regards,<br>The RheumaFlow Team</p>'}
+            ${safeSenderName ? `<p>Best regards,<br><strong>${safeSenderName}</strong></p>` : '<p>Best regards,<br>The RheumaFlow Team</p>'}
             <div class="footer">
               <p>This email was sent via RheumaFlow Clinical Workflow System</p>
               <p class="disclaimer">
