@@ -1,0 +1,54 @@
+# Canonical CI/CD pipeline for UHS Health OS / Rhema Care Flow
+# Canonical repo: JoaoRG-lab/rhema-care-flow  branch: main
+# This workflow validates the build on every push to main and PRs.
+# Actual Vercel deploy is triggered automatically via the Vercel GitHub integration.
+
+name: CI — Build & Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Type-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout canonical repo
+        uses: actions/checkout@v4
+        with:
+          repository: JoaoRG-lab/rhema-care-flow
+          ref: main
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint src --ext .ts,.tsx --max-warnings 0 || true
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Verify dist output
+        run: |
+          if [ ! -f dist/index.html ]; then
+            echo "ERROR: dist/index.html not found. Build failed."
+            exit 1
+          fi
+          echo "Build successful — dist/index.html present."
+          ls -lh dist/

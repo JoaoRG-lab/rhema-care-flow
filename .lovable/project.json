@@ -1,0 +1,10 @@
+{
+  "canonicalRepo": "JoaoRG-lab/rhema-care-flow",
+  "canonicalBranch": "main",
+  "projectName": "UHS Health OS — Rhema Care Flow",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "note": "This is the ONLY canonical repository. Do NOT use rhema-care-flow-e98622f0, rhema-care-flow-65f281f9, medconsult-os-starter or any hash-suffixed repo. Branch must be main (lowercase)."
+}

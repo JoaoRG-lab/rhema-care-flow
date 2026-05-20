@@ -1,58 +1,36 @@
 {
-  "project": "Rhema Care Flow",
+  "platform": "UHS Health OS / Rhema Care Flow",
+  "version": "2.0.0",
+  "updatedAt": "2026-05-20",
   "canonical": {
-    "github_owner": "JoaoRG-lab",
-    "github_repo": "rhema-care-flow",
-    "github_full_name": "JoaoRG-lab/rhema-care-flow",
-    "github_url": "https://github.com/JoaoRG-lab/rhema-care-flow",
-    "branch": "main",
+    "githubOrg": "JoaoRG-lab",
+    "githubRepo": "rhema-care-flow",
+    "githubBranch": "main",
     "framework": "vite",
-    "install_command": "npm install",
-    "build_command": "npm run build",
-    "output_directory": "dist"
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "installCommand": "npm install"
   },
-  "integrations": {
-    "lovable": {
-      "mode": "connect_existing_repository_only",
-      "repository": "JoaoRG-lab/rhema-care-flow",
-      "branch": "main",
-      "do_not_create_or_clone": true
-    },
-    "vercel": {
-      "project_name": "rhema-care-flow",
-      "repository": "JoaoRG-lab/rhema-care-flow",
-      "production_branch": "main",
-      "framework_preset": "Vite",
-      "install_command": "npm install",
-      "build_command": "npm run build",
-      "output_directory": "dist"
-    },
-    "supabase": {
-      "project_name": "Rhema-care-flow",
-      "project_ref": "rfsaxstpfpigrjyiochi",
-      "public_url": "https://rfsaxstpfpigrjyiochi.supabase.co",
-      "frontend_env_keys": [
-        "VITE_SUPABASE_URL",
-        "VITE_SUPABASE_PUBLISHABLE_KEY"
-      ]
-    }
+  "deprecated": [
+    "rhema-care-flow-e98622f0",
+    "rhema-care-flow-65f281f9",
+    "medconsult-os-starter",
+    "medconsult-os-starter-p2hz",
+    "medconsult-os-starter-1ldc",
+    "medconsult-os-starter-52l4"
+  ],
+  "supabase": {
+    "projectUrl": "https://rfsaxstpfpigrjyiochi.supabase.co",
+    "envVar": "VITE_SUPABASE_URL",
+    "keyEnvVar": "VITE_SUPABASE_PUBLISHABLE_KEY"
   },
-  "do_not_use": {
-    "repositories": [
-      "JoaoRG-lab/rhema-care-flow-65f281f9",
-      "joaooz123-png/rhema-care-flow",
-      "joaooz123-png/medconsult-os-starter",
-      "joaooz123-png/vida-clinica-os",
-      "joaooz123-png/vida-clinica-os-bc012bad"
-    ],
-    "branches": ["mainn", "Mainn"],
-    "frameworks": ["nextjs"]
+  "stack": {
+    "frontend": ["React 18", "TypeScript 5", "Vite 5", "Tailwind CSS 3", "shadcn/ui"],
+    "routing": ["React Router v6", "TanStack Query v5"],
+    "backend": ["Supabase PostgreSQL", "Supabase Auth", "Supabase Edge Functions", "Supabase Storage"],
+    "blockchain": ["Solana", "Anchor (Rust)", "URV Privacy Module"]
   },
-  "deployment_success_criteria": {
-    "github_org": "JoaoRG-lab",
-    "github_repo": "rhema-care-flow",
-    "github_ref": "main",
-    "framework": "vite",
-    "ready_state": "READY"
-  }
+  "personas": ["clinician", "academic", "patient"],
+  "specialties": 14,
+  "note": "Single source of truth for all deploy targets. Lovable, Vercel, Supabase and GitHub Actions must all reference JoaoRG-lab/rhema-care-flow branch main."
 }
