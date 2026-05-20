@@ -4,34 +4,26 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 // Rate limit para usuários normais (admins têm bypass)
-const RATE_LIMIT_MAX_REQUESTS = 30;
+const RATE_LIMIT_MAX_REQUESTS = 20;
 const RATE_LIMIT_WINDOW_MINUTES = 60;
-
-// Modelos disponíveis por perfil
-const USER_MODELS = ["gpt-4o-mini", "gpt-3.5-turbo"] as const;
-const ADMIN_MODELS = [
-  "gpt-4o",
-  "gpt-4o-mini",
-  "gpt-4-turbo",
-  "gpt-4",
-  "gpt-3.5-turbo",
-  "o1",
-  "o1-mini",
-  "o3-mini",
-] as const;
 
 const MessageSchema = z.object({
   role: z.enum(["system", "user", "assistant"]),
   content: z.string().min(1).max(32000),
 });
 
-const OpenAIChatRequestSchema = z.object({
+const GrokChatRequestSchema = z.object({
   messages: z.array(MessageSchema).min(1).max(100),
-  model: z.string().optional().default("gpt-4o-mini"),
+  model: z.enum([
+    "grok-3",
+    "grok-3-mini",
+    "grok-2",
+    "grok-2-vision",
+  ]).optional().default("grok-3-mini"),
   temperature: z.number().min(0).max(2).optional(),
   max_tokens: z.number().min(1).max(8192).optional(),
   stream: z.boolean().optional().default(true),
@@ -75,15 +67,15 @@ serve(async (req) => {
     const userRole = claimsData.claims.user_metadata?.role ?? claimsData.claims.role ?? "user";
     const isAdmin = userRole === "admin" || userRole === "super_admin";
 
-    console.log(`[openai-chat] user=${userId} role=${userRole} isAdmin=${isAdmin}`);
+    console.log(`[grok-chat] user=${userId} role=${userRole} isAdmin=${isAdmin}`);
 
-    // Rate limit apenas para não-admins
+    // Apenas aplica rate limit para não-admins
     if (!isAdmin) {
       const { data: rateLimitAllowed, error: rateLimitError } = await supabaseAdmin.rpc(
         "check_rate_limit",
         {
           p_user_id: userId,
-          p_endpoint: "openai-chat",
+          p_endpoint: "grok-chat",
           p_max_requests: RATE_LIMIT_MAX_REQUESTS,
           p_window_minutes: RATE_LIMIT_WINDOW_MINUTES,
         }
@@ -93,7 +85,7 @@ serve(async (req) => {
         console.error("Rate limit check error:", rateLimitError);
       } else if (!rateLimitAllowed) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Maximum 30 requests per hour." }),
+          JSON.stringify({ error: "Rate limit exceeded. Maximum 20 requests per hour." }),
           {
             status: 429,
             headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "3600" },
@@ -112,7 +104,7 @@ serve(async (req) => {
       );
     }
 
-    const validationResult = OpenAIChatRequestSchema.safeParse(body);
+    const validationResult = GrokChatRequestSchema.safeParse(body);
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({
@@ -128,25 +120,20 @@ serve(async (req) => {
 
     const { messages, model, temperature, max_tokens, stream } = validationResult.data;
 
-    // Valida se o modelo solicitado é permitido para o perfil do usuário
-    const allowedModels: readonly string[] = isAdmin ? ADMIN_MODELS : USER_MODELS;
-    const effectiveModel = allowedModels.includes(model) ? model : (isAdmin ? "gpt-4o" : "gpt-4o-mini");
+    // Admins podem usar modelos mais poderosos
+    const effectiveModel = isAdmin && model === "grok-3-mini" ? "grok-3" : model;
 
-    if (model !== effectiveModel) {
-      console.warn(`[openai-chat] model '${model}' not allowed for role '${userRole}', using '${effectiveModel}'`);
+    const GROK_API_KEY = Deno.env.get("GROK_API_KEY") ?? Deno.env.get("XAI_API_KEY");
+    if (!GROK_API_KEY) {
+      throw new Error("GROK_API_KEY (ou XAI_API_KEY) não configurada no ambiente Supabase");
     }
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY não configurada no ambiente Supabase");
-    }
+    console.log(`[grok-chat] calling model=${effectiveModel} stream=${stream}`);
 
-    console.log(`[openai-chat] calling model=${effectiveModel} stream=${stream}`);
-
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+    const grokResponse = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${GROK_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -158,41 +145,41 @@ serve(async (req) => {
       }),
     });
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error("[openai-chat] OpenAI API error:", openaiResponse.status, errorText);
+    if (!grokResponse.ok) {
+      const errorText = await grokResponse.text();
+      console.error("[grok-chat] xAI API error:", grokResponse.status, errorText);
 
-      if (openaiResponse.status === 429) {
+      if (grokResponse.status === 429) {
         return new Response(
-          JSON.stringify({ error: "OpenAI rate limit exceeded. Please try again later." }),
+          JSON.stringify({ error: "Grok rate limit exceeded. Try again later." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (openaiResponse.status === 401) {
+      if (grokResponse.status === 401) {
         return new Response(
-          JSON.stringify({ error: "OpenAI API key invalid or expired." }),
+          JSON.stringify({ error: "Grok API key inválida ou expirada." }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       return new Response(
-        JSON.stringify({ error: "OpenAI request failed" }),
+        JSON.stringify({ error: "Grok request failed", status: grokResponse.status }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (stream) {
-      return new Response(openaiResponse.body, {
+      return new Response(grokResponse.body, {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     } else {
-      const data = await openaiResponse.json();
+      const data = await grokResponse.json();
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
   } catch (error) {
-    console.error("[openai-chat] unexpected error:", error);
+    console.error("[grok-chat] unexpected error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
