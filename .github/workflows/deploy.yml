@@ -1,9 +1,4 @@
-# Canonical CI/CD pipeline for UHS Health OS / Rhema Care Flow
-# Canonical repo: JoaoRG-lab/rhema-care-flow  branch: main
-# This workflow validates the build on every push to main and PRs.
-# Actual Vercel deploy is triggered automatically via the Vercel GitHub integration.
-
-name: CI — Build & Lint
+name: CI — Build & Deploy
 
 on:
   push:
@@ -12,16 +7,12 @@ on:
     branches: [main]
 
 jobs:
+  # ── 1. Build ──────────────────────────────────────────────────────────────
   build:
-    name: Build & Type-check
+    name: Build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout canonical repo
-        uses: actions/checkout@v4
-        with:
-          repository: JoaoRG-lab/rhema-care-flow
-          ref: main
+      - uses: actions/checkout@v4
 
       - name: Setup Node 20
         uses: actions/setup-node@v4
@@ -35,20 +26,38 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
-      - name: Lint
-        run: npx eslint src --ext .ts,.tsx --max-warnings 0 || true
-
       - name: Build
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Verify dist output
-        run: |
-          if [ ! -f dist/index.html ]; then
-            echo "ERROR: dist/index.html not found. Build failed."
-            exit 1
-          fi
-          echo "Build successful — dist/index.html present."
-          ls -lh dist/
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  # ── 2. Deploy → Cloudflare Pages (apenas main) ────────────────────────────
+  deploy-cloudflare:
+    name: Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=rhema-care-flow --branch=main
