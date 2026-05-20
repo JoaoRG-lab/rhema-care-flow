@@ -61,15 +61,21 @@ serve(async (req) => {
     
     // Verify webhook signature
     const digestHeader = req.headers.get("x-payload-digest");
-    if (digestHeader) {
-      const isValid = verifyWebhookSignature(rawBody, digestHeader, SUMSUB_SECRET_KEY);
-      if (!isValid) {
-        console.error("Invalid webhook signature");
-        return new Response(
-          JSON.stringify({ error: "Invalid signature" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    if (!digestHeader) {
+      console.error("Missing webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Missing signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const isValid = verifyWebhookSignature(rawBody, digestHeader, SUMSUB_SECRET_KEY);
+    if (!isValid) {
+      console.error("Invalid webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const payload: SumsubWebhookPayload = JSON.parse(rawBody);
