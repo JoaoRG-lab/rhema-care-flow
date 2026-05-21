@@ -1,15 +1,3 @@
-# ╔══════════════════════════════════════════════════════════════════════════╗
-# ║  RHEMA TMR DEPLOYMENT AUDITOR                                           ║
-# ║  Triple Modular Redundancy — inspirado em Byzantine Fault Tolerance     ║
-# ║                                                                          ║
-# ║  Fluxo:                                                                  ║
-# ║    3 réplicas de build em paralelo (R1, R2, R3)                          ║
-# ║    Voter 2-of-3: ≥2 builds verdes → aprovado                            ║
-# ║    Kill: réplica falha → cancela runs irmãs instantaneamente            ║
-# ║    Rotate: voter rejeita → git reset --hard para last-known-good SHA    ║
-# ║    Auditor I3: score 0-100, abre Issue consolidada se score < 85        ║
-# ╚══════════════════════════════════════════════════════════════════════════╝
-
 name: TMR Deployment Auditor
 
 on:
@@ -18,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       force_rotate:
-        description: 'Forçar rotate para último SHA limpo'
+        description: 'Force rotate to last clean SHA'
         required: false
         default: 'false'
 
@@ -27,19 +15,14 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_GOOD_VERSION: '20'
-  BUILD_CMD: 'vite build'
   INSTALL_FLAGS: '--legacy-peer-deps'
   SCORE_THRESHOLD: '85'
   VOTER_QUORUM: '2'
 
 jobs:
 
-  # ══════════════════════════════════════════════════════════════════════════
-  # RÉPLICA 1 — Node 20 LTS (baseline)
-  # ══════════════════════════════════════════════════════════════════════════
   replica-1:
-    name: 'R1 · Node 20 · Ubuntu Latest'
+    name: 'R1 - Node 20 - cache'
     runs-on: ubuntu-latest
     outputs:
       status: ${{ steps.result.outputs.status }}
@@ -47,48 +30,37 @@ jobs:
       error: ${{ steps.result.outputs.error }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
       - name: Install
         id: install
         run: |
           START=$(date +%s)
-          npm install ${{ env.INSTALL_FLAGS }} 2>&1 | tee /tmp/install.log
-          echo "install_exit=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+          npm install ${{ env.INSTALL_FLAGS }}
           echo "start=$START" >> $GITHUB_OUTPUT
-
       - name: Build
         id: build
-        run: |
-          npm run build 2>&1 | tee /tmp/build.log
-          echo "build_exit=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+        run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-
-      - name: Emit result
+      - name: Result
         id: result
         if: always()
         run: |
           END=$(date +%s)
           START=${{ steps.install.outputs.start }}
-          DURATION=$((END - START))
+          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
           if [ "${{ steps.build.outcome }}" = "success" ]; then
             echo "status=pass" >> $GITHUB_OUTPUT
             echo "error=none" >> $GITHUB_OUTPUT
           else
-            ERR=$(tail -20 /tmp/build.log 2>/dev/null || tail -20 /tmp/install.log 2>/dev/null || echo 'unknown error')
             echo "status=fail" >> $GITHUB_OUTPUT
-            echo "error=${ERR}" >> $GITHUB_OUTPUT
+            echo "error=build-failed" >> $GITHUB_OUTPUT
           fi
-          echo "duration=${DURATION}s" >> $GITHUB_OUTPUT
-
-      - name: Upload dist R1
+      - name: Upload dist
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -96,11 +68,8 @@ jobs:
           path: dist/
           retention-days: 3
 
-  # ══════════════════════════════════════════════════════════════════════════
-  # RÉPLICA 2 — Node 18 (compatibilidade)
-  # ══════════════════════════════════════════════════════════════════════════
   replica-2:
-    name: 'R2 · Node 18 · Ubuntu Latest'
+    name: 'R2 - Node 18 - cache'
     runs-on: ubuntu-latest
     outputs:
       status: ${{ steps.result.outputs.status }}
@@ -108,46 +77,37 @@ jobs:
       error: ${{ steps.result.outputs.error }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node 18
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-
       - name: Install
         id: install
         run: |
           START=$(date +%s)
-          npm install ${{ env.INSTALL_FLAGS }} 2>&1 | tee /tmp/install.log
+          npm install ${{ env.INSTALL_FLAGS }}
           echo "start=$START" >> $GITHUB_OUTPUT
-
       - name: Build
         id: build
-        run: |
-          npm run build 2>&1 | tee /tmp/build.log
+        run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-
-      - name: Emit result
+      - name: Result
         id: result
         if: always()
         run: |
           END=$(date +%s)
           START=${{ steps.install.outputs.start }}
-          DURATION=$((END - START))
+          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
           if [ "${{ steps.build.outcome }}" = "success" ]; then
             echo "status=pass" >> $GITHUB_OUTPUT
             echo "error=none" >> $GITHUB_OUTPUT
           else
-            ERR=$(tail -20 /tmp/build.log 2>/dev/null || tail -20 /tmp/install.log 2>/dev/null || echo 'unknown error')
             echo "status=fail" >> $GITHUB_OUTPUT
-            echo "error=${ERR}" >> $GITHUB_OUTPUT
+            echo "error=build-failed" >> $GITHUB_OUTPUT
           fi
-          echo "duration=${DURATION}s" >> $GITHUB_OUTPUT
-
-      - name: Upload dist R2
+      - name: Upload dist
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -155,11 +115,8 @@ jobs:
           path: dist/
           retention-days: 3
 
-  # ══════════════════════════════════════════════════════════════════════════
-  # RÉPLICA 3 — Node 20 + cache limpo (paranoia mode)
-  # ══════════════════════════════════════════════════════════════════════════
   replica-3:
-    name: 'R3 · Node 20 · Clean Cache'
+    name: 'R3 - Node 20 - no cache'
     runs-on: ubuntu-latest
     outputs:
       status: ${{ steps.result.outputs.status }}
@@ -167,45 +124,36 @@ jobs:
       error: ${{ steps.result.outputs.error }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node 20 (sem cache)
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Install (sem cache, npm ci)
+      - name: Install
         id: install
         run: |
           START=$(date +%s)
-          npm install ${{ env.INSTALL_FLAGS }} 2>&1 | tee /tmp/install.log
+          npm install ${{ env.INSTALL_FLAGS }}
           echo "start=$START" >> $GITHUB_OUTPUT
-
       - name: Build
         id: build
-        run: |
-          npm run build 2>&1 | tee /tmp/build.log
+        run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-
-      - name: Emit result
+      - name: Result
         id: result
         if: always()
         run: |
           END=$(date +%s)
           START=${{ steps.install.outputs.start }}
-          DURATION=$((END - START))
+          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
           if [ "${{ steps.build.outcome }}" = "success" ]; then
             echo "status=pass" >> $GITHUB_OUTPUT
             echo "error=none" >> $GITHUB_OUTPUT
           else
-            ERR=$(tail -20 /tmp/build.log 2>/dev/null || tail -20 /tmp/install.log 2>/dev/null || echo 'unknown error')
             echo "status=fail" >> $GITHUB_OUTPUT
-            echo "error=${ERR}" >> $GITHUB_OUTPUT
+            echo "error=build-failed" >> $GITHUB_OUTPUT
           fi
-          echo "duration=${DURATION}s" >> $GITHUB_OUTPUT
-
-      - name: Upload dist R3
+      - name: Upload dist
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -213,69 +161,37 @@ jobs:
           path: dist/
           retention-days: 3
 
-  # ══════════════════════════════════════════════════════════════════════════
-  # VOTER — árbitro 2-of-3 (Byzantine majority)
-  # Se < quorum: KILL + ROTATE para last-known-good SHA
-  # ══════════════════════════════════════════════════════════════════════════
   voter:
-    name: 'VOTER · 2-of-3 Byzantine Majority'
+    name: 'VOTER - 2-of-3 Byzantine Majority'
     runs-on: ubuntu-latest
     needs: [replica-1, replica-2, replica-3]
     if: always()
     outputs:
       verdict: ${{ steps.vote.outputs.verdict }}
       pass_count: ${{ steps.vote.outputs.pass_count }}
-      winner_replica: ${{ steps.vote.outputs.winner_replica }}
-      rotate_sha: ${{ steps.rotate.outputs.sha }}
+      winner: ${{ steps.vote.outputs.winner }}
       score: ${{ steps.score.outputs.value }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 50
-
       - name: Cast votes
         id: vote
         run: |
           R1="${{ needs.replica-1.outputs.status }}"
           R2="${{ needs.replica-2.outputs.status }}"
           R3="${{ needs.replica-3.outputs.status }}"
-
           PASS=0
           WINNER="none"
           [ "$R1" = "pass" ] && PASS=$((PASS+1)) && WINNER="r1"
           [ "$R2" = "pass" ] && PASS=$((PASS+1)) && [ "$WINNER" = "none" ] && WINNER="r2"
           [ "$R3" = "pass" ] && PASS=$((PASS+1)) && [ "$WINNER" = "none" ] && WINNER="r3"
-
           echo "pass_count=$PASS" >> $GITHUB_OUTPUT
-          echo "winner_replica=$WINNER" >> $GITHUB_OUTPUT
-
+          echo "winner=$WINNER" >> $GITHUB_OUTPUT
           if [ $PASS -ge ${{ env.VOTER_QUORUM }} ]; then
             echo "verdict=APPROVED" >> $GITHUB_OUTPUT
-            echo "✅ VOTER: $PASS/3 replicas passed — APPROVED (winner: $WINNER)"
           else
             echo "verdict=REJECTED" >> $GITHUB_OUTPUT
-            echo "❌ VOTER: only $PASS/3 replicas passed — REJECTED"
           fi
-
-      - name: Find last-known-good SHA (rotate target)
-        id: rotate
-        if: steps.vote.outputs.verdict == 'REJECTED'
-        run: |
-          # Busca o último commit onde o build passou (tag tmr-good ou último merge)
-          GOOD_SHA=$(git log --oneline -20 --format="%H %s" | \
-            grep -v "^${{ github.sha }}" | \
-            head -1 | awk '{print $1}')
-
-          if [ -z "$GOOD_SHA" ]; then
-            GOOD_SHA=$(git rev-parse HEAD~1)
-          fi
-
-          echo "sha=$GOOD_SHA" >> $GITHUB_OUTPUT
-          echo "🔄 ROTATE target: $GOOD_SHA"
-
-      - name: Compute quality score
+      - name: Compute score
         id: score
-        if: always()
         run: |
           R1="${{ needs.replica-1.outputs.status }}"
           R2="${{ needs.replica-2.outputs.status }}"
@@ -284,239 +200,90 @@ jobs:
           [ "$R1" = "pass" ] && PASS=$((PASS+1))
           [ "$R2" = "pass" ] && PASS=$((PASS+1))
           [ "$R3" = "pass" ] && PASS=$((PASS+1))
-
-          # Score: 33 pts por réplica + 1 bonus por velocidade < 120s
-          BASE=$((PASS * 33))
-          D1="${{ needs.replica-1.outputs.duration }}"
-          D1_SEC=$(echo $D1 | tr -d 's')
-          SPEED_BONUS=0
-          [ "$R1" = "pass" ] && [ "$D1_SEC" -lt 120 ] 2>/dev/null && SPEED_BONUS=1
-
-          SCORE=$((BASE + SPEED_BONUS))
-          [ $SCORE -gt 100 ] && SCORE=100
+          SCORE=$((PASS * 33))
+          [ $PASS -eq 3 ] && SCORE=100
           echo "value=$SCORE" >> $GITHUB_OUTPUT
-          echo "📊 Quality score: $SCORE/100"
+          echo "Score: $SCORE/100 ($PASS/3 replicas passed)"
 
-  # ══════════════════════════════════════════════════════════════════════════
-  # ROTATE — executa reset para last-known-good se REJECTED
-  # ══════════════════════════════════════════════════════════════════════════
-  rotate-to-head:
-    name: '🔄 ROTATE → Last Known Good'
-    runs-on: ubuntu-latest
-    needs: voter
-    if: needs.voter.outputs.verdict == 'REJECTED'
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 50
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure git
-        run: |
-          git config user.name  "TMR Auditor Bot"
-          git config user.email "tmr-bot@rhema.ai"
-
-      - name: Rotate to last-known-good SHA
-        run: |
-          GOOD_SHA="${{ needs.voter.outputs.rotate_sha }}"
-          CURRENT_SHA="${{ github.sha }}"
-
-          echo "💀 KILLING failing build: $CURRENT_SHA"
-          echo "🔄 ROTATING to: $GOOD_SHA"
-
-          # Cria branch de emergência preservando o SHA falho para análise
-          git checkout -b tmr/killed-$(date +%Y%m%d-%H%M%S)
-          git push origin tmr/killed-$(date +%Y%m%d-%H%M%S) || true
-
-          # Volta main para último SHA bom
-          git checkout main
-          git reset --hard $GOOD_SHA
-          git push origin main --force-with-lease
-
-          echo "✅ main rotacionado para $GOOD_SHA"
-          echo "🗂️ SHA falho preservado em branch tmr/killed-*"
-
-  # ══════════════════════════════════════════════════════════════════════════
-  # DEPLOY — só executa se APPROVED pelo voter
-  # ══════════════════════════════════════════════════════════════════════════
   deploy:
-    name: '🚀 Deploy (voter approved)'
+    name: 'DEPLOY - Vercel (voter approved)'
     runs-on: ubuntu-latest
     needs: voter
     if: needs.voter.outputs.verdict == 'APPROVED'
-    permissions:
-      contents: read
-      deployments: write
-    steps:
-      - name: Download dist do winner
-        uses: actions/download-artifact@v4
-        with:
-          name: dist-${{ needs.voter.outputs.winner_replica }}
-          path: dist/
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=rhema-care-flow --branch=main
-
-      - name: Tag commit como last-known-good
-        run: |
-          echo "tmr-good-$(date +%Y%m%d-%H%M%S)" > /tmp/tag_name
-          cat /tmp/tag_name
-        # Tag real via API no auditor abaixo
-
-  # ══════════════════════════════════════════════════════════════════════════
-  # AUDITOR I3 — relatório consolidado, score, tag SHA limpo
-  # Roda em PARALELO com deploy — não bloqueia entrega
-  # ══════════════════════════════════════════════════════════════════════════
-  auditor-i3:
-    name: '🔍 Auditor I3 — Relatório Consolidado'
-    runs-on: ubuntu-latest
-    needs: [voter, deploy, rotate-to-head]
-    if: always()
-    permissions:
-      contents: write
-      issues: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 10
+          node-version: '20'
+      - name: Install
+        run: npm install ${{ env.INSTALL_FLAGS }}
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      - name: Deploy to Vercel
+        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Gerar relatório TMR
+  auditor-i3:
+    name: 'AUDITOR I3 - Consolidated Report'
+    runs-on: ubuntu-latest
+    needs: [voter]
+    if: always()
+    permissions:
+      issues: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate report
         id: report
         run: |
           VERDICT="${{ needs.voter.outputs.verdict }}"
           SCORE="${{ needs.voter.outputs.score }}"
           PASS="${{ needs.voter.outputs.pass_count }}"
-          WINNER="${{ needs.voter.outputs.winner_replica }}"
+          WINNER="${{ needs.voter.outputs.winner }}"
           SHA="${{ github.sha }}"
           SHORT_SHA="${SHA:0:7}"
-          ROTATE_SHA="${{ needs.voter.outputs.rotate_sha }}"
-
-          R1_STATUS="${{ needs.replica-1.outputs.status }}"
-          R1_DURATION="${{ needs.replica-1.outputs.duration }}"
-          R2_STATUS="${{ needs.replica-2.outputs.status }}"
-          R2_DURATION="${{ needs.replica-2.outputs.duration }}"
-          R3_STATUS="${{ needs.replica-3.outputs.status }}"
-          R3_DURATION="${{ needs.replica-3.outputs.duration }}"
-
-          R1_ERR="${{ needs.replica-1.outputs.error }}"
-          R2_ERR="${{ needs.replica-2.outputs.error }}"
-          R3_ERR="${{ needs.replica-3.outputs.error }}"
-
-          # Ícone por status
-          icon_r1() { [ "$R1_STATUS" = "pass" ] && echo "✅" || echo "❌"; }
-          icon_r2() { [ "$R2_STATUS" = "pass" ] && echo "✅" || echo "❌"; }
-          icon_r3() { [ "$R3_STATUS" = "pass" ] && echo "✅" || echo "❌"; }
-
-          if [ "$VERDICT" = "APPROVED" ]; then
-            VERDICT_BADGE="## ✅ APROVADO — Deploy realizado"
-            ACTION_TAKEN="Deploy executado via réplica **$WINNER**. SHA tagueado como last-known-good."
-          else
-            VERDICT_BADGE="## ❌ REJEITADO — Rotate executado"
-            ACTION_TAKEN="Build **MORTO** instantaneamente. main rotacionado para \`${ROTATE_SHA:0:7}\` (último SHA limpo)."
-          fi
-
-          SCORE_BAR=$(python3 -c "
-s=$SCORE
-filled=int(s/5)
-empty=20-filled
-print('█'*filled + '░'*empty + f' {s}/100')
-" 2>/dev/null || echo "$SCORE/100")
-
-          cat > /tmp/report.md << REPORT
-          $VERDICT_BADGE
-
-          > Commit: \`$SHORT_SHA\` | Branch: \`main\` | Autor: ${{ github.actor }}
-
-          ---
-
-          ### 🗳️ Resultado do Voter (2-of-3 Byzantine Majority)
-
-          | Réplica | Ambiente | Status | Duração | Erro |
-          |---------|----------|--------|---------|------|
-          | R1 | Node 20 · Ubuntu · cache | $(icon_r1) $R1_STATUS | $R1_DURATION | $R1_ERR |
-          | R2 | Node 18 · Ubuntu · cache | $(icon_r2) $R2_STATUS | $R2_DURATION | $R2_ERR |
-          | R3 | Node 20 · Ubuntu · sem cache | $(icon_r3) $R3_STATUS | $R3_DURATION | $R3_ERR |
-
-          **Quorum:** $PASS/3 réplicas aprovadas (mínimo: ${{ env.VOTER_QUORUM }})
-
-          ---
-
-          ### 📊 Quality Score I3
-
-          \`\`\`
-          $SCORE_BAR
-          \`\`\`
-
-          > Score < ${{ env.SCORE_THRESHOLD }} → Issue aberta automaticamente
-
-          ---
-
-          ### ⚡ Ação Executada
-
-          $ACTION_TAKEN
-
-          ---
-
-          ### 📋 Próximos Passos
-
-          $([ "$VERDICT" = "APPROVED" ] && echo '- [x] Build aprovado por maioria TMR
-          - [x] Deploy realizado em Cloudflare Pages
-          - [x] SHA marcado como last-known-good
-          - [ ] Monitorar métricas pós-deploy (15 min)' || echo '- [x] Build falho MORTO instantaneamente
-          - [x] main rotacionado para último SHA limpo
-          - [ ] Inspecionar branch `tmr/killed-*` para diagnóstico
-          - [ ] Corrigir erro e fazer novo push')
-
-          ---
-          *Gerado por TMR Deployment Auditor · ${{ github.run_id }}*
-          REPORT
-
-          echo "report_path=/tmp/report.md" >> $GITHUB_OUTPUT
+          R1="${{ needs.replica-1.outputs.status }}"
+          R2="${{ needs.replica-2.outputs.status }}"
+          R3="${{ needs.replica-3.outputs.status }}"
+          D1="${{ needs.replica-1.outputs.duration }}"
+          D2="${{ needs.replica-2.outputs.duration }}"
+          D3="${{ needs.replica-3.outputs.duration }}"
+          icon() { [ "$1" = "pass" ] && echo "PASS" || echo "FAIL"; }
+          cat > /tmp/report.md << MDEOF
+          ## TMR Verdict: $VERDICT
+          **Commit:** \`$SHORT_SHA\` | **Score:** $SCORE/100 | **Quorum:** $PASS/3
+          | Replica | Node | Status | Duration |
+          |---------|------|--------|----------|
+          | R1 | 20+cache | $(icon $R1) | $D1 |
+          | R2 | 18+cache | $(icon $R2) | $D2 |
+          | R3 | 20 no-cache | $(icon $R3) | $D3 |
+          _Generated by TMR Auditor - Run ${{ github.run_id }}_
+          MDEOF
           echo "verdict=$VERDICT" >> $GITHUB_OUTPUT
           echo "score=$SCORE" >> $GITHUB_OUTPUT
-
-      - name: Abrir Issue se REJECTED ou score baixo
-        if: needs.voter.outputs.verdict == 'REJECTED' || (needs.voter.outputs.score != '' && needs.voter.outputs.score < env.SCORE_THRESHOLD)
+      - name: Open Issue if REJECTED
+        if: needs.voter.outputs.verdict == 'REJECTED'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('/tmp/report.md', 'utf8');
-            const verdict = '${{ needs.voter.outputs.verdict }}';
-            const score = '${{ needs.voter.outputs.score }}';
             const sha = '${{ github.sha }}'.substring(0, 7);
-
-            const title = verdict === 'REJECTED'
-              ? `❌ TMR: Build ${sha} KILLED — rotate executado`
-              : `⚠️ TMR: Build ${sha} aprovado mas score baixo (${score}/100)`;
-
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title,
+              title: `TMR REJECTED: build ${sha} failed quorum`,
               body: report,
-              labels: verdict === 'REJECTED' ? ['tmr-killed', 'deploy-failure'] : ['tmr-low-score']
+              labels: ['tmr-killed', 'deploy-failure']
             });
-
-      - name: Tag SHA como last-known-good (se aprovado)
-        if: needs.voter.outputs.verdict == 'APPROVED'
-        run: |
-          git config user.name  "TMR Auditor Bot"
-          git config user.email "tmr-bot@rhema.ai"
-          TAG="tmr-good-$(date +%Y%m%d-%H%M%S)"
-          git tag $TAG ${{ github.sha }}
-          git push origin $TAG
-          echo "🏷️ Tagged: $TAG"
-
-      - name: Comentar no commit
-        uses: actions/github-script@v7
+      - name: Comment on commit
         if: always()
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
