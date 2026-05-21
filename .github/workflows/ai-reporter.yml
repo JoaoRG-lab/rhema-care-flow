@@ -1,0 +1,81 @@
+name: AI Code Quality Reporter
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**/*.ts'
+      - 'src/**/*.tsx'
+
+jobs:
+  report-on-failure:
+    name: Cria Issue se build falhar
+    runs-on: ubuntu-latest
+    # Só executa se o job ci.yml (Build, Lint & Security Audit) falhar
+    needs: []
+    if: failure()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci --legacy-peer-deps
+
+      - name: Build check
+        id: build
+        run: npm run build
+        continue-on-error: true
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_HF_TOKEN: ${{ secrets.VITE_HF_TOKEN }}
+
+      - name: Criar Issue de falha no GitHub
+        if: steps.build.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { context } = require('@actions/github');
+            const commit = context.sha.slice(0, 7);
+            const branch = context.ref.replace('refs/heads/', '');
+            const actor = context.actor;
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[AI Report] ❌ Build falhou — ${commit} (${branch})`,
+              labels: ['ai-report', 'auto-generated', 'build-failure', 'needs-review'],
+              body: [
+                '## 🤖 Relatório Automático de Build',
+                '',
+                `**Commit:** \`${commit}\``,
+                `**Branch:** \`${branch}\``,
+                `**Autor:** @${actor}`,
+                `**Run:** [Ver logs](${runUrl})`,
+                '',
+                '---',
+                '## ❌ O build Vite falhou',
+                '',
+                'Verifique os logs no link acima para identificar o erro.',
+                '',
+                '### Checklist de investigação',
+                '- [ ] Import quebrado ou arquivo faltando',
+                '- [ ] Tipo TypeScript incorreto',
+                '- [ ] Dependência ausente no package.json',
+                '- [ ] Variável de ambiente faltando',
+                '- [ ] Conflito de versão de pacote',
+                '',
+                '---',
+                '> Revisores: @JoaoRG-lab',
+                '> Tags: `ai-report` `build-failure` `auto-generated`',
+              ].join('\n'),
+            });
