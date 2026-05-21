@@ -1,4 +1,4 @@
-name: CI
+name: CI + Deploy
 
 on:
   push:
@@ -7,41 +7,83 @@ on:
     branches: [main]
 
 jobs:
+  # ─────────────────────────────────────────
+  # 1. Build & verificacoes
+  # ─────────────────────────────────────────
   build:
+    name: Build & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install
         run: npm ci
 
-      - name: TypeScript check
+      - name: TypeScript
         run: npm run typecheck
 
       - name: ESLint
         run: npm run lint
         continue-on-error: true
 
-      - name: Build (Vite)
+      - name: Vite Build
         run: npm run build
         env:
           VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Upload build artifact
+      # Artefato salvo 30 dias — backup independente de plataforma
+      - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ github.sha }}
           path: dist/
           retention-days: 30
 
+  # ─────────────────────────────────────────
+  # 2. PRIMARIO — Cloudflare Pages
+  # ─────────────────────────────────────────
   deploy-cloudflare:
+    name: Deploy › Cloudflare Pages (PRIMARY)
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://rhema-care-flow.pages.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Wrangler — Cloudflare Pages deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken:  ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command:   pages deploy dist --project-name=rhema-care-flow --branch=main
+
+  # ─────────────────────────────────────────
+  # 3. SECUNDARIO — Netlify
+  # ─────────────────────────────────────────
+  deploy-netlify:
+    name: Deploy › Netlify (SECONDARY)
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
@@ -60,10 +102,8 @@ jobs:
           VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken:    ${{ secrets.CF_API_TOKEN }}
-          accountId:   ${{ secrets.CF_ACCOUNT_ID }}
-          command:     pages deploy dist --project-name=rhema-care-flow --branch=main
-        continue-on-error: true
+      - name: Netlify CLI deploy
+        run: npx netlify-cli deploy --prod --dir=dist --message "CI deploy ${{ github.sha }}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID:    ${{ secrets.NETLIFY_SITE_ID }}

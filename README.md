@@ -1,192 +1,170 @@
 # Rhema Care Flow
 
-> Sistema de gestão em saúde — prontuários eletrônicos, scores clínicos, teleconsulta WebRTC e notificações em tempo real.
-
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)](https://react.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)](https://supabase.com/)
-[![Vercel](https://img.shields.io/badge/Deploy-Vercel-000?logo=vercel&logoColor=white)](https://vercel.com/)
-[![PWA](https://img.shields.io/badge/PWA-ready-5a0fc8)](https://web.dev/progressive-web-apps/)
+Sistema clinico moderno para gestao de pacientes com reumatologia: prontuario eletronico, scores clinicos (DAS28, SDAI, Wells, BASFI), teleconsulta WebRTC, upload de exames e relatorios PDF.
 
 ---
 
 ## Stack
 
-| Camada | Tecnologia |
-|---|---|
-| Frontend | React 19 + TypeScript + Tailwind CSS |
-| Backend | Supabase (PostgreSQL + Auth + Storage + Realtime) |
-| Deploy | Vercel (CI/CD automático via GitHub) |
-| CDN / DNS | Cloudflare |
-| SMS | Twilio via Supabase Edge Functions |
-| PDF | jsPDF (client-side) |
-| PWA | vite-plugin-pwa + Workbox |
-| Video | WebRTC nativo + sinalização via Supabase Realtime |
+| Camada    | Tecnologia                  |
+|-----------|-----------------------------|
+| Frontend  | React 19 + TypeScript + Vite |
+| Estilo    | Tailwind CSS v3             |
+| Backend   | Supabase (Postgres + Auth + Storage + Realtime) |
+| Deploy #1 | **Cloudflare Pages** (primario) |
+| Deploy #2 | Netlify (secundario)        |
+| CI/CD     | GitHub Actions              |
 
 ---
 
-## Pré-requisitos
-
-- Node.js 20+
-- [Supabase CLI](https://supabase.com/docs/guides/cli)
-- Conta Vercel (deploy)
-- Conta Cloudflare (DNS)
-- Conta Twilio (SMS — opcional)
-
----
-
-## Setup local
+## Setup Local
 
 ```bash
 # 1. Clone
 git clone https://github.com/JoaoRG-lab/rhema-care-flow.git
 cd rhema-care-flow
 
-# 2. Instale dependências
+# 2. Instale dependencias
 npm install
 
-# 3. Configure variáveis de ambiente
+# 3. Configure ambiente
 cp .env.example .env.local
 # Edite .env.local com suas credenciais Supabase
 
-# 4. Execute as migrations
-supabase db push
+# 4. Suba as migrations
+npx supabase db push
 
-# 5. Start dev server
+# 5. Rode localmente
 npm run dev
 ```
 
 ---
 
-## Variáveis de ambiente
+## Variaveis de Ambiente
 
-Crie `.env.local` na raiz com:
-
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbGci...
-
-# Twilio (Edge Function send-sms)
-TWILIO_ACCOUNT_SID=ACxxxx
-TWILIO_AUTH_TOKEN=xxxx
-TWILIO_FROM_NUMBER=+1555xxxxxxx
-```
-
-No painel da Vercel, adicione as mesmas variáveis em **Settings → Environment Variables**.
+| Variavel                   | Onde encontrar                                    |
+|----------------------------|---------------------------------------------------|
+| `VITE_SUPABASE_URL`        | Supabase > Settings > API > Project URL           |
+| `VITE_SUPABASE_ANON_KEY`   | Supabase > Settings > API > anon public key       |
+| `TWILIO_ACCOUNT_SID`       | console.twilio.com (secret no Supabase)           |
+| `TWILIO_AUTH_TOKEN`        | console.twilio.com (secret no Supabase)           |
+| `TWILIO_FROM_NUMBER`       | Numero Twilio no formato +15550000000             |
 
 ---
 
-## Migrations Supabase
+## Deploy
 
-Executar em ordem:
+### Primario — Cloudflare Pages
 
 ```bash
-# Esquema principal
-supabase db push --file supabase/migrations/20260520_initial_schema.sql
+# Setup unico (primeira vez)
+npx wrangler login
+npx wrangler pages project create rhema-care-flow
 
-# RLS policies
-supabase db push --file supabase/migrations/20260520_rls_policies.sql
-
-# Storage bucket
-supabase db push --file supabase/migrations/20260520_storage_bucket.sql
-
-# Tabela de notificações
-supabase db push --file supabase/migrations/20260520_notifications_table.sql
+# Deploy manual
+npm run build
+npx wrangler pages deploy dist --project-name=rhema-care-flow
 ```
 
-Ou tudo de uma vez:
-```bash
-supabase db push
-```
+Ou conecte o repo direto no [Cloudflare Dashboard](https://dash.cloudflare.com) > Pages > Connect to Git.
+
+**Variaveis de ambiente no Cloudflare:**
+Dashboard > Pages > rhema-care-flow > Settings > Environment variables
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+**GitHub Secrets para CI automatico:**
+- `CF_API_TOKEN` — token com permissao `Pages:Edit`
+- `CF_ACCOUNT_ID` — seu Account ID
+
+### Secundario — Netlify
+
+1. [app.netlify.com](https://app.netlify.com) > Add new site > Import from GitHub
+2. Selecione `JoaoRG-lab/rhema-care-flow`
+3. Build: `npm run build` | Publish: `dist`
+4. Adicione as variaveis de ambiente
+
+**GitHub Secrets para CI automatico:**
+- `NETLIFY_AUTH_TOKEN` — User settings > Applications > New access token
+- `NETLIFY_SITE_ID` — Site settings > Site ID
 
 ---
 
-## Deploy Edge Function SMS
+## Arquitetura de Banco (Supabase)
 
-```bash
-supabase functions deploy send-sms
+```
+profiles        — dados do usuario + role
+patients        — cadastro de pacientes
+visits          — historico de consultas
+prontuario      — registro clinico detalhado
+scores          — DAS28, SDAI, Wells, BASFI
+exams           — metadados de exames
+audit_logs      — LGPD compliance
+notifications   — alertas em tempo real
 ```
 
-Agendamento automático (pg_cron — rode no SQL Editor do Supabase):
-```sql
-select cron.schedule(
-  'send-sms-job',
-  '*/5 * * * *',
-  $$select net.http_post(
-    url := 'https://<project-ref>.supabase.co/functions/v1/send-sms',
-    headers := '{"Authorization": "Bearer <service-role-key>"}'::jsonb
-  )$$
-);
-```
+### Roles e Permissoes RLS
+
+| Role       | Pacientes | Prontuario | Scores | Admin |
+|------------|-----------|------------|--------|-------|
+| admin      | CRUD      | CRUD       | CRUD   | sim   |
+| medico     | CRUD      | CRUD       | CRUD   | nao   |
+| enfermeiro | leitura   | leitura    | leitura| nao   |
 
 ---
 
-## Deploy Vercel
-
-```bash
-# Via CLI
-vercel deploy --prod
-
-# Ou conecte o repositório no painel Vercel:
-# vercel.com/new → Import Git Repository → JoaoRG-lab/rhema-care-flow
-```
-
-Configurações recomendadas no Vercel:
-- **Framework Preset**: Vite
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Node.js Version**: 20.x
-
----
-
-## Cloudflare DNS
-
-1. Adicione o domínio no Cloudflare
-2. Aponte os nameservers para Cloudflare
-3. Adicione CNAME `@` → `cname.vercel-dns.com` (proxied ☁️)
-4. Ative **Always Use HTTPS** e **HTTP/3**
-5. Regra de cache: `Cache Level: Standard` para `/assets/*`
-
----
-
-## Estrutura do projeto
+## Estrutura do Projeto
 
 ```
 src/
+├── main.tsx
+├── router.tsx
+├── index.css
+├── lib/supabase.ts
+├── contexts/AuthContext.tsx
+├── hooks/               (useToast, useAuditLog, usePatients...)
+├── services/            (SignalingService WebRTC)
 ├── components/
-│   ├── layout/       # AppShell, sidebar
-│   ├── ui/           # ToastContainer, botões, inputs
-│   ├── notifications/ # NotificationsPanel (Realtime)
-│   └── storage/      # FileUpload (drag & drop)
-├── contexts/         # AuthContext
-├── hooks/            # usePatients, useProntuario, useVisits,
-│                     # useScores, useAuditLog, useToast, useWebRTC
-├── lib/              # supabase.ts (cliente)
-├── pages/            # Todas as páginas (lazy-loaded)
-├── services/         # SignalingService (WebRTC P2P)
-├── router.tsx        # BrowserRouter + guards de role
-└── main.tsx          # Entrada
+│   ├── layout/AppShell.tsx
+│   ├── ui/ToastContainer.tsx
+│   ├── notifications/
+│   └── storage/
+└── pages/
+    ├── LoginPage.tsx
+    ├── DashboardPage.tsx
+    ├── PatientsPage.tsx
+    ├── PatientDetailPage.tsx
+    ├── ProntuarioPage.tsx
+    ├── ScorePage.tsx
+    ├── TeleconsultaPage.tsx
+    ├── ReportsPage.tsx
+    ├── SettingsPage.tsx
+    └── AdminPage.tsx
 
 supabase/
-├── functions/send-sms/   # Edge Function Twilio
-└── migrations/           # SQL em ordem cronológica
+├── migrations/
+└── functions/send-sms/
+
+# Arquivos de deploy
+wrangler.toml      — Cloudflare Pages
+netlify.toml       — Netlify
+_redirects         — SPA fallback (ambos)
+_headers           — Security headers Cloudflare
+.github/workflows/ — CI/CD GitHub Actions
 ```
 
 ---
 
-## Roles e permissões
+## CI/CD — GitHub Actions
 
-| Role | Dashboard | Pacientes | Prontuário | Scores | Teleconsulta | Relatórios | Admin |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `admin`      | ✅ | ✅ CRUD | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `medico`     | ✅ | ✅ CRUD | ✅ | ✅ | ✅ | ✅ | — |
-| `enfermeiro` | ✅ | ✅ lê/edita | ✅ | ✅ | ✅ | ✅ | — |
-| `recepcao`   | ✅ | ✅ cria/edita | — | — | — | — | — |
-| `paciente`   | — | 👁 próprio | — | — | ✅ | — | — |
+Cada push na `main` dispara automaticamente:
+
+1. TypeScript check + ESLint
+2. Vite build
+3. Salva `dist/` como artefato (30 dias de backup)
+4. Deploy no **Cloudflare Pages** (primario)
+5. Deploy no **Netlify** (secundario)
 
 ---
 
-## Licença
-
-Proprietário — © 2026 Rhema Care Flow. Todos os direitos reservados.
+*Rhema Care Flow v1.0 — Desenvolvido com React 19 + Supabase + Cloudflare*

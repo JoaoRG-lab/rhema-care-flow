@@ -1,7 +1,22 @@
-# Cloudflare Pages config — rhema-care-flow
-name                = "rhema-care-flow"
-compatibility_date  = "2024-09-01"
+# ================================================================
+# Rhema Care Flow — Cloudflare Pages (PRIMARIO)
+# Deploy automatico via GitHub Actions (workflow ci.yml)
+#
+# Setup manual (uma vez so):
+#   1. npx wrangler login
+#   2. npx wrangler pages project create rhema-care-flow
+#   3. Adicione no GitHub Secrets:
+#      CF_API_TOKEN  = token Cloudflare com permissao Pages:Edit
+#      CF_ACCOUNT_ID = seu Account ID (dash.cloudflare.com -> lado direito)
+# ================================================================
+name       = "rhema-care-flow"
+compatibility_date = "2024-01-01"
 pages_build_output_dir = "dist"
 
-[build]
-  command = "npm run build"
+[vars]
+# Variaveis publicas (nao secretas) podem ficar aqui.
+# Segredos (SUPABASE_URL, ANON_KEY) ficam no painel:
+# Cloudflare Dashboard > Pages > rhema-care-flow > Settings > Environment variables
+
+[[env.production.vars]]
+# Exemplo: APP_ENV = "production"

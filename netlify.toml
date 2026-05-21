@@ -1,31 +1,33 @@
 # ================================================================
-# Rhema Care Flow — Netlify (backup de deploy)
-# Ative em: app.netlify.com > Add new site > Import from GitHub
+# Rhema Care Flow — Netlify (SECUNDARIO)
+# Deploy automatico via GitHub Actions (workflow ci.yml)
+# Manual: app.netlify.com > Add new site > Import from GitHub
 # ================================================================
 [build]
-  command       = "npm run build"
-  publish       = "dist"
-  environment   = { NODE_VERSION = "20" }
+  command     = "npm run build"
+  publish     = "dist"
 
 [build.environment]
-  NPM_FLAGS = "--legacy-peer-deps"
+  NODE_VERSION = "20"
+  NPM_FLAGS    = "--legacy-peer-deps"
 
-# SPA: todas as rotas redirecionam para index.html
+# SPA fallback
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
   status = 200
 
-# Headers de segurança
+# Assets com cache longo
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Seguranca
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options         = "DENY"
-    X-Content-Type-Options  = "nosniff"
-    Referrer-Policy         = "strict-origin-when-cross-origin"
-    X-XSS-Protection        = "1; mode=block"
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+    X-XSS-Protection       = "1; mode=block"
