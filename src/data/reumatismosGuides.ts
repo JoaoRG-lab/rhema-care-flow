@@ -36,6 +36,24 @@ export const rheumatoidArthritisGuide: RheumatologyGuide = {
   principlesTitle: 'Inflamação controlada protege futuro.',
   principlesIntro: 'A meta não é apenas aliviar dor no dia da consulta, mas reduzir inflamação, prevenir dano e preservar função.',
   principles: ['Diagnóstico precoce reduz risco de dano articular.', 'Acompanhamento por metas é melhor que cuidado episódico.', 'Adesão e monitorização laboratorial importam.', 'Dor sem inchaço nem inflamação pode exigir raciocínio diferente.'],
+  faqs: [
+    {
+      question: 'Artrite reumatoide aparece no exame de sangue?',
+      answer: 'Exames como fator reumatoide e anti-CCP podem ajudar, mas não substituem história clínica e exame físico. Algumas pessoas podem ter artrite reumatoide mesmo com exames negativos.',
+    },
+    {
+      question: 'Rigidez matinal é sinal de artrite reumatoide?',
+      answer: 'Rigidez matinal prolongada, especialmente associada a inchaço em mãos, punhos ou pés, é uma pista de inflamação articular e deve ser avaliada por profissional de saúde.',
+    },
+    {
+      question: 'Artrite reumatoide tem cura?',
+      answer: 'A artrite reumatoide costuma ser crônica, mas pode entrar em remissão ou baixa atividade com acompanhamento adequado. O objetivo é controlar inflamação, preservar função e prevenir dano articular.',
+    },
+    {
+      question: 'Quando procurar um reumatologista?',
+      answer: 'Procure avaliação se houver inchaço articular persistente, rigidez matinal importante, dor em múltiplas articulações ou perda de função. Quanto mais cedo a inflamação é reconhecida, melhor tende a ser a proteção articular.',
+    },
+  ],
 };
 
 export const lupusGuide: RheumatologyGuide = {
