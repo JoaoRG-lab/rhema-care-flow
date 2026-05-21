@@ -1,43 +1,44 @@
-import { useState, useEffect } from 'react';
-import { NotificationService } from '../services/NotificationService';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import type { Notification } from '../types';
 
-export function useNotifications() {
+export interface NotifSummary {
+  unread: number;
+}
+
+/**
+ * Hook leve para qualquer componente que precisa saber
+ * quantas notificacoes nao lidas o usuario tem.
+ * Atualiza em tempo real via Supabase Realtime.
+ */
+export function useNotifications(): NotifSummary {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unread,         setUnread]        = useState(0);
-  const [loading,        setLoading]       = useState(true);
+  const [unread, setUnread] = useState(0);
+
+  const fetchCount = useCallback(async () => {
+    if (!user) return;
+    const { count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'nao_lida');
+    setUnread(count ?? 0);
+  }, [user]);
+
+  useEffect(() => { fetchCount(); }, [fetchCount]);
 
   useEffect(() => {
     if (!user) return;
+    const ch = supabase
+      .channel('notif-badge')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => fetchCount()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, fetchCount]);
 
-    NotificationService.list(user.id).then((ns) => {
-      setNotifications(ns);
-      setUnread(ns.filter((n) => !n.read).length);
-      setLoading(false);
-    });
-
-    const channel = NotificationService.subscribeToUser(user.id, (n) => {
-      setNotifications((prev) => [n, ...prev]);
-      setUnread((c) => c + 1);
-    });
-
-    return () => { channel.unsubscribe(); };
-  }, [user]);
-
-  async function markRead(id: string) {
-    await NotificationService.markRead(id);
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
-    setUnread((c) => Math.max(0, c - 1));
-  }
-
-  async function markAllRead() {
-    if (!user) return;
-    await NotificationService.markAllRead(user.id);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    setUnread(0);
-  }
-
-  return { notifications, unread, loading, markRead, markAllRead };
+  return { unread };
 }
