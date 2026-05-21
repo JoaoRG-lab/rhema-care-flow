@@ -1,26 +1,45 @@
-# Política de Segurança — Rhema Care Flow
+# Segurança — Rhema Care Flow
 
-## Credenciais expostas — Ação imediata
+## Cabeçalhos HTTP
 
-Se você suspeita que credenciais foram expostas no repositório:
+Todos configurados via `vercel.json`:
 
-1. **GitHub PAT**: https://github.com/settings/tokens → Revogar todos → Gerar novo
-2. **Supabase keys**: Dashboard → Settings → API → Rotate `anon` e `service_role`
-3. **OpenAI key**: https://platform.openai.com/api-keys → Revogar → Gerar nova
+| Header | Valor | Propósito |
+|---|---|---|
+| `Content-Security-Policy` | restricts sources | Bloqueia XSS e injeção de scripts |
+| `X-Frame-Options` | `DENY` | Impede clickjacking via iframe |
+| `X-Content-Type-Options` | `nosniff` | Impede MIME sniffing |
+| `Strict-Transport-Security` | 2 anos + preload | Força HTTPS |
+| `Referrer-Policy` | strict-origin | Oculta URL em cross-origin |
+| `Permissions-Policy` | bloqueia câmera/mic/geo | Princípio do menor privilégio |
 
-## Regras de segurança
+## Autenticação
 
-- NUNCA commitar `.env`, `.env.local` ou qualquer arquivo com credenciais
-- Variáveis de ambiente do frontend: apenas `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`
-- Chaves secretas (OpenAI, Resend, Mercado Pago, SumSub): apenas via `supabase secrets set`
-- Edge Functions usam `Deno.env.get()` — nunca recebem keys pelo frontend
+- Gerenciada pelo **Supabase Auth** (JWT RS256)
+- `AuthContext.tsx` — provider central com `session`, `user`, `profile`, `role`
+- Row-Level Security (RLS) deve estar habilitado em **todas** as tabelas do Supabase
+- Tokens não são armazenados manualmente — Supabase gerencia via `httpOnly` cookie ou `localStorage` com `PKCE`
 
-## Acesso ao repositório
+## IA Interna (Hugging Face)
 
-- Apenas `JoaoRG-lab` deve ter acesso de escrita ao branch `main`
-- Revogar acesso de: `joaooz123-png` se ainda estiver como colaborador
-- Revisar GitHub Apps instalados: https://github.com/settings/installations
+- Token `VITE_HF_TOKEN` configurado como variável de ambiente no Vercel (nunca no código)
+- Modelo: `HuggingFaceH4/zephyr-7b-beta` por padrão (substituível via `VITE_HF_MODEL`)
+- Chamadas feitas do **cliente** com o token exposto apenas em runtime — para produção com dados sensíveis, migrar para Supabase Edge Function como proxy
 
-## Verificação periódica
+## CI/CD
 
-Use `git log --author=joaooz123-png` para auditar commits externos.
+- GitHub Actions roda `tsc --noEmit` + `vite build` + `npm audit` em todo PR
+- Secrets do GitHub: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_HF_TOKEN`
+
+## Vulnerabilidades Conhecidas
+
+Rodar periodicamente:
+```bash
+npm audit fix
+```
+
+Relatório atual: 14 vulnerabilidades (7 moderate, 7 high) — monitorar via CI.
+
+## Contato
+
+Reportar vulnerabilidades: security@gruporghealthcare.com
