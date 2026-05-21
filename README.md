@@ -1,98 +1,192 @@
 # Rhema Care Flow
 
-> Plataforma clinica inteligente — gestao de pacientes, prontuarios, teleconsulta e IA assistiva.
+> Sistema de gestão em saúde — prontuários eletrônicos, scores clínicos, teleconsulta WebRTC e notificações em tempo real.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/JoaoRG-lab/rhema-care-flow)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)](https://react.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-000?logo=vercel&logoColor=white)](https://vercel.com/)
+[![PWA](https://img.shields.io/badge/PWA-ready-5a0fc8)](https://web.dev/progressive-web-apps/)
+
+---
 
 ## Stack
 
 | Camada | Tecnologia |
 |---|---|
-| Frontend | React + TypeScript + Vite + Tailwind CSS |
-| Backend / DB | Supabase (PostgreSQL + Auth + Storage + Realtime) |
-| Edge Functions | Supabase Edge Functions (Deno) |
-| Deploy | Vercel (frontend) + Supabase Cloud (backend) |
-| IA | OpenAI GPT-4o |
-| Email | Resend API |
-| SMS | Twilio |
-| Pagamentos | Stripe |
+| Frontend | React 19 + TypeScript + Tailwind CSS |
+| Backend | Supabase (PostgreSQL + Auth + Storage + Realtime) |
+| Deploy | Vercel (CI/CD automático via GitHub) |
+| CDN / DNS | Cloudflare |
+| SMS | Twilio via Supabase Edge Functions |
+| PDF | jsPDF (client-side) |
+| PWA | vite-plugin-pwa + Workbox |
+| Video | WebRTC nativo + sinalização via Supabase Realtime |
 
-## Inicio Rapido
+---
+
+## Pré-requisitos
+
+- Node.js 20+
+- [Supabase CLI](https://supabase.com/docs/guides/cli)
+- Conta Vercel (deploy)
+- Conta Cloudflare (DNS)
+- Conta Twilio (SMS — opcional)
+
+---
+
+## Setup local
 
 ```bash
-# 1. Clone o repositorio
+# 1. Clone
 git clone https://github.com/JoaoRG-lab/rhema-care-flow.git
 cd rhema-care-flow
 
-# 2. Instale dependencias
+# 2. Instale dependências
 npm install
 
-# 3. Configure variaveis de ambiente
+# 3. Configure variáveis de ambiente
 cp .env.example .env.local
-# Edite .env.local com seus valores do Supabase, OpenAI, Resend etc.
+# Edite .env.local com suas credenciais Supabase
 
-# 4. Inicie em modo desenvolvimento
+# 4. Execute as migrations
+supabase db push
+
+# 5. Start dev server
 npm run dev
 ```
 
-## Supabase — Setup
+---
 
-```bash
-# Instale a CLI do Supabase
-npm install -g supabase
+## Variáveis de ambiente
 
-# Login
-supabase login
+Crie `.env.local` na raiz com:
 
-# Link com seu projeto
-supabase link --project-ref SEU_PROJECT_REF
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbGci...
 
-# Execute as migrations
-supabase db push
-
-# Deploy de todas as Edge Functions
-supabase functions deploy
+# Twilio (Edge Function send-sms)
+TWILIO_ACCOUNT_SID=ACxxxx
+TWILIO_AUTH_TOKEN=xxxx
+TWILIO_FROM_NUMBER=+1555xxxxxxx
 ```
 
-## Edge Functions Disponíveis
+No painel da Vercel, adicione as mesmas variáveis em **Settings → Environment Variables**.
 
-| Funcao | Metodo | Descricao |
-|---|---|---|
-| `openai-chat` | POST | Chat com GPT-4o (autenticado) |
-| `ai-assistant` | POST | Assistente publico (site) |
-| `analyze-trends` | POST | Analise de tendencias + insight IA |
-| `audit-data-export` | GET/POST | Exportacao de dados (admin) |
-| `admin-signout-all-sessions` | POST | Encerrar sessoes (admin) |
-| `send-feedback-email` | POST | Envio de feedback por email |
-| `schedule-sms` | POST | Agendamento de SMS |
-| `process-payment` | POST | Processamento de pagamento |
+---
 
-## Componentes Principais
+## Migrations Supabase
 
-- `AppShell` — Layout com sidebar + topbar + widgets flutuantes
-- `ChatWidget` — Chat de IA flutuante (bottom-right)
-- `FeedbackWidget` — Widget de feedback (bottom-left)
-- `AIDashboard` — Painel de KPIs com insights de IA
-- `useAIAssistant` — Hook React para integracao com chat
+Executar em ordem:
 
-## Variaveis de Ambiente
+```bash
+# Esquema principal
+supabase db push --file supabase/migrations/20260520_initial_schema.sql
 
-Veja `.env.example` para a lista completa de variaveis necessarias.
+# RLS policies
+supabase db push --file supabase/migrations/20260520_rls_policies.sql
 
-## Deploy na Vercel
+# Storage bucket
+supabase db push --file supabase/migrations/20260520_storage_bucket.sql
 
-1. Conecte o repositorio na [Vercel](https://vercel.com/new)
-2. Configure as variaveis de ambiente (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`)
-3. Deploy automatico a cada push na branch `main`
+# Tabela de notificações
+supabase db push --file supabase/migrations/20260520_notifications_table.sql
+```
 
-## Segurança
+Ou tudo de uma vez:
+```bash
+supabase db push
+```
 
-- Row Level Security (RLS) habilitado em todas as tabelas
-- JWT verificado em todas as Edge Functions
-- Rate limiting por usuario + IP
-- PII mascarado nos exports de dados
-- Headers de segurança configurados no `vercel.json`
+---
+
+## Deploy Edge Function SMS
+
+```bash
+supabase functions deploy send-sms
+```
+
+Agendamento automático (pg_cron — rode no SQL Editor do Supabase):
+```sql
+select cron.schedule(
+  'send-sms-job',
+  '*/5 * * * *',
+  $$select net.http_post(
+    url := 'https://<project-ref>.supabase.co/functions/v1/send-sms',
+    headers := '{"Authorization": "Bearer <service-role-key>"}'::jsonb
+  )$$
+);
+```
+
+---
+
+## Deploy Vercel
+
+```bash
+# Via CLI
+vercel deploy --prod
+
+# Ou conecte o repositório no painel Vercel:
+# vercel.com/new → Import Git Repository → JoaoRG-lab/rhema-care-flow
+```
+
+Configurações recomendadas no Vercel:
+- **Framework Preset**: Vite
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Node.js Version**: 20.x
+
+---
+
+## Cloudflare DNS
+
+1. Adicione o domínio no Cloudflare
+2. Aponte os nameservers para Cloudflare
+3. Adicione CNAME `@` → `cname.vercel-dns.com` (proxied ☁️)
+4. Ative **Always Use HTTPS** e **HTTP/3**
+5. Regra de cache: `Cache Level: Standard` para `/assets/*`
+
+---
+
+## Estrutura do projeto
+
+```
+src/
+├── components/
+│   ├── layout/       # AppShell, sidebar
+│   ├── ui/           # ToastContainer, botões, inputs
+│   ├── notifications/ # NotificationsPanel (Realtime)
+│   └── storage/      # FileUpload (drag & drop)
+├── contexts/         # AuthContext
+├── hooks/            # usePatients, useProntuario, useVisits,
+│                     # useScores, useAuditLog, useToast, useWebRTC
+├── lib/              # supabase.ts (cliente)
+├── pages/            # Todas as páginas (lazy-loaded)
+├── services/         # SignalingService (WebRTC P2P)
+├── router.tsx        # BrowserRouter + guards de role
+└── main.tsx          # Entrada
+
+supabase/
+├── functions/send-sms/   # Edge Function Twilio
+└── migrations/           # SQL em ordem cronológica
+```
+
+---
+
+## Roles e permissões
+
+| Role | Dashboard | Pacientes | Prontuário | Scores | Teleconsulta | Relatórios | Admin |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `admin`      | ✅ | ✅ CRUD | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `medico`     | ✅ | ✅ CRUD | ✅ | ✅ | ✅ | ✅ | — |
+| `enfermeiro` | ✅ | ✅ lê/edita | ✅ | ✅ | ✅ | ✅ | — |
+| `recepcao`   | ✅ | ✅ cria/edita | — | — | — | — | — |
+| `paciente`   | — | 👁 próprio | — | — | ✅ | — | — |
+
+---
 
 ## Licença
 
-Proprietario — Rhema Care Flow © 2026
+Proprietário — © 2026 Rhema Care Flow. Todos os direitos reservados.
