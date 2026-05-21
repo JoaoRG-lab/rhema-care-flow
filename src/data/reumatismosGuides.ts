@@ -37,22 +37,10 @@ export const rheumatoidArthritisGuide: RheumatologyGuide = {
   principlesIntro: 'A meta não é apenas aliviar dor no dia da consulta, mas reduzir inflamação, prevenir dano e preservar função.',
   principles: ['Diagnóstico precoce reduz risco de dano articular.', 'Acompanhamento por metas é melhor que cuidado episódico.', 'Adesão e monitorização laboratorial importam.', 'Dor sem inchaço nem inflamação pode exigir raciocínio diferente.'],
   faqs: [
-    {
-      question: 'Artrite reumatoide aparece no exame de sangue?',
-      answer: 'Exames como fator reumatoide e anti-CCP podem ajudar, mas não substituem história clínica e exame físico. Algumas pessoas podem ter artrite reumatoide mesmo com exames negativos.',
-    },
-    {
-      question: 'Rigidez matinal é sinal de artrite reumatoide?',
-      answer: 'Rigidez matinal prolongada, especialmente associada a inchaço em mãos, punhos ou pés, é uma pista de inflamação articular e deve ser avaliada por profissional de saúde.',
-    },
-    {
-      question: 'Artrite reumatoide tem cura?',
-      answer: 'A artrite reumatoide costuma ser crônica, mas pode entrar em remissão ou baixa atividade com acompanhamento adequado. O objetivo é controlar inflamação, preservar função e prevenir dano articular.',
-    },
-    {
-      question: 'Quando procurar um reumatologista?',
-      answer: 'Procure avaliação se houver inchaço articular persistente, rigidez matinal importante, dor em múltiplas articulações ou perda de função. Quanto mais cedo a inflamação é reconhecida, melhor tende a ser a proteção articular.',
-    },
+    { question: 'Artrite reumatoide aparece no exame de sangue?', answer: 'Exames como fator reumatoide e anti-CCP podem ajudar, mas não substituem história clínica e exame físico. Algumas pessoas podem ter artrite reumatoide mesmo com exames negativos.' },
+    { question: 'Rigidez matinal é sinal de artrite reumatoide?', answer: 'Rigidez matinal prolongada, especialmente associada a inchaço em mãos, punhos ou pés, é uma pista de inflamação articular e deve ser avaliada por profissional de saúde.' },
+    { question: 'Artrite reumatoide tem cura?', answer: 'A artrite reumatoide costuma ser crônica, mas pode entrar em remissão ou baixa atividade com acompanhamento adequado. O objetivo é controlar inflamação, preservar função e prevenir dano articular.' },
+    { question: 'Quando procurar um reumatologista?', answer: 'Procure avaliação se houver inchaço articular persistente, rigidez matinal importante, dor em múltiplas articulações ou perda de função. Quanto mais cedo a inflamação é reconhecida, melhor tende a ser a proteção articular.' },
   ],
 };
 
@@ -80,6 +68,12 @@ export const lupusGuide: RheumatologyGuide = {
   principlesTitle: 'Lúpus exige mapa, não improviso.',
   principlesIntro: 'O cuidado melhora quando o paciente entende a doença, reconhece sinais de alerta e mantém seguimento regular.',
   principles: ['Exame positivo isolado não fecha diagnóstico.', 'Acometimento renal muda prioridade de seguimento.', 'Fotoproteção e adesão podem reduzir atividade.', 'Gestação deve ser planejada com doença controlada.'],
+  faqs: [
+    { question: 'Lúpus aparece só no exame de sangue?', answer: 'Não. Exames como FAN e autoanticorpos podem ajudar, mas lúpus não deve ser definido por um exame isolado. O diagnóstico depende do conjunto entre sintomas, exame físico, exames laboratoriais e padrão de órgãos envolvidos.' },
+    { question: 'FAN positivo significa lúpus?', answer: 'FAN positivo não significa automaticamente lúpus. Ele pode aparecer em outras condições e até em pessoas sem doença autoimune. A interpretação precisa de contexto clínico.' },
+    { question: 'Lúpus pode afetar os rins?', answer: 'Pode. Alterações urinárias, proteinúria, inchaço ou pressão alta nova merecem avaliação, porque acometimento renal muda prioridade de acompanhamento e tratamento.' },
+    { question: 'Quem tem lúpus pode engravidar?', answer: 'Muitas pessoas com lúpus podem engravidar, mas a gestação deve ser planejada com doença controlada e acompanhamento especializado, porque atividade da doença e certos medicamentos mudam riscos.' },
+  ],
 };
 
 export const osteoporosisGuide: RheumatologyGuide = {
@@ -103,6 +97,12 @@ export const osteoporosisGuide: RheumatologyGuide = {
   principlesTitle: 'Proteger osso é proteger independência.',
   principlesIntro: 'A meta é reduzir risco de fratura e preservar mobilidade, não apenas corrigir um exame.',
   principles: ['Fratura prévia muda o risco futuro.', 'Prevenção de quedas é parte do tratamento.', 'Corticoide exige atenção óssea precoce.', 'Acompanhamento melhora adesão e segurança.'],
+  faqs: [
+    { question: 'Osteoporose dói?', answer: 'A osteoporose em si costuma ser silenciosa. Dor pode aparecer quando há fratura, especialmente em coluna, quadril ou punho. Por isso o rastreio é importante antes do primeiro evento.' },
+    { question: 'Densitometria normal exclui risco de fratura?', answer: 'Não completamente. A densitometria é importante, mas risco de fratura também depende de idade, quedas, fraturas prévias, uso de corticoide, doenças associadas e outros fatores clínicos.' },
+    { question: 'Quem usa corticoide precisa cuidar dos ossos?', answer: 'Sim. Uso prolongado de corticoide pode aumentar risco de perda óssea e fraturas. O ideal é avaliar risco, cálcio/vitamina D, quedas e necessidade de tratamento preventivo com profissional de saúde.' },
+    { question: 'Exercício ajuda na osteoporose?', answer: 'Exercícios de força, equilíbrio e impacto adequado podem ajudar na proteção funcional e prevenção de quedas. A escolha deve considerar idade, fraturas prévias, dor e segurança individual.' },
+  ],
 };
 
 export const goutGuide: RheumatologyGuide = {
@@ -126,6 +126,12 @@ export const goutGuide: RheumatologyGuide = {
   principlesTitle: 'Menos crises exige plano, não só resgate.',
   principlesIntro: 'A gota é uma das artrites com maior potencial de controle quando há educação e acompanhamento por metas.',
   principles: ['Ácido úrico normal durante crise não exclui gota.', 'Infecção articular precisa ser lembrada em quadros intensos.', 'Meta de urato depende do perfil clínico.', 'Dieta ajuda, mas nem sempre substitui tratamento indicado.'],
+  faqs: [
+    { question: 'Ácido úrico alto significa gota?', answer: 'Não necessariamente. Ácido úrico alto aumenta risco, mas o diagnóstico de gota depende do quadro clínico e, quando necessário, de exames complementares. Há pessoas com ácido úrico alto sem crises.' },
+    { question: 'Ácido úrico normal durante a crise exclui gota?', answer: 'Não. O ácido úrico pode variar durante uma crise. Por isso o resultado precisa ser interpretado junto da história, exame físico e evolução.' },
+    { question: 'Gota é só excesso de carne ou bebida?', answer: 'Dieta e álcool podem influenciar, mas gota envolve metabolismo do urato, rim, genética, medicamentos e comorbidades. A alimentação ajuda, mas nem sempre substitui tratamento quando ele é indicado.' },
+    { question: 'Toda articulação vermelha e inchada é gota?', answer: 'Não. Infecção articular, outras artrites por cristais e doenças inflamatórias podem parecer gota. Febre, primeira crise intensa ou dúvida diagnóstica exigem avaliação.' },
+  ],
 };
 
 export const inflammatoryBackPainGuide: RheumatologyGuide = {
@@ -149,6 +155,12 @@ export const inflammatoryBackPainGuide: RheumatologyGuide = {
   principlesTitle: 'Coluna também pode inflamar.',
   principlesIntro: 'Reconhecer dor lombar inflamatória reduz anos de atraso diagnóstico em espondiloartrites.',
   principles: ['Melhora com movimento é pista importante.', 'Uveíte e psoríase mudam o raciocínio.', 'Exames precisam ser interpretados no contexto.', 'Mobilidade deve ser protegida desde cedo.'],
+  faqs: [
+    { question: 'Como saber se a dor lombar é inflamatória?', answer: 'Pistas incluem início mais jovem, rigidez matinal, melhora com movimento, piora em repouso e dor durante a segunda metade da noite. A avaliação clínica é necessária para diferenciar de dor mecânica comum.' },
+    { question: 'Dor lombar inflamatória melhora com repouso?', answer: 'Geralmente não. Um padrão sugestivo é piorar em repouso e melhorar com atividade física. Esse detalhe ajuda a diferenciar de muitas dores mecânicas.' },
+    { question: 'HLA-B27 positivo confirma espondiloartrite?', answer: 'Não sozinho. HLA-B27 pode ajudar no raciocínio, mas precisa ser interpretado com sintomas, exame físico, imagem e história familiar ou extra-articular.' },
+    { question: 'Olho vermelho pode ter relação com dor lombar inflamatória?', answer: 'Pode, especialmente se for olho vermelho doloroso com sensibilidade à luz, sugerindo uveíte. Esse quadro merece avaliação rápida, pois pode estar associado a espondiloartrites.' },
+  ],
 };
 
 export const rheumatologyGuides = {
