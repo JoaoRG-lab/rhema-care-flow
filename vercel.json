@@ -5,6 +5,12 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "ignoreCommand": "exit 1",
   "rewrites": [
     { "source": "/((?!api/.*).*)", "destination": "/index.html" }
   ],
@@ -19,15 +25,11 @@
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options",  "value": "nosniff" },
-        { "key": "X-Frame-Options",         "value": "DENY" },
+        { "key": "X-Frame-Options",         "value": "SAMEORIGIN" },
         { "key": "X-XSS-Protection",        "value": "1; mode=block" },
         { "key": "Referrer-Policy",         "value": "strict-origin-when-cross-origin" },
         { "key": "Permissions-Policy",      "value": "camera=(), microphone=(), geolocation=()" }
       ]
     }
-  ],
-  "env": {
-    "VITE_SUPABASE_URL":              "@supabase_url",
-    "VITE_SUPABASE_PUBLISHABLE_KEY":  "@supabase_publishable_key"
-  }
+  ]
 }

@@ -4,109 +4,103 @@
 
 ---
 
+## ⚠️ ATENÇÃO: Workspace Vercel correto
+
+Existem **dois workspaces** Vercel associados à conta. Use SOMENTE:
+
+```
+Workspace CORRETO:  joaorg-lab's projects
+Projeto:            rhema-care-flow
+Domínio:           https://www.reumatismos.com
+```
+
+❌ **NÃO use** o workspace `João's projects` (slug: `joao-s-projects13`) — esse é o workspace errado.
+
+---
+
 ## Passo 1 — Supabase (banco de dados)
 
-1. Acesse [supabase.com](https://supabase.com) e faça login
-2. Clique em **New Project**
-3. Dê um nome (ex: `rhema-care`) e escolha uma senha forte
-4. Aguarde criar (~2 min)
-5. Vá em **Project Settings → API**
-6. Copie os dois valores abaixo — você vai precisar deles:
+**Projeto já existe:** `rfsaxstpfpigrjyiochi` — não criar outro!
 
-```
-Project URL  →  https://xxxxxx.supabase.co
-anon public  →  eyJhbGci...
-```
-
-7. No menu lateral, clique em **SQL Editor**
-8. Cole e execute cada arquivo na ordem:
-   - `supabase/migrations/001_initial_schema.sql`
-   - `supabase/migrations/002_schedules.sql`
-   - `supabase/migrations/003_rls.sql`
-   - `supabase/migrations/004_realtime.sql`
-   - `supabase/migrations/005_notifications.sql`
+1. Acesse [supabase.com](https://supabase.com) → projeto `Rhema-care-flow`
+2. Vá em **Project Settings → API** e copie:
+   - **Project URL:** `https://rfsaxstpfpigrjyiochi.supabase.co`
+   - **anon public key:** `eyJhbGci...`
 
 ---
 
-## Passo 2 — Vercel (hospedagem)
+## Passo 2 — Vercel: Environment Variables
 
-1. Acesse [vercel.com](https://vercel.com) e faça login com GitHub
-2. Clique em **Add New → Project**
-3. Selecione o repositório **rhema-care-flow**
-4. Clique em **Environment Variables** e adicione:
+1. Acesse [vercel.com](https://vercel.com) → workspace **joaorg-lab's projects**
+2. Abra o projeto **rhema-care-flow**
+3. Vá em **Settings → Environment Variables**
+4. Adicione/confirme as 3 variáveis abaixo, marcando **Production + Preview + Development**:
 
-| Nome | Valor |
-|------|-------|
-| `VITE_SUPABASE_URL` | URL copiada no Passo 1 |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | anon key copiada no Passo 1 |
+| Variável | Valor | Nota |
+|----------|-------|------|
+| `VITE_SUPABASE_URL` | `https://rfsaxstpfpigrjyiochi.supabase.co` | — |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | `<anon public key>` | — |
+| `PERPLEXITY_API_KEY` | `<valor da GPTESTE>` | `aquigpt` |
 
-5. Clique em **Deploy** ✅
-
-O Vercel vai buildar e te dar uma URL tipo:
-`https://rhema-care-flow.vercel.app`
+5. Clique **Save** em cada uma
 
 ---
 
-## Passo 3 — GitHub Secrets (para CI automático)
+## Passo 3 — Vercel: Corrigir "Ignored Build Step"
 
-1. No Vercel, vá em **Account Settings → Tokens → Create Token**
-   - Nome: `github-ci`
-   - Copie o token gerado
+Este é o motivo do erro `Skipped/Ignored`:
 
-2. No GitHub, vá em:
-   **Settings → Secrets and variables → Actions → New repository secret**
+1. Vá em **Settings → Git**
+2. Encontre **Ignored Build Step**
+3. Se houver qualquer regra (ex: `exit 0` ou script personalizado), **apague**
+4. Deixe o campo **vazio** (o `vercel.json` já gerencia isso com `"ignoreCommand": "exit 1"`)
+5. Confirme que **Production Branch = `main`**
 
-   Adicione estes 3 secrets:
+---
+
+## Passo 4 — Vercel: Redeploy
+
+1. Vá em **Deployments**
+2. No último deploy, clique nos **3 pontos (...)**
+3. Clique em **Redeploy**
+4. Marque **Use existing Build Cache: NO** (redeploy limpo)
+5. Aguarde — o build deve completar sem `Ignored`
+
+---
+
+## Passo 5 — GitHub Secrets (para CI automático)
+
+Vá em **GitHub → Settings → Secrets → Actions** e adicione:
 
 | Secret | Valor |
 |--------|-------|
-| `VERCEL_TOKEN` | Token do passo acima |
-| `VITE_SUPABASE_URL` | Mesma URL do Passo 1 |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Mesma anon key do Passo 1 |
-
-3. Pronto! A partir de agora:
-   - Todo `git push` na `main` → **deploy automático**
-   - Todo Pull Request → **preview com URL comentada automaticamente**
+| `VERCEL_TOKEN` | [vercel.com/account/tokens](https://vercel.com/account/tokens) → Create |
+| `VITE_SUPABASE_URL` | `https://rfsaxstpfpigrjyiochi.supabase.co` |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | anon key do Supabase |
+| `PERPLEXITY_API_KEY` | valor da GPTESTE |
 
 ---
 
-## Passo 4 — Testar localmente (opcional)
+## Resumo do Fluxo
 
-```bash
-git clone https://github.com/JoaoRG-lab/rhema-care-flow
-cd rhema-care-flow
-npm install
-
-# Crie o arquivo .env.local com:
-VITE_SUPABASE_URL=sua_url_aqui
-VITE_SUPABASE_PUBLISHABLE_KEY=sua_chave_aqui
-
-npm run dev
-# Abre em http://localhost:5173
+```
+git push main
+    │
+    ▼
+GitHub Actions
+ ├── Lint + TypeScript
+ ├── Build de produção
+ └── Deploy → Vercel ──► https://www.reumatismos.com
 ```
 
 ---
 
-## Resumo visual
+## Problemas Conhecidos
 
-```
-Você faz push no GitHub
-        │
-        ▼
-  GitHub Actions
-  ├── Lint + TypeScript
-  ├── Testes automáticos
-  ├── Build de produção
-  └── Deploy na Vercel ──► URL pública ao vivo
-```
-
----
-
-## Problemas comuns
-
-| Erro | Solução |
-|------|---------|
-| Página em branco após deploy | Verifique se as env vars foram adicionadas na Vercel |
-| Build falha no CI | Confirme que os 3 GitHub Secrets foram criados |
-| Erro 404 ao navegar | Já corrigido no `vercel.json` automaticamente |
-| Banco sem tabelas | Execute as migrations SQL no Supabase (Passo 1) |
+| Erro | Causa | Solução |
+|------|-------|---------|
+| `Skipped/Ignored` | `Ignored Build Step` com regra bloqueando | Apagar regra em Settings → Git |
+| `Skipped/Ignored` | Workspace errado (`joao-s-projects13`) | Usar workspace `joaorg-lab's projects` |
+| Página em branco | Env vars ausentes na Vercel | Adicionar as 3 vars e fazer redeploy |
+| Erro 404 ao navegar | SPA sem rewrite | Já corrigido no `vercel.json` |
+| Build falha no CI | Secrets do GitHub ausentes | Adicionar os 4 secrets acima |
