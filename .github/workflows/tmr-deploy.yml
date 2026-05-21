@@ -20,9 +20,8 @@ env:
   VOTER_QUORUM: '2'
 
 jobs:
-
-  replica-1:
-    name: 'R1 - Node 20 - cache'
+  auditor-i1:
+    name: 'AUDITOR I1 - Node 20 cache'
     runs-on: ubuntu-latest
     outputs:
       status: ${{ steps.result.outputs.status }}
@@ -38,8 +37,8 @@ jobs:
         id: install
         run: |
           START=$(date +%s)
-          npm install ${{ env.INSTALL_FLAGS }}
-          echo "start=$START" >> $GITHUB_OUTPUT
+          npm install --legacy-peer-deps
+          echo "start=$START" >> "$GITHUB_OUTPUT"
       - name: Build
         id: build
         run: npm run build
@@ -51,72 +50,25 @@ jobs:
         if: always()
         run: |
           END=$(date +%s)
-          START=${{ steps.install.outputs.start }}
-          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
+          START="${{ steps.install.outputs.start }}"
+          echo "duration=$((END - START))s" >> "$GITHUB_OUTPUT"
           if [ "${{ steps.build.outcome }}" = "success" ]; then
-            echo "status=pass" >> $GITHUB_OUTPUT
-            echo "error=none" >> $GITHUB_OUTPUT
+            echo "status=pass" >> "$GITHUB_OUTPUT"
+            echo "error=none" >> "$GITHUB_OUTPUT"
           else
-            echo "status=fail" >> $GITHUB_OUTPUT
-            echo "error=build-failed" >> $GITHUB_OUTPUT
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "error=build-failed" >> "$GITHUB_OUTPUT"
           fi
       - name: Upload dist
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: dist-r1
+          name: dist-i1
           path: dist/
           retention-days: 3
 
-  replica-2:
-    name: 'R2 - Node 18 - cache'
-    runs-on: ubuntu-latest
-    outputs:
-      status: ${{ steps.result.outputs.status }}
-      duration: ${{ steps.result.outputs.duration }}
-      error: ${{ steps.result.outputs.error }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      - name: Install
-        id: install
-        run: |
-          START=$(date +%s)
-          npm install ${{ env.INSTALL_FLAGS }}
-          echo "start=$START" >> $GITHUB_OUTPUT
-      - name: Build
-        id: build
-        run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-      - name: Result
-        id: result
-        if: always()
-        run: |
-          END=$(date +%s)
-          START=${{ steps.install.outputs.start }}
-          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
-          if [ "${{ steps.build.outcome }}" = "success" ]; then
-            echo "status=pass" >> $GITHUB_OUTPUT
-            echo "error=none" >> $GITHUB_OUTPUT
-          else
-            echo "status=fail" >> $GITHUB_OUTPUT
-            echo "error=build-failed" >> $GITHUB_OUTPUT
-          fi
-      - name: Upload dist
-        if: steps.build.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-r2
-          path: dist/
-          retention-days: 3
-
-  replica-3:
-    name: 'R3 - Node 20 - no cache'
+  auditor-i2:
+    name: 'AUDITOR I2 - Node 20 no-cache'
     runs-on: ubuntu-latest
     outputs:
       status: ${{ steps.result.outputs.status }}
@@ -131,8 +83,8 @@ jobs:
         id: install
         run: |
           START=$(date +%s)
-          npm install ${{ env.INSTALL_FLAGS }}
-          echo "start=$START" >> $GITHUB_OUTPUT
+          npm install --legacy-peer-deps
+          echo "start=$START" >> "$GITHUB_OUTPUT"
       - name: Build
         id: build
         run: npm run build
@@ -144,27 +96,73 @@ jobs:
         if: always()
         run: |
           END=$(date +%s)
-          START=${{ steps.install.outputs.start }}
-          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
+          START="${{ steps.install.outputs.start }}"
+          echo "duration=$((END - START))s" >> "$GITHUB_OUTPUT"
           if [ "${{ steps.build.outcome }}" = "success" ]; then
-            echo "status=pass" >> $GITHUB_OUTPUT
-            echo "error=none" >> $GITHUB_OUTPUT
+            echo "status=pass" >> "$GITHUB_OUTPUT"
+            echo "error=none" >> "$GITHUB_OUTPUT"
           else
-            echo "status=fail" >> $GITHUB_OUTPUT
-            echo "error=build-failed" >> $GITHUB_OUTPUT
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "error=build-failed" >> "$GITHUB_OUTPUT"
           fi
       - name: Upload dist
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: dist-r3
+          name: dist-i2
+          path: dist/
+          retention-days: 3
+
+  auditor-i3:
+    name: 'AUDITOR I3 - Node 20 clean install'
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.result.outputs.status }}
+      duration: ${{ steps.result.outputs.duration }}
+      error: ${{ steps.result.outputs.error }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        id: install
+        run: |
+          START=$(date +%s)
+          npm install --legacy-peer-deps
+          echo "start=$START" >> "$GITHUB_OUTPUT"
+      - name: Build
+        id: build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      - name: Result
+        id: result
+        if: always()
+        run: |
+          END=$(date +%s)
+          START="${{ steps.install.outputs.start }}"
+          echo "duration=$((END - START))s" >> "$GITHUB_OUTPUT"
+          if [ "${{ steps.build.outcome }}" = "success" ]; then
+            echo "status=pass" >> "$GITHUB_OUTPUT"
+            echo "error=none" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "error=build-failed" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Upload dist
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-i3
           path: dist/
           retention-days: 3
 
   voter:
     name: 'VOTER - 2-of-3 Byzantine Majority'
     runs-on: ubuntu-latest
-    needs: [replica-1, replica-2, replica-3]
+    needs: [auditor-i1, auditor-i2, auditor-i3]
     if: always()
     outputs:
       verdict: ${{ steps.vote.outputs.verdict }}
@@ -175,35 +173,29 @@ jobs:
       - name: Cast votes
         id: vote
         run: |
-          R1="${{ needs.replica-1.outputs.status }}"
-          R2="${{ needs.replica-2.outputs.status }}"
-          R3="${{ needs.replica-3.outputs.status }}"
+          I1="${{ needs.auditor-i1.outputs.status }}"
+          I2="${{ needs.auditor-i2.outputs.status }}"
+          I3="${{ needs.auditor-i3.outputs.status }}"
           PASS=0
           WINNER="none"
-          [ "$R1" = "pass" ] && PASS=$((PASS+1)) && WINNER="r1"
-          [ "$R2" = "pass" ] && PASS=$((PASS+1)) && [ "$WINNER" = "none" ] && WINNER="r2"
-          [ "$R3" = "pass" ] && PASS=$((PASS+1)) && [ "$WINNER" = "none" ] && WINNER="r3"
-          echo "pass_count=$PASS" >> $GITHUB_OUTPUT
-          echo "winner=$WINNER" >> $GITHUB_OUTPUT
-          if [ $PASS -ge ${{ env.VOTER_QUORUM }} ]; then
-            echo "verdict=APPROVED" >> $GITHUB_OUTPUT
+          [ "$I1" = "pass" ] && PASS=$((PASS + 1)) && WINNER="i1"
+          [ "$I2" = "pass" ] && PASS=$((PASS + 1)) && [ "$WINNER" = "none" ] && WINNER="i2"
+          [ "$I3" = "pass" ] && PASS=$((PASS + 1)) && [ "$WINNER" = "none" ] && WINNER="i3"
+          echo "pass_count=$PASS" >> "$GITHUB_OUTPUT"
+          echo "winner=$WINNER" >> "$GITHUB_OUTPUT"
+          if [ "$PASS" -ge "${{ env.VOTER_QUORUM }}" ]; then
+            echo "verdict=APPROVED" >> "$GITHUB_OUTPUT"
           else
-            echo "verdict=REJECTED" >> $GITHUB_OUTPUT
+            echo "verdict=REJECTED" >> "$GITHUB_OUTPUT"
           fi
       - name: Compute score
         id: score
         run: |
-          R1="${{ needs.replica-1.outputs.status }}"
-          R2="${{ needs.replica-2.outputs.status }}"
-          R3="${{ needs.replica-3.outputs.status }}"
-          PASS=0
-          [ "$R1" = "pass" ] && PASS=$((PASS+1))
-          [ "$R2" = "pass" ] && PASS=$((PASS+1))
-          [ "$R3" = "pass" ] && PASS=$((PASS+1))
+          PASS="${{ steps.vote.outputs.pass_count }}"
           SCORE=$((PASS * 33))
-          [ $PASS -eq 3 ] && SCORE=100
-          echo "value=$SCORE" >> $GITHUB_OUTPUT
-          echo "Score: $SCORE/100 ($PASS/3 replicas passed)"
+          [ "$PASS" -eq 3 ] && SCORE=100
+          echo "value=$SCORE" >> "$GITHUB_OUTPUT"
+          echo "Score: $SCORE/100 ($PASS/3 auditors passed)"
 
   deploy:
     name: 'DEPLOY - Vercel (voter approved)'
@@ -216,7 +208,7 @@ jobs:
         with:
           node-version: '20'
       - name: Install
-        run: npm install ${{ env.INSTALL_FLAGS }}
+        run: npm install --legacy-peer-deps
       - name: Build
         run: npm run build
         env:
@@ -228,10 +220,10 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-  auditor-i3:
-    name: 'AUDITOR I3 - Consolidated Report'
+  report:
+    name: 'REPORT - Consolidated TMR result'
     runs-on: ubuntu-latest
-    needs: [voter]
+    needs: [auditor-i1, auditor-i2, auditor-i3, voter]
     if: always()
     permissions:
       issues: write
@@ -247,25 +239,27 @@ jobs:
           WINNER="${{ needs.voter.outputs.winner }}"
           SHA="${{ github.sha }}"
           SHORT_SHA="${SHA:0:7}"
-          R1="${{ needs.replica-1.outputs.status }}"
-          R2="${{ needs.replica-2.outputs.status }}"
-          R3="${{ needs.replica-3.outputs.status }}"
-          D1="${{ needs.replica-1.outputs.duration }}"
-          D2="${{ needs.replica-2.outputs.duration }}"
-          D3="${{ needs.replica-3.outputs.duration }}"
+          I1="${{ needs.auditor-i1.outputs.status }}"
+          I2="${{ needs.auditor-i2.outputs.status }}"
+          I3="${{ needs.auditor-i3.outputs.status }}"
+          D1="${{ needs.auditor-i1.outputs.duration }}"
+          D2="${{ needs.auditor-i2.outputs.duration }}"
+          D3="${{ needs.auditor-i3.outputs.duration }}"
           icon() { [ "$1" = "pass" ] && echo "PASS" || echo "FAIL"; }
-          cat > /tmp/report.md << MDEOF
+          cat > /tmp/report.md <<MDEOF
           ## TMR Verdict: $VERDICT
-          **Commit:** \`$SHORT_SHA\` | **Score:** $SCORE/100 | **Quorum:** $PASS/3
-          | Replica | Node | Status | Duration |
+          **Commit:** \`$SHORT_SHA\` | **Score:** $SCORE/100 | **Quorum:** $PASS/3 | **Winner:** $WINNER
+
+          | Auditor | Node | Status | Duration |
           |---------|------|--------|----------|
-          | R1 | 20+cache | $(icon $R1) | $D1 |
-          | R2 | 18+cache | $(icon $R2) | $D2 |
-          | R3 | 20 no-cache | $(icon $R3) | $D3 |
+          | I1 | 20 cache | $(icon "$I1") | $D1 |
+          | I2 | 20 no-cache | $(icon "$I2") | $D2 |
+          | I3 | 20 clean | $(icon "$I3") | $D3 |
+
           _Generated by TMR Auditor - Run ${{ github.run_id }}_
           MDEOF
-          echo "verdict=$VERDICT" >> $GITHUB_OUTPUT
-          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+          echo "score=$SCORE" >> "$GITHUB_OUTPUT"
       - name: Open Issue if REJECTED
         if: needs.voter.outputs.verdict == 'REJECTED'
         uses: actions/github-script@v7
