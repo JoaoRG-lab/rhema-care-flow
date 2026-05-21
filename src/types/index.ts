@@ -103,17 +103,18 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
-// Toast
+// Toast — alinhado com useToast.ts e ToastContainer
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export interface Toast {
   id: string;
   type: ToastType;
   title: string;
-  message?: string;
+  /** Texto secundário exibido abaixo do título */
+  description?: string;
   duration?: number;
 }
 
-// WebRTC sinalização
+// WebRTC sinalizacao
 export type SignalingPayload =
   | { type: 'offer';     sdp: RTCSessionDescriptionInit }
   | { type: 'answer';    sdp: RTCSessionDescriptionInit }

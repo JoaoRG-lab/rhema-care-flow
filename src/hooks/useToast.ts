@@ -1,13 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-export interface Toast {
-  id: string;
-  type: ToastType;
-  title: string;
-  description?: string;
-}
+import type { Toast, ToastType } from '../types';
 
 type Listener = (t: { type: ToastType; title: string; message?: string }) => void;
 
@@ -23,6 +15,9 @@ export const toastBus = {
     return () => listeners.delete(fn);
   },
 };
+
+// Re-exporta para compatibilidade com imports diretos de useToast
+export type { Toast, ToastType };
 
 // Hook para disparar toasts (usado em qualquer componente)
 export function useToast() {
