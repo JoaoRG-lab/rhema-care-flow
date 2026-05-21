@@ -1,2 +1,3 @@
-TMR trigger — 2026-05-21 12:25 BRT
-Preflight corrigido, deploy autorizado.
+TMR trigger — 2026-05-21 12:39 BRT
+Manual rerun requested for TMR Deployment Auditor on main.
+Refs #21
