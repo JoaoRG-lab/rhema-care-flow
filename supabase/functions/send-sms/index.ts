@@ -1,164 +1,83 @@
- import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
- import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
- import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
- 
- const corsHeaders = {
-   "Access-Control-Allow-Origin": "*",
-   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
- };
- 
- // Zod schema for request validation
- const SendSmsRequestSchema = z.object({
-   to: z.string()
-     .min(10, "Phone number must be at least 10 digits")
-     .max(20, "Phone number too long")
-     .regex(/^\+?[1-9]\d{9,14}$/, "Invalid phone number format (use E.164: +1234567890)"),
-   message: z.string()
-     .min(1, "Message cannot be empty")
-     .max(1600, "Message exceeds SMS limit (1600 chars)"),
-   from: z.string()
-     .regex(/^\+?[1-9]\d{9,14}$/, "Invalid 'from' phone number")
-     .optional(),
- });
- 
- serve(async (req) => {
-   // Handle CORS preflight
-   if (req.method === "OPTIONS") {
-     return new Response(null, { headers: corsHeaders });
-   }
- 
-   try {
-     // Validate environment variables
-     const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
-     const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
-     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
- 
-     if (!TWILIO_ACCOUNT_SID) {
-       throw new Error("TWILIO_ACCOUNT_SID is not configured");
-     }
-     if (!TWILIO_AUTH_TOKEN) {
-       throw new Error("TWILIO_AUTH_TOKEN is not configured");
-     }
-     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-       throw new Error("Supabase configuration missing");
-     }
- 
-     // Verify JWT authentication
-     const authHeader = req.headers.get("Authorization");
-     if (!authHeader?.startsWith("Bearer ")) {
-       return new Response(
-         JSON.stringify({ error: "Unauthorized - missing or invalid token" }),
-         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-       global: { headers: { Authorization: authHeader } },
-     });
- 
-     const { data: claimsData, error: claimsError } = await supabase.auth.getUser();
-     if (claimsError || !claimsData?.user) {
-       return new Response(
-         JSON.stringify({ error: "Unauthorized - invalid token" }),
-         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     const userId = claimsData.user.id;
-     console.log(`SMS request from user: ${userId}`);
- 
-     // Parse and validate request body
-     let body: unknown;
-     try {
-       body = await req.json();
-     } catch {
-       return new Response(
-         JSON.stringify({ error: "Invalid JSON body" }),
-         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     // Validate with Zod
-     const validationResult = SendSmsRequestSchema.safeParse(body);
-     if (!validationResult.success) {
-       return new Response(
-         JSON.stringify({
-           error: "Validation failed",
-           details: validationResult.error.errors.map((e) => ({
-             field: e.path.join("."),
-             message: e.message,
-           })),
-         }),
-         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     const { to, message, from } = validationResult.data;
- 
-     // Twilio API URL
-     const TWILIO_API_URL = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
- 
-     // Create Basic Auth header (Twilio requires Account SID:Auth Token)
-     const basicAuth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
- 
-     // Prepare form data for Twilio
-     const formData = new URLSearchParams();
-     formData.append("To", to);
-     formData.append("Body", message);
-     
-     // Use provided 'from' number or a default (you may want to set a TWILIO_PHONE_NUMBER env var)
-     const fromNumber = from || Deno.env.get("TWILIO_PHONE_NUMBER");
-     if (!fromNumber) {
-       return new Response(
-         JSON.stringify({ error: "No 'from' phone number provided and TWILIO_PHONE_NUMBER not configured" }),
-         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
-     formData.append("From", fromNumber);
- 
-     // Call Twilio API
-     const twilioResponse = await fetch(TWILIO_API_URL, {
-       method: "POST",
-       headers: {
-         "Authorization": `Basic ${basicAuth}`,
-         "Content-Type": "application/x-www-form-urlencoded",
-       },
-       body: formData.toString(),
-     });
- 
-     const twilioData = await twilioResponse.json();
- 
-     if (!twilioResponse.ok) {
-       console.error("Twilio API error:", twilioData);
-       return new Response(
-         JSON.stringify({
-           error: "Failed to send SMS",
-           details: twilioData.message || "Unknown Twilio error",
-           code: twilioData.code,
-         }),
-         { status: twilioResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     console.log(`SMS sent successfully. SID: ${twilioData.sid}`);
- 
-     return new Response(
-       JSON.stringify({
-         success: true,
-         messageSid: twilioData.sid,
-         status: twilioData.status,
-         to: twilioData.to,
-       }),
-       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-     );
- 
-   } catch (error: unknown) {
-     console.error("Send SMS error:", error);
-     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-     return new Response(
-       JSON.stringify({ error: errorMessage }),
-       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-     );
-   }
- });
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { verifyJWT } from '../_shared/auth.ts';
+import { checkRateLimit, getClientIp } from '../_shared/rateLimit.ts';
+
+const FUNCTION_VERSION = 'rhema-care-v2.0';
+
+serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const ip = getClientIp(req);
+
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: getCorsHeaders(origin) });
+  }
+
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Método não permitido.' }, 405, origin);
+  }
+
+  const auth = await verifyJWT(req);
+  if (!auth) {
+    return jsonResponse({ error: 'Não autorizado.' }, 401, origin);
+  }
+
+  if (!checkRateLimit(`sms:${auth.userId}:${ip}`, 20, 60_000)) {
+    return jsonResponse({ error: 'Muitas requisições de SMS. Aguarde.' }, 429, origin);
+  }
+
+  try {
+    const { to, message, patient_id } = await req.json();
+
+    if (!to || !message) {
+      return jsonResponse({ error: 'Campos obrigatórios: to, message.' }, 400, origin);
+    }
+
+    // Validação simples de telefone brasileiro
+    const phoneRegex = /^\+55\d{10,11}$/;
+    if (!phoneRegex.test(to.replace(/\s/g, ''))) {
+      return jsonResponse({ error: 'Número de telefone inválido. Use formato +55...' }, 400, origin);
+    }
+
+    const twilioSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const twilioToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const twilioFrom = Deno.env.get('TWILIO_PHONE_NUMBER');
+
+    if (!twilioSid || !twilioToken || !twilioFrom) {
+      console.error('send-sms: credenciais Twilio não configuradas');
+      return jsonResponse({ error: 'Serviço de SMS não configurado.' }, 503, origin);
+    }
+
+    const formData = new URLSearchParams();
+    formData.append('To', to);
+    formData.append('From', twilioFrom);
+    formData.append('Body', String(message).slice(0, 160));
+
+    const twilioResp = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${btoa(`${twilioSid}:${twilioToken}`)}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData,
+      }
+    );
+
+    if (!twilioResp.ok) {
+      const err = await twilioResp.text();
+      console.error('send-sms Twilio error', { status: twilioResp.status, err: err.slice(0, 200) });
+      return jsonResponse({ error: 'Falha ao enviar SMS.' }, 502, origin);
+    }
+
+    const twilioData = await twilioResp.json();
+    console.log('send-sms ok', { sid: twilioData.sid, to, userId: auth.userId, patient_id });
+
+    return jsonResponse({ ok: true, sid: twilioData.sid, version: FUNCTION_VERSION }, 200, origin);
+
+  } catch (error) {
+    console.error('send-sms erro interno', error instanceof Error ? error.message : String(error));
+    return jsonResponse({ error: 'Erro interno.' }, 500, origin);
+  }
+});

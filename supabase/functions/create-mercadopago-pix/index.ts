@@ -1,137 +1,95 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { verifyJWT } from '../_shared/auth.ts';
+import { checkRateLimit, getClientIp } from '../_shared/rateLimit.ts';
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const PACKAGES: Record<string, { credits: number; amount: number; label: string }> = {
-  starter: { credits: 50, amount: 1.5, label: "50 créditos" },
-  standard: { credits: 200, amount: 6.0, label: "200 créditos" },
-  pro: { credits: 500, amount: 15.0, label: "500 créditos" },
-};
+const FUNCTION_VERSION = 'rhema-care-v2.0';
+const MP_API = 'https://api.mercadopago.com/v1/payments';
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const origin = req.headers.get('origin');
+  const ip = getClientIp(req);
+
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: getCorsHeaders(origin) });
+  }
+
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Método não permitido.' }, 405, origin);
+  }
+
+  const auth = await verifyJWT(req);
+  if (!auth) {
+    return jsonResponse({ error: 'Não autorizado.' }, 401, origin);
+  }
+
+  if (!checkRateLimit(`pix:${auth.userId}:${ip}`, 10, 60_000)) {
+    return jsonResponse({ error: 'Muitas tentativas de pagamento. Aguarde.' }, 429, origin);
+  }
 
   try {
-    const MP_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const { amount, description, payer_email, external_reference } = await req.json();
 
-    if (!MP_TOKEN) throw new Error("MERCADOPAGO_ACCESS_TOKEN not configured");
-
-    // Auth
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!amount || !payer_email) {
+      return jsonResponse({ error: 'Campos obrigatórios: amount, payer_email.' }, 400, origin);
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !userData.user) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const user = userData.user;
-
-    const { packageId } = await req.json();
-    const pkg = PACKAGES[packageId];
-    if (!pkg) {
-      return new Response(JSON.stringify({ error: "Invalid package" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (typeof amount !== 'number' || amount <= 0 || amount > 50000) {
+      return jsonResponse({ error: 'Valor inválido. Máximo R$ 50.000.' }, 400, origin);
     }
 
-    const idempotencyKey = crypto.randomUUID();
-    const expiration = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-    const webhookUrl = `${SUPABASE_URL}/functions/v1/mercadopago-webhook`;
+    const mpToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
+    if (!mpToken) {
+      console.error('create-mercadopago-pix: MERCADOPAGO_ACCESS_TOKEN não configurado');
+      return jsonResponse({ error: 'Serviço de pagamento não configurado.' }, 503, origin);
+    }
 
-    const mpResp = await fetch("https://api.mercadopago.com/v1/payments", {
-      method: "POST",
+    const idempotencyKey = `rhema-${auth.userId}-${Date.now()}`;
+
+    const mpResp = await fetch(MP_API, {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${MP_TOKEN}`,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": idempotencyKey,
+        'Authorization': `Bearer ${mpToken}`,
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': idempotencyKey,
       },
       body: JSON.stringify({
-        transaction_amount: pkg.amount,
-        description: `${pkg.label} — AI Assistant`,
-        payment_method_id: "pix",
-        date_of_expiration: expiration,
-        notification_url: webhookUrl,
-        external_reference: `${user.id}:${packageId}`,
-        payer: {
-          email: user.email || `user-${user.id}@uhs.local`,
-          first_name: "User",
-        },
+        transaction_amount: amount,
+        description: String(description ?? 'Rhema Care Flow').slice(0, 100),
+        payment_method_id: 'pix',
+        payer: { email: payer_email },
+        external_reference: String(external_reference ?? auth.userId).slice(0, 64),
+        notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercadopago-webhook`,
       }),
     });
 
-    const mpData = await mpResp.json();
     if (!mpResp.ok) {
-      console.error("Mercado Pago error:", mpData);
-      return new Response(
-        JSON.stringify({ error: "Failed to create PIX payment", details: mpData }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      const err = await mpResp.text();
+      console.error('create-mercadopago-pix MP error', { status: mpResp.status, err: err.slice(0, 300) });
+      return jsonResponse({ error: 'Falha ao criar pagamento PIX.' }, 502, origin);
     }
 
-    const qrCode = mpData.point_of_interaction?.transaction_data?.qr_code;
-    const qrCodeBase64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64;
-    const ticketUrl = mpData.point_of_interaction?.transaction_data?.ticket_url;
+    const mpData = await mpResp.json();
+    const qrCode = mpData?.point_of_interaction?.transaction_data?.qr_code;
+    const qrCodeBase64 = mpData?.point_of_interaction?.transaction_data?.qr_code_base64;
 
-    const { data: tx, error: insertError } = await supabase
-      .from("payment_transactions")
-      .insert({
-        user_id: user.id,
-        provider: "mercadopago",
-        payment_method: "pix",
-        external_id: String(mpData.id),
-        amount_brl: pkg.amount,
-        credits_amount: pkg.credits,
-        package_label: pkg.label,
-        status: "pending",
-        qr_code: qrCode,
-        qr_code_base64: qrCodeBase64,
-        ticket_url: ticketUrl,
-        expires_at: expiration,
-        metadata: { mp_status: mpData.status },
-      })
-      .select()
-      .single();
+    console.log('create-mercadopago-pix ok', {
+      paymentId: mpData.id,
+      status: mpData.status,
+      userId: auth.userId,
+    });
 
-    if (insertError) {
-      console.error("DB insert error:", insertError);
-      throw insertError;
-    }
+    return jsonResponse({
+      ok: true,
+      payment_id: mpData.id,
+      status: mpData.status,
+      qr_code: qrCode,
+      qr_code_base64: qrCodeBase64,
+      version: FUNCTION_VERSION,
+    }, 200, origin);
 
-    return new Response(
-      JSON.stringify({
-        transactionId: tx.id,
-        qrCode,
-        qrCodeBase64,
-        ticketUrl,
-        expiresAt: expiration,
-        amount: pkg.amount,
-        credits: pkg.credits,
-        label: pkg.label,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
   } catch (error) {
-    console.error("create-mercadopago-pix error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error('create-mercadopago-pix erro interno', error instanceof Error ? error.message : String(error));
+    return jsonResponse({ error: 'Erro interno.' }, 500, origin);
   }
 });

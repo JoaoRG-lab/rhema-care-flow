@@ -1,195 +1,105 @@
- import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
- import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
- import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
- 
- const corsHeaders = {
-   "Access-Control-Allow-Origin": "*",
-   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
- };
- 
- // Rate limit: 30 requests per hour per user
- const RATE_LIMIT_MAX_REQUESTS = 30;
- const RATE_LIMIT_WINDOW_MINUTES = 60;
- 
- // Zod schemas for input validation
- const MessageSchema = z.object({
-   role: z.enum(["system", "user", "assistant"]),
-   content: z.string().min(1).max(32000),
- });
- 
- const OpenAIChatRequestSchema = z.object({
-   messages: z.array(MessageSchema).min(1).max(100),
-   model: z.enum([
-     "gpt-4o",
-     "gpt-4o-mini",
-     "gpt-4-turbo",
-     "gpt-4",
-     "gpt-3.5-turbo",
-   ]).optional().default("gpt-4o-mini"),
-   temperature: z.number().min(0).max(2).optional(),
-   max_tokens: z.number().min(1).max(4096).optional(),
-   stream: z.boolean().optional().default(true),
- });
- 
- serve(async (req) => {
-   if (req.method === "OPTIONS") {
-     return new Response(null, { headers: corsHeaders });
-   }
- 
-   try {
-     // Validate JWT authentication
-     const authHeader = req.headers.get("Authorization");
-     if (!authHeader?.startsWith("Bearer ")) {
-       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-         status: 401,
-         headers: { ...corsHeaders, "Content-Type": "application/json" },
-       });
-     }
- 
-     // Create service role client for rate limiting (bypasses RLS)
-     const supabaseAdmin = createClient(
-       Deno.env.get("SUPABASE_URL") ?? "",
-       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-     );
- 
-     // Create user client for authenticated operations
-     const supabaseUser = createClient(
-       Deno.env.get("SUPABASE_URL") ?? "",
-       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-       { global: { headers: { Authorization: authHeader } } }
-     );
- 
-     const token = authHeader.replace("Bearer ", "");
-     const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-     if (claimsError || !claimsData?.claims) {
-       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-         status: 401,
-         headers: { ...corsHeaders, "Content-Type": "application/json" },
-       });
-     }
- 
-     const userId = claimsData.claims.sub;
-     console.log("OpenAI chat request from user:", userId);
- 
-     // Check rate limit
-     const { data: rateLimitAllowed, error: rateLimitError } = await supabaseAdmin.rpc(
-       "check_rate_limit",
-       {
-         p_user_id: userId,
-         p_endpoint: "openai-chat",
-         p_max_requests: RATE_LIMIT_MAX_REQUESTS,
-         p_window_minutes: RATE_LIMIT_WINDOW_MINUTES,
-       }
-     );
- 
-     if (rateLimitError) {
-       console.error("Rate limit check error:", rateLimitError);
-     } else if (!rateLimitAllowed) {
-       console.log("Rate limit exceeded for user:", userId);
-       return new Response(
-         JSON.stringify({
-           error: "Rate limit exceeded. Maximum 30 requests per hour. Please try again later.",
-         }),
-         {
-           status: 429,
-           headers: {
-             ...corsHeaders,
-             "Content-Type": "application/json",
-             "Retry-After": "3600",
-           },
-         }
-       );
-     }
- 
-     // Parse and validate request body
-     let body: unknown;
-     try {
-       body = await req.json();
-     } catch {
-       return new Response(
-         JSON.stringify({ error: "Invalid JSON body" }),
-         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     // Validate with Zod
-     const validationResult = OpenAIChatRequestSchema.safeParse(body);
-     if (!validationResult.success) {
-       console.warn("Validation error:", validationResult.error.errors);
-       return new Response(
-         JSON.stringify({
-           error: "Invalid request format",
-           details: validationResult.error.errors.map((e) => ({
-             field: e.path.join("."),
-             message: e.message,
-           })),
-         }),
-         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     const { messages, model, temperature, max_tokens, stream } = validationResult.data;
- 
-     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-     if (!OPENAI_API_KEY) {
-       throw new Error("OPENAI_API_KEY is not configured");
-     }
- 
-     // Call OpenAI API
-     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-       method: "POST",
-       headers: {
-         Authorization: `Bearer ${OPENAI_API_KEY}`,
-         "Content-Type": "application/json",
-       },
-       body: JSON.stringify({
-         model,
-         messages,
-         temperature,
-         max_tokens,
-         stream,
-       }),
-     });
- 
-     if (!openaiResponse.ok) {
-       const errorText = await openaiResponse.text();
-       console.error("OpenAI API error:", openaiResponse.status, errorText);
-       
-       if (openaiResponse.status === 429) {
-         return new Response(
-           JSON.stringify({ error: "OpenAI rate limit exceeded. Please try again later." }),
-           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-         );
-       }
-       if (openaiResponse.status === 401) {
-         return new Response(
-           JSON.stringify({ error: "OpenAI API key invalid or expired." }),
-           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-         );
-       }
-       
-       return new Response(
-         JSON.stringify({ error: "OpenAI request failed" }),
-         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     // Return streaming or non-streaming response
-     if (stream) {
-       return new Response(openaiResponse.body, {
-         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-       });
-     } else {
-       const data = await openaiResponse.json();
-       return new Response(JSON.stringify(data), {
-         headers: { ...corsHeaders, "Content-Type": "application/json" },
-       });
-     }
-   } catch (error) {
-     console.error("openai-chat error:", error);
-     return new Response(
-       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-     );
-   }
- });
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { checkRateLimit, getClientIp } from '../_shared/rateLimit.ts';
+import { verifyJWT } from '../_shared/auth.ts';
+
+const FUNCTION_VERSION = 'rhema-care-v2.0';
+const MAX_MESSAGE_LENGTH = 2000;
+const MAX_HISTORY_ITEMS = 10;
+const DEFAULT_MODEL = 'gpt-4o';
+
+serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const ip = getClientIp(req);
+
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: getCorsHeaders(origin) });
+  }
+
+  if (req.method === 'GET') {
+    return jsonResponse({ ok: true, function: 'openai-chat', version: FUNCTION_VERSION }, 200, origin);
+  }
+
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Método não permitido.' }, 405, origin);
+  }
+
+  // Auth obrigatório para openai-chat (função interna)
+  const auth = await verifyJWT(req);
+  if (!auth) {
+    return jsonResponse({ error: 'Não autorizado.' }, 401, origin);
+  }
+
+  if (!checkRateLimit(`${auth.userId}:${ip}`, 50, 60_000)) {
+    return jsonResponse({ error: 'Muitas requisições. Aguarde um momento.' }, 429, origin);
+  }
+
+  try {
+    const { message, history = [], context = 'internal' } = await req.json();
+
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return jsonResponse({ error: 'Mensagem inválida.' }, 400, origin);
+    }
+
+    const userMessage = message.trim().slice(0, MAX_MESSAGE_LENGTH);
+    const openaiKey = Deno.env.get('OPENAI_API_KEY');
+
+    if (!openaiKey) {
+      console.error('openai-chat: OPENAI_API_KEY não configurada');
+      return jsonResponse({ error: 'Serviço temporariamente indisponível.' }, 503, origin);
+    }
+
+    const safeHistory = Array.isArray(history)
+      ? history
+          .filter((m: { role?: unknown }) => m?.role === 'user' || m?.role === 'assistant')
+          .slice(-MAX_HISTORY_ITEMS)
+          .map((m: { role: string; content: string }) => ({
+            role: m.role,
+            content: String(m.content ?? '').slice(0, 1000),
+          }))
+      : [];
+
+    const systemPrompt = `Você é o assistente clínico-operacional do Rhema Care Flow.
+Ajude profissionais de saúde com agendamentos, prontuários, teleconsultas e operações da plataforma.
+Contexto: ${String(context).slice(0, 80)}.
+Responda sempre em português brasileiro. Seja objetivo e preciso.`;
+
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: Deno.env.get('OPENAI_MODEL') || DEFAULT_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...safeHistory,
+          { role: 'user', content: userMessage },
+        ],
+        temperature: 0.3,
+        max_tokens: 800,
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const details = await aiResponse.text();
+      console.error('openai-chat provider error', { status: aiResponse.status, details: details.slice(0, 300) });
+      return jsonResponse({ error: 'Falha ao consultar OpenAI.' }, 502, origin);
+    }
+
+    const result = await aiResponse.json();
+    const answer = result?.choices?.[0]?.message?.content ?? 'Sem resposta disponível.';
+
+    console.log('openai-chat ok', { userId: auth.userId, model: result?.model });
+
+    return jsonResponse({
+      answer,
+      meta: { function: 'openai-chat', version: FUNCTION_VERSION, model: result?.model },
+    }, 200, origin);
+
+  } catch (error) {
+    console.error('openai-chat erro interno', error instanceof Error ? error.message : String(error));
+    return jsonResponse({ error: 'Erro interno.' }, 500, origin);
+  }
+});
