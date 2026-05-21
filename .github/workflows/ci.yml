@@ -1,62 +1,112 @@
-name: CI + Deploy
+name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # ─────────────────────────────────────────
-  # 1. Build & verificacoes
-  # ─────────────────────────────────────────
-  build:
-    name: Build & Type Check
+  # ──────────────────────────────────────────
+  # 1. Typecheck + Lint
+  # ──────────────────────────────────────────
+  lint:
+    name: Typecheck & Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install
+      - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript
-        run: npm run typecheck
+      - name: TypeScript check
+        run: npx tsc --noEmit
 
       - name: ESLint
         run: npm run lint
-        continue-on-error: true
 
-      - name: Vite Build
+  # ──────────────────────────────────────────
+  # 2. Testes unitários + coverage
+  # ──────────────────────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      VITE_SUPABASE_URL:             ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ──────────────────────────────────────────
+  # 3. Build de produção
+  # ──────────────────────────────────────────
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    env:
+      VITE_SUPABASE_URL:             ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
         run: npm run build
-        env:
-          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # Artefato salvo 30 dias — backup independente de plataforma
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ github.sha }}
+          name: dist
           path: dist/
-          retention-days: 30
+          retention-days: 1
 
-  # ─────────────────────────────────────────
-  # 2. PRIMARIO — Cloudflare Pages
-  # ─────────────────────────────────────────
-  deploy-cloudflare:
-    name: Deploy › Cloudflare Pages (PRIMARY)
-    needs: build
+  # ──────────────────────────────────────────
+  # 4. Deploy Vercel (apenas no push para main)
+  # ──────────────────────────────────────────
+  deploy:
+    name: Deploy → Vercel
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: production
-      url: https://rhema-care-flow.pages.dev
+      url: ${{ steps.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -65,45 +115,30 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - run: npm ci
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
 
-      - run: npm run build
-        env:
-          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Wrangler — Cloudflare Pages deploy
-        uses: cloudflare/wrangler-action@v3
+      - name: Build via Vercel CLI
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to production
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "✅ Deployed: $URL"
+
+      - name: Comment deploy URL on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
         with:
-          apiToken:  ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command:   pages deploy dist --project-name=rhema-care-flow --branch=main
-
-  # ─────────────────────────────────────────
-  # 3. SECUNDARIO — Netlify
-  # ─────────────────────────────────────────
-  deploy-netlify:
-    name: Deploy › Netlify (SECONDARY)
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - run: npm ci
-
-      - run: npm run build
-        env:
-          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-
-      - name: Netlify CLI deploy
-        run: npx netlify-cli deploy --prod --dir=dist --message "CI deploy ${{ github.sha }}"
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID:    ${{ secrets.NETLIFY_SITE_ID }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Preview deploy:** ${{ steps.deploy.outputs.url }}`
+            })

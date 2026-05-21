@@ -1,0 +1,11 @@
+bun.lock
+bun.lockb
+.env
+.env.local
+supabase/
+docs/
+*.sh
+*.md
+!README.md
+anchor/
+wrangler.toml
