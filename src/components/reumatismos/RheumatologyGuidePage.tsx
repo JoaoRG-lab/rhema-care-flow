@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, BookOpen, CheckCircle2, Route, ShieldCheck, Stethoscope } from 'lucide-react';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,8 @@ export type RheumatologyGuide = {
   badge: string;
   title: string;
   subtitle: string;
+  slug: string;
+  keywords: string[];
   centralIdeaTitle: string;
   centralIdea: string[];
   commonSignsTitle?: string;
@@ -28,9 +31,62 @@ type RheumatologyGuidePageProps = {
   guide: RheumatologyGuide;
 };
 
+function buildMedicalJsonLd(guide: RheumatologyGuide) {
+  const url = `https://www.reumatismos.com/reumatismos/${guide.slug}`;
+
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'MedicalWebPage',
+      name: guide.title,
+      description: guide.subtitle,
+      url,
+      inLanguage: 'pt-BR',
+      medicalAudience: {
+        '@type': 'MedicalAudience',
+        audienceType: 'Patient',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'UHS Health OS / Protocolo Vida',
+        url: 'https://www.reumatismos.com',
+      },
+      about: guide.keywords.map((keyword) => ({
+        '@type': 'MedicalCondition',
+        name: keyword,
+      })),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Reumatismos',
+          item: 'https://www.reumatismos.com/reumatismos',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: guide.keywords[0] ?? guide.title,
+          item: url,
+        },
+      ],
+    },
+  ];
+}
+
 export function RheumatologyGuidePage({ guide }: RheumatologyGuidePageProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEOHead
+        title={guide.title}
+        description={guide.subtitle}
+        path={`/reumatismos/${guide.slug}`}
+        type="article"
+        jsonLd={buildMedicalJsonLd(guide)}
+      />
       <header className="border-b bg-card/80 backdrop-blur">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <Link to="/reumatismos" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
