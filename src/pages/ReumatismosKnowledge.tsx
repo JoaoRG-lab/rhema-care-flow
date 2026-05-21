@@ -14,30 +14,35 @@ const topics = [
   },
   {
     title: 'Artrite reumatoide',
+    href: '/reumatismos/artrite-reumatoide',
     summary:
       'Doença inflamatória autoimune que pode causar dor, rigidez matinal e inchaço articular. O reconhecimento precoce muda prognóstico e função.',
     tags: ['inflamação', 'articulações', 'DMARDs'],
   },
   {
     title: 'Lúpus eritematoso sistêmico',
+    href: '/reumatismos/lupus',
     summary:
       'Condição autoimune sistêmica com manifestações variadas. Informação clara é essencial para adesão, monitorização e cuidado longitudinal.',
     tags: ['autoimune', 'monitorização', 'longitudinal'],
   },
   {
     title: 'Osteoporose',
+    href: '/reumatismos/osteoporose',
     summary:
       'Fragilidade óssea e risco de fraturas, frequentemente silenciosa até o primeiro evento. Prevenção, rastreio e adesão são decisivos.',
     tags: ['osso', 'fratura', 'prevenção'],
   },
   {
     title: 'Gota',
+    href: '/reumatismos/gota',
     summary:
       'Artrite por cristais associada ao ácido úrico. Crises recorrentes podem ser prevenidas com diagnóstico correto, metas e acompanhamento.',
     tags: ['cristais', 'ácido úrico', 'crises'],
   },
   {
     title: 'Dor lombar inflamatória',
+    href: '/reumatismos/dor-lombar-inflamatoria',
     summary:
       'Dor lombar com padrão inflamatório pode sugerir espondiloartrites. Diferenciar de dor mecânica evita anos de atraso diagnóstico.',
     tags: ['coluna', 'espondiloartrite', 'diagnóstico precoce'],
@@ -151,21 +156,17 @@ export default function ReumatismosKnowledge() {
                           <Badge key={tag} variant="outline">{tag}</Badge>
                         ))}
                       </div>
-                      {topic.href && (
-                        <p className="inline-flex items-center text-sm font-medium text-primary">
-                          Ler guia completo <ArrowRight className="ml-1 h-4 w-4" />
-                        </p>
-                      )}
+                      <p className="inline-flex items-center text-sm font-medium text-primary">
+                        Ler guia completo <ArrowRight className="ml-1 h-4 w-4" />
+                      </p>
                     </CardContent>
                   </Card>
                 );
 
-                return topic.href ? (
+                return (
                   <Link key={topic.title} to={topic.href} className="block h-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg">
                     {card}
                   </Link>
-                ) : (
-                  <div key={topic.title}>{card}</div>
                 );
               })}
             </div>
