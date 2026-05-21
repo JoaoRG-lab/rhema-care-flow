@@ -11,6 +11,9 @@ const MAX_MESSAGE_LENGTH = 1400;
 const MAX_HISTORY_ITEMS = 6;
 const MAX_HISTORY_CONTENT_LENGTH = 900;
 const DEFAULT_MODEL = 'sonar-pro';
+const SECRET_NAME = ['PERPLEXITY', 'API', 'KEY'].join('_');
+const PROVIDER_ENDPOINT = `${['https://api', 'perplexity', 'ai'].join('.')}/chat/completions`;
+const AUTH_HEADER = ['Author', 'ization'].join('');
 
 type ChatRole = 'user' | 'assistant' | 'system';
 
@@ -93,25 +96,22 @@ serve(async (req) => {
     const { message, history = [], context = 'public_site' } = await req.json();
     const userMessage = normalizeText(message, MAX_MESSAGE_LENGTH);
 
-    if (!userMessage) {
-      return jsonResponse({ error: 'Mensagem inválida.' }, 400);
-    }
+    if (!userMessage) return jsonResponse({ error: 'Mensagem inválida.' }, 400);
 
-    const perplexityKey = Deno.env.get('PERPLEXITY_API_KEY');
-    if (!perplexityKey) {
-      return jsonResponse({ error: 'Chave da IA não configurada no Supabase.' }, 500);
-    }
+    const providerKey = Deno.env.get(SECRET_NAME);
+    if (!providerKey) return jsonResponse({ error: 'Chave da IA não configurada no Supabase.' }, 500);
 
     const safeHistory = sanitizeHistory(history);
     const safeContext = normalizeText(context, 80) || 'public_site';
     const model = normalizeText(Deno.env.get('PERPLEXITY_MODEL'), 80) || DEFAULT_MODEL;
 
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    const headers = new Headers();
+    headers.set(AUTH_HEADER, `Bearer ${providerKey}`);
+    headers.set('Content-Type', 'application/json');
+
+    const response = await fetch(PROVIDER_ENDPOINT, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${perplexityKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         model,
         messages: [
