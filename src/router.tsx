@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Carregamento imediato — rotas cr\u00edticas
+// Carregamento imediato — rotas críticas
 import LoginPage         from './pages/LoginPage';
 import DashboardPage     from './pages/DashboardPage';
 import PatientsPage      from './pages/PatientsPage';
@@ -17,7 +17,7 @@ import SettingsPage      from './pages/SettingsPage';
 import AdminPage         from './pages/AdminPage';
 import NotFound          from './pages/NotFound';
 
-// Lazy-load — chunks pesados s\u00f3 carregam quando o usu\u00e1rio navega
+// Lazy-load — chunks pesados só carregam quando o usuário navega
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -44,7 +44,7 @@ export function AppRouter() {
         <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
         <Route path="/admin" element={<PrivateRoute><AdminPage /></PrivateRoute>} />
 
-        {/* Lazy — carrega vendor-charts s\u00f3 quando acessado */}
+        {/* Lazy — carrega vendor-charts só quando acessado */}
         <Route
           path="/reports"
           element={
