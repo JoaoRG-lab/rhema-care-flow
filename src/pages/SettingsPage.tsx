@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useToast } from '../hooks/useToast';
 import { useAuditLog } from '../hooks/useAuditLog';
 
-tab type Tab = 'perfil' | 'senha' | 'notificacoes';
+type Tab = 'perfil' | 'senha' | 'notificacoes';
 
 export function SettingsPage() {
   const { user, profile } = useAuth();
