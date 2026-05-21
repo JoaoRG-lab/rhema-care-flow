@@ -1,0 +1,12 @@
+# DESATIVADO — substituído por tmr-deploy.yml
+# As 3 réplicas do TMR cobrem build + lint + audit em paralelo.
+# Este arquivo foi desativado em 2026-05-21 para eliminar ruído.
+#
+# Para reativar: remover .disabled da extensão
+# ATENÇÃO: reativar sem desativar tmr-deploy.yml causa build duplo.
+
+# name: Build, Lint & Security Audit (LEGACY)
+# on:
+#   push:
+#     branches: [main]
+# ...

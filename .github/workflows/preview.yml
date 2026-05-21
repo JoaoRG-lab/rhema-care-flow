@@ -11,12 +11,12 @@ concurrency:
 
 jobs:
   preview:
-    name: Preview → Vercel
+    name: Preview → Cloudflare Pages (PR)
     runs-on: ubuntu-latest
-    environment:
-      name: preview
     permissions:
       pull-requests: write
+      contents: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,44 +25,38 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      # FIX: npm ci → npm install --legacy-peer-deps
+      # npm ci falha com peer dep conflicts (causa dos +30 deploys)
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
+      - name: Build preview
+        run: npm run build
         env:
           VITE_SUPABASE_URL:             ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Deploy preview
+      - name: Deploy preview → Cloudflare Pages
         id: preview
-        run: |
-          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$URL" >> $GITHUB_OUTPUT
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken:  ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=rhema-care-flow --branch=pr-${{ github.event.pull_request.number }}
 
-      - name: Comment on PR
+      - name: Comentar URL no PR
         uses: actions/github-script@v7
         with:
           script: |
-            const url = '${{ steps.preview.outputs.url }}';
-            const body = [
-              '## 🔍 Preview Deploy',
-              '',
-              `**URL:** ${url}`,
-              '',
-              '| Branch | Commit |',
-              '|--------|--------|',
-              `| \`${{ github.head_ref }}\` | \`${{ github.sha }}\`.slice(0,7) |`,
-            ].join('\n');
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
-              repo: context.repo.repo,
-              body
+              repo:  context.repo.repo,
+              body: [
+                '## 🔍 Preview Deploy',
+                '',
+                '| Branch | Commit | URL |',
+                '|--------|--------|-----|',
+                `| \`${{ github.head_ref }}\` | \`${{ github.sha }}\`.slice(0,7) | [Abrir preview](${{ steps.preview.outputs.deployment-url }}) |`,
+              ].join('\n')
             });

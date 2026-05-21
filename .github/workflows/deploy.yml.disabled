@@ -1,0 +1,13 @@
+# DESATIVADO — substituído por tmr-deploy.yml
+# TMR Deployment Auditor é o único ponto de deploy para main.
+# Este arquivo foi desativado em 2026-05-21 para eliminar conflito.
+# Manter aqui como referência histórica.
+#
+# Para reativar: remover .disabled da extensão
+# ATENÇÃO: reativar sem desativar tmr-deploy.yml causa deploy duplo.
+
+# name: CI — Build & Deploy (LEGACY)
+# on:
+#   push:
+#     branches: [main]
+# ...
