@@ -1,128 +1,100 @@
 // ============================================================
-// Rhema Care Flow — Tipos globais
+// Rhema Care Flow — Tipos globais TypeScript
 // ============================================================
 
-// --- Auth ---
-export type UserRole = 'admin' | 'medico' | 'enfermeiro' | 'recepcao' | 'paciente';
+export type Role = 'admin' | 'medico' | 'enfermeiro';
 
-export interface UserProfile {
+export interface Profile {
   id: string;
   full_name: string | null;
-  email: string | null;
-  phone_number: string | null;
+  phone: string | null;
+  role: Role;
   avatar_url: string | null;
-  role: UserRole;
-  created_at: string;
-  updated_at: string;
-}
-
-// --- Pacientes ---
-export interface PatientCard {
-  id: string;
-  patient_code: string;
-  full_name: string;
-  date_of_birth: string | null;
-  gender: 'M' | 'F' | 'outro' | null;
-  phone_number: string | null;
-  email: string | null;
-  address: string | null;
-  mrn_last4: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface PatientCardInsert extends Omit<PatientCard, 'id' | 'created_at' | 'updated_at'> {
-  id?: string;
+export interface Patient {
+  id: string;
+  name: string;
+  birthdate: string;
+  cpf: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  diagnosis: string | null;
+  active: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
-
-// --- Visitas ---
-export type VisitStatus = 'agendada' | 'em_andamento' | 'concluida' | 'cancelada' | 'faltou';
 
 export interface Visit {
   id: string;
   patient_id: string;
-  provider_id: string | null;
-  scheduled_at: string;
-  started_at: string | null;
-  ended_at: string | null;
-  status: VisitStatus;
+  doctor_id: string;
+  visit_date: string;
   chief_complaint: string | null;
-  diagnosis: string | null;
   notes: string | null;
   created_at: string;
-  updated_at: string;
-  // joins
-  patient?: PatientCard;
-  provider?: UserProfile;
 }
 
-// --- Prontuario ---
-export interface ProntuarioEntry {
+export interface Prontuario {
   id: string;
   patient_id: string;
-  visit_id: string | null;
   author_id: string;
-  entry_type: 'anamnese' | 'evolucao' | 'prescricao' | 'exame' | 'laudo' | 'outro';
   content: string;
+  type: 'evolucao' | 'prescricao' | 'laudo' | 'anamnese';
   created_at: string;
   updated_at: string;
-  author?: UserProfile;
 }
 
-// --- Score Clinico ---
-export interface ScoreEntry {
+export interface Score {
   id: string;
   patient_id: string;
-  visit_id: string | null;
-  score_type: string;
+  author_id: string;
+  score_type: 'DAS28' | 'SDAI' | 'Wells' | 'BASFI';
   score_value: number;
-  metadata: Record<string, unknown> | null;
+  inputs: Record<string, number>;
+  interpretation: string;
   created_at: string;
 }
 
-// --- SMS ---
-export type SMSStatus = 'pendente' | 'sent' | 'failed' | 'cancelled';
-
-export interface ScheduledSMS {
+export interface Exam {
   id: string;
   patient_id: string;
-  phone_number: string;
-  message: string;
-  scheduled_at: string;
-  sent_at: string | null;
-  status: SMSStatus;
-  error_message: string | null;
-  created_at: string;
-}
-
-// --- Pagamentos ---
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'cancelled';
-
-export interface PaymentTransaction {
-  id: string;
-  patient_id: string | null;
-  amount: number;
-  currency: string;
-  status: PaymentStatus;
-  stripe_payment_intent_id: string | null;
+  uploaded_by: string;
+  file_name: string;
+  file_url: string;
+  file_size: number;
+  mime_type: string;
   description: string | null;
   created_at: string;
 }
 
-// --- Audit ---
-export interface AuditLog {
+export interface Notification {
   id: string;
-  user_id: string | null;
-  action: string;
-  resource_type: string;
-  resource_id: string | null;
-  metadata: Record<string, unknown> | null;
-  ip_address: string | null;
+  user_id: string;
+  title: string;
+  body: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+  read: boolean;
+  link: string | null;
   created_at: string;
 }
 
-// --- Paginacao ---
+export interface AuditLog {
+  id: string;
+  user_id: string;
+  action: string;
+  resource: string;
+  resource_id: string | null;
+  meta: Record<string, unknown> | null;
+  created_at: string;
+}
+
+// Paginacao generica
 export interface PaginatedResult<T> {
   data: T[];
   count: number;
@@ -131,17 +103,19 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
-// --- API Response ---
-export interface ApiSuccess<T = unknown> {
-  ok: true;
-  data?: T;
+// Toast
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+export interface Toast {
+  id: string;
+  type: ToastType;
+  title: string;
   message?: string;
+  duration?: number;
 }
 
-export interface ApiError {
-  ok: false;
-  error: string;
-  code?: number;
-}
-
-export type ApiResult<T = unknown> = ApiSuccess<T> | ApiError;
+// WebRTC sinalização
+export type SignalingPayload =
+  | { type: 'offer';     sdp: RTCSessionDescriptionInit }
+  | { type: 'answer';    sdp: RTCSessionDescriptionInit }
+  | { type: 'ice';       candidate: RTCIceCandidateInit }
+  | { type: 'hangup' };
