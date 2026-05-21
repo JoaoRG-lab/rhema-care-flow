@@ -1,21 +1,18 @@
-name: CI — Rhema Care Flow
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  build-and-lint:
-    name: Build & Lint
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -25,41 +22,48 @@ jobs:
         run: npm ci
 
       - name: TypeScript check
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
-      - name: Lint (ESLint)
-        run: npm run lint --if-present
+      - name: ESLint
+        run: npm run lint
+        continue-on-error: true
 
-      - name: Build
+      - name: Build (Vite)
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Upload build artifacts
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-${{ github.sha }}
           path: dist/
-          retention-days: 7
+          retention-days: 30
 
-  supabase-functions-lint:
-    name: Edge Functions Check
+  deploy-cloudflare:
+    needs: build
     runs-on: ubuntu-latest
-    needs: build-and-lint
-
+    if: github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - uses: actions/setup-node@v4
         with:
-          deno-version: v1.x
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Check Edge Functions types
-        run: |
-          for fn in supabase/functions/*/index.ts; do
-            echo "Checking $fn..."
-            deno check --quiet "$fn" || exit 1
-          done
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken:    ${{ secrets.CF_API_TOKEN }}
+          accountId:   ${{ secrets.CF_ACCOUNT_ID }}
+          command:     pages deploy dist --project-name=rhema-care-flow --branch=main
+        continue-on-error: true

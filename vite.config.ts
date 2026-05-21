@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: 'Rhema Care Flow',
         short_name: 'RhemaCare',
-        description: 'Sistema de gestão em saúde — prontuários, scores e teleconsulta',
+        description: 'Sistema de gestao em saude — prontuarios, scores e teleconsulta',
         theme_color: '#0f766e',
         background_color: '#ffffff',
         display: 'standalone',
@@ -22,21 +22,15 @@ export default defineConfig({
           { src: '/icons/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
         shortcuts: [
-          { name: 'Novo Paciente',   short_name: 'Paciente',   url: '/patients/new', icons: [{ src: '/icons/pwa-192.png', sizes: '192x192' }] },
-          { name: 'Teleconsulta',   short_name: 'Telecons.',   url: '/teleconsulta', icons: [{ src: '/icons/pwa-192.png', sizes: '192x192' }] },
-          { name: 'Relatórios',     short_name: 'Relatórios', url: '/reports',       icons: [{ src: '/icons/pwa-192.png', sizes: '192x192' }] },
-        ],
-        screenshots: [
-          { src: '/screenshots/desktop.png', sizes: '1280x800',  type: 'image/png', form_factor: 'wide' },
-          { src: '/screenshots/mobile.png',  sizes: '390x844',   type: 'image/png', form_factor: 'narrow' },
+          { name: 'Novo Paciente', short_name: 'Paciente',  url: '/patients/new' },
+          { name: 'Teleconsulta', short_name: 'Telecons.',  url: '/teleconsulta' },
+          { name: 'Relatorios',   short_name: 'Relatorios', url: '/reports' },
         ],
       },
       workbox: {
-        // Cache de assets estáticos por 1 ano
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            // Supabase API — network-first, fallback cache 5min
             urlPattern: /https:\/\/.*\.supabase\.co\/.*/i,
             handler: 'NetworkFirst',
             options: {
@@ -46,7 +40,6 @@ export default defineConfig({
             },
           },
           {
-            // Fontes — cache-first
             urlPattern: /https:\/\/(fonts\.googleapis\.com|api\.fontshare\.com)\/.*/i,
             handler: 'CacheFirst',
             options: {
@@ -56,19 +49,20 @@ export default defineConfig({
           },
         ],
       },
-      devOptions: { enabled: true },
+      devOptions: { enabled: false },
     }),
   ],
   resolve: { alias: { '@': '/src' } },
   build: {
-    target:    'esnext',
-    sourcemap: true,
+    target: 'es2020',
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor:    ['react', 'react-dom'],
-          supabase:  ['@supabase/supabase-js'],
-          router:    ['react-router-dom'],
+          vendor:   ['react', 'react-dom'],
+          supabase: ['@supabase/supabase-js'],
+          router:   ['react-router-dom'],
         },
       },
     },
