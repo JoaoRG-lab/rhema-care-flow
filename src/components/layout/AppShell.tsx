@@ -1,310 +1,217 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../hooks/useNotifications';
 
 interface NavItem {
-  href: string;
+  to: string;
   label: string;
-  icon: React.ReactNode;
+  icon: string;
   roles?: string[];
-  exact?: boolean;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  {
-    href: '/dashboard',
-    label: 'Dashboard',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <rect x="3" y="3" width="7" height="7" rx="1"/>
-        <rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/>
-        <rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/patients',
-    label: 'Pacientes',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/calendar',
-    label: 'Agenda',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <rect x="3" y="4" width="18" height="18" rx="2"/>
-        <line x1="16" y1="2" x2="16" y2="6"/>
-        <line x1="8" y1="2" x2="8" y2="6"/>
-        <line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/prontuario',
-    label: 'Prontuário',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/monitoring',
-    label: 'Monitoramento',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/tasks',
-    label: 'Tarefas',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <path d="M9 11l3 3L22 4"/>
-        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/analytics',
-    label: 'Análises',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <line x1="18" y1="20" x2="18" y2="10"/>
-        <line x1="12" y1="20" x2="12" y2="4"/>
-        <line x1="6" y1="20" x2="6" y2="14"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/ai-assistant',
-    label: 'IA Clínica',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <path d="M12 2a10 10 0 1 0 10 10"/>
-        <path d="M12 6v6l4 2"/>
-        <circle cx="19" cy="5" r="3"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/settings',
-    label: 'Configurações',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    ),
-  },
+const NAV: NavItem[] = [
+  { to: '/',              label: 'Dashboard',     icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 0-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1m-6 0h16' },
+  { to: '/patients',      label: 'Pacientes',     icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 4v6m3-3h-6' },
+  { to: '/schedule',      label: 'Agenda',        icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z' },
+  { to: '/teleconsulta',  label: 'Teleconsulta',  icon: 'M15 10l4.553-2.069A1 1 0 0 1 21 8.88v6.24a1 1 0 0 1-1.447.89L15 14M3 8h12v8H3z' },
+  { to: '/reports',       label: 'Relatórios',    icon: 'M9 17v-2m3 2v-4m3 4v-6M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-5z', roles: ['admin','medico'] },
+  { to: '/notifications', label: 'Notificações',  icon: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9m-4.27 13a2 2 0 0 1-3.46 0' },
+  { to: '/settings',      label: 'Configurações', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z' },
+  { to: '/admin',         label: 'Admin',         icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', roles: ['admin'] },
 ];
 
-function NavLink({ item, active, onClick }: { item: NavItem; active: boolean; onClick?: () => void }) {
+function NavIcon({ d }: { d: string }) {
   return (
-    <a
-      href={item.href}
-      onClick={onClick}
-      aria-current={active ? 'page' : undefined}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-        active
-          ? 'bg-teal-50 dark:bg-teal-900/25 text-teal-700 dark:text-teal-300'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
-      }`}
-    >
-      <span className={active ? 'text-teal-600 dark:text-teal-400' : ''}>{item.icon}</span>
-      <span>{item.label}</span>
-    </a>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d={d} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
-interface AppShellProps {
-  children: React.ReactNode;
-}
-
-export function AppShell({ children }: AppShellProps) {
+export function AppShell() {
   const { profile, signOut } = useAuth();
+  const { unread } = useNotifications();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const path = window.location.pathname;
+  const [dark, setDark] = useState(() =>
+    document.documentElement.getAttribute('data-theme') === 'dark' ||
+    (!document.documentElement.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches)
+  );
 
-  // Fecha sidebar ao clicar fora (mobile)
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
-        setSidebarOpen(false);
-      }
-    }
-    if (sidebarOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [sidebarOpen]);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }, [dark]);
 
-  // Fecha sidebar ao pressionar ESC
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setSidebarOpen(false);
-    }
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, []);
+  // Fecha sidebar no mobile ao navegar
+  const close = () => setSidebarOpen(false);
 
-  // Bloqueia scroll do body quando sidebar mobile aberta
-  useEffect(() => {
-    document.body.style.overflow = sidebarOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [sidebarOpen]);
+  const visibleNav = NAV.filter(item =>
+    !item.roles || (profile?.role && item.roles.includes(profile.role))
+  );
 
-  function isActive(href: string) {
-    if (href === '/dashboard') return path === '/dashboard';
-    return path.startsWith(href);
+  async function handleSignOut() {
+    await signOut();
+    navigate('/login');
   }
 
   const initials = profile?.full_name
-    ?.split(' ')
-    .slice(0, 2)
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase() ?? '?';
+    ?.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() ?? '?';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Skip link */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-50 bg-white dark:bg-gray-900 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-teal-600"
-      >
-        Ir para o conteúdo
-      </a>
+    <div className="flex h-dvh bg-gray-50 dark:bg-gray-950 overflow-hidden">
 
-      {/* Overlay mobile */}
+      {/* Backdrop mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 dark:bg-black/60 z-30 lg:hidden"
+          className="fixed inset-0 z-20 bg-black/40 backdrop-blur-sm lg:hidden"
+          onClick={close}
           aria-hidden="true"
-          onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* ── Sidebar ────────────────────────────────────────────── */}
+      {/* Sidebar */}
       <aside
-        ref={sidebarRef}
+        className={[
+          'fixed inset-y-0 left-0 z-30 w-64 flex flex-col',
+          'bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800',
+          'transition-transform duration-300 ease-out',
+          'lg:static lg:translate-x-0',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        ].join(' ')}
         aria-label="Navegação principal"
-        className={`fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-40 flex flex-col transition-transform duration-200 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-5 py-5 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
-          {/* SVG Logo */}
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <rect width="32" height="32" rx="8" fill="#0d9488"/>
-            <path d="M16 7v18M7 16h18" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-            <circle cx="16" cy="16" r="5" stroke="white" strokeWidth="1.75" fill="none"/>
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-label="Rhema Care" role="img">
+            <rect width="32" height="32" rx="8" fill="#0d9488" />
+            <path d="M10 22V10h6a4 4 0 0 1 0 8h-6M16 18l5 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="font-bold text-gray-900 dark:text-gray-100 text-base tracking-tight">
-            Rhema<span className="text-teal-600">Care</span>
-          </span>
+          <span className="font-bold text-gray-900 dark:text-gray-100 text-lg tracking-tight">Rhema Care</span>
           {/* Fechar no mobile */}
           <button
-            onClick={() => setSidebarOpen(false)}
-            className="ml-auto lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            onClick={close}
+            className="ml-auto lg:hidden text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             aria-label="Fechar menu"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M18 6 6 18M6 6l12 12"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5" aria-label="Menu">
-          {NAV_ITEMS.map((item) => (
+        {/* Nav items */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+          {visibleNav.map(item => (
             <NavLink
-              key={item.href}
-              item={item}
-              active={isActive(item.href)}
-              onClick={() => setSidebarOpen(false)}
-            />
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              onClick={close}
+              className={({ isActive }) => [
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group',
+                isActive
+                  ? 'bg-teal-50 dark:bg-teal-900/25 text-teal-700 dark:text-teal-300'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100',
+              ].join(' ')}
+            >
+              <span className="shrink-0"><NavIcon d={item.icon} /></span>
+              <span className="flex-1">{item.label}</span>
+              {item.to === '/notifications' && unread > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-teal-600 text-white text-xs font-bold shrink-0">
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              )}
+            </NavLink>
           ))}
         </nav>
 
         {/* Perfil + logout */}
-        <div className="flex-shrink-0 border-t border-gray-100 dark:border-gray-800 p-3">
-          <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-semibold text-teal-700 dark:text-teal-300">{initials}</span>
+        <div className="px-3 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0 space-y-1">
+          {/* Dark mode toggle */}
+          <button
+            onClick={() => setDark(d => !d)}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label={dark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
+          >
+            {dark ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            )}
+            <span>{dark ? 'Modo claro' : 'Modo escuro'}</span>
+          </button>
+
+          {/* Avatar + nome */}
+          <Link
+            to="/settings"
+            onClick={close}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xs font-bold shrink-0">
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                {profile?.full_name ?? 'Usuário'}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{profile?.email ?? ''}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{profile?.full_name ?? 'Usuário'}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-600 truncate capitalize">{profile?.role ?? ''}</p>
             </div>
-            <button
-              onClick={signOut}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex-shrink-0"
-              aria-label="Sair"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </button>
-          </div>
+          </Link>
+
+          {/* Logout */}
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Sair</span>
+          </button>
         </div>
       </aside>
 
-      {/* ── Header mobile ──────────────────────────────────────── */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center px-4 h-14">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 -ml-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          aria-label="Abrir menu"
-          aria-expanded={sidebarOpen}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
-        </button>
-        <div className="flex items-center gap-2 mx-auto">
-          <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <rect width="32" height="32" rx="8" fill="#0d9488"/>
-            <path d="M16 7v18M7 16h18" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-            <circle cx="16" cy="16" r="5" stroke="white" strokeWidth="1.75" fill="none"/>
-          </svg>
-          <span className="font-bold text-gray-900 dark:text-gray-100 text-sm">
-            Rhema<span className="text-teal-600">Care</span>
-          </span>
-        </div>
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center ml-auto">
-          <span className="text-xs font-semibold text-teal-700 dark:text-teal-300">{initials}</span>
-        </div>
-      </header>
+      {/* Conteúdo principal */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Topbar mobile */}
+        <header className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 lg:hidden shrink-0">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+            aria-label="Abrir menu"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
+            </svg>
+          </button>
+          <span className="font-semibold text-gray-900 dark:text-gray-100 flex-1">Rhema Care</span>
+          {/* Badge notificações mobile */}
+          <Link to="/notifications" className="relative" aria-label={`Notificações${unread > 0 ? ` (${unread} não lidas)` : ''}`}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className="text-gray-500 dark:text-gray-400" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9m-4.27 13a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {unread > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-teal-600 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
+          </Link>
+        </header>
 
-      {/* ── Main content ───────────────────────────────────────── */}
-      <main
-        id="main-content"
-        className="lg:pl-64 pt-14 lg:pt-0 min-h-screen"
-        tabIndex={-1}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-          {children}
-        </div>
-      </main>
+        {/* Skip link acessibilidade */}
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:px-3 focus:py-1 focus:rounded focus:text-teal-700 focus:shadow">
+          Pular para o conteúdo
+        </a>
+
+        {/* Página atual */}
+        <main id="main-content" className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
-
-export default AppShell;

@@ -7,62 +7,65 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Rhema Care Flow',
         short_name: 'RhemaCare',
-        description: 'Sistema de gestao em saude — prontuarios, scores e teleconsulta',
-        theme_color: '#0f766e',
-        background_color: '#ffffff',
+        description: 'Plataforma de gestão de saúde Rhema Care',
+        theme_color: '#0d9488',
+        background_color: '#f7f6f2',
         display: 'standalone',
+        orientation: 'portrait-primary',
         start_url: '/',
+        scope: '/',
+        lang: 'pt-BR',
         icons: [
           { src: '/icons/pwa-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/pwa-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icons/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
         shortcuts: [
-          { name: 'Novo Paciente', short_name: 'Paciente',  url: '/patients/new' },
-          { name: 'Teleconsulta', short_name: 'Telecons.',  url: '/teleconsulta' },
-          { name: 'Relatorios',   short_name: 'Relatorios', url: '/reports' },
+          { name: 'Agenda',    short_name: 'Agenda',    url: '/schedule',    icons: [{ src: '/icons/pwa-192.png', sizes: '192x192' }] },
+          { name: 'Pacientes', short_name: 'Pacientes', url: '/patients',    icons: [{ src: '/icons/pwa-192.png', sizes: '192x192' }] },
+        ],
+        screenshots: [
+          { src: '/screenshots/desktop.png', sizes: '1280x720', type: 'image/png', form_factor: 'wide',   label: 'Dashboard' },
+          { src: '/screenshots/mobile.png',  sizes: '390x844',  type: 'image/png', form_factor: 'narrow', label: 'Agenda'    },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
+            // Cache fontes do Fontshare/Google
+            urlPattern: /^https:\/\/(api\.fontshare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)/,
+            handler: 'CacheFirst',
             options: {
-              cacheName: 'supabase-api',
-              expiration: { maxEntries: 100, maxAgeSeconds: 300 },
-              networkTimeoutSeconds: 5,
+              cacheName: 'fonts-cache',
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
-            urlPattern: /https:\/\/(fonts\.googleapis\.com|api\.fontshare\.com)\/.*/i,
-            handler: 'CacheFirst',
+            // Cache assets estáticos do Supabase Storage
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage/,
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'fonts',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheName: 'supabase-storage',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
             },
           },
         ],
       },
-      devOptions: { enabled: false },
     }),
   ],
-  resolve: { alias: { '@': '/src' } },
   build: {
-    target: 'es2020',
-    sourcemap: false,
-    chunkSizeWarningLimit: 600,
+    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor:   ['react', 'react-dom'],
-          supabase: ['@supabase/supabase-js'],
-          router:   ['react-router-dom'],
+          'vendor-react':    ['react', 'react-dom', 'react-router-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-charts':   ['recharts'],
         },
       },
     },
