@@ -1,40 +1,17 @@
-name: Build, Lint & Security Audit
+# DESATIVADO — substituído pelo TMR Deployment Auditor
+# Workflow ativo: tmr-deploy.yml
+
+name: Build, Lint & Security Audit (DISABLED)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Este workflow está desativado. Use tmr-deploy.yml'
+        required: false
 
 jobs:
-  build:
-    name: Install, Typecheck & Build
+  disabled:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install (legacy-peer-deps)
-        run: npm install --legacy-peer-deps
-
-      - name: TypeScript check
-        run: npm run typecheck
-        continue-on-error: true
-
-      - name: Vite Build
-        run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_HF_TOKEN: ${{ secrets.VITE_HF_TOKEN }}
-
-      - name: Security Audit
-        run: npm audit --audit-level=high
-        continue-on-error: true
+      - run: echo 'Este workflow está desativado. O TMR Auditor cuida do CI.'
