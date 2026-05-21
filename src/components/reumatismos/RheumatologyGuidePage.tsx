@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, BookOpen, CheckCircle2, Route, ShieldCheck, Stethoscope } from 'lucide-react';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { FAQSection, buildFAQJsonLd, type FAQItem } from '@/components/reumatismos/FAQSection';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,7 @@ export type RheumatologyGuide = {
   principlesTitle: string;
   principlesIntro: string;
   principles: string[];
+  faqs?: FAQItem[];
 };
 
 type RheumatologyGuidePageProps = {
@@ -33,8 +35,7 @@ type RheumatologyGuidePageProps = {
 
 function buildMedicalJsonLd(guide: RheumatologyGuide) {
   const url = `https://www.reumatismos.com/reumatismos/${guide.slug}`;
-
-  return [
+  const schemas: Record<string, unknown>[] = [
     {
       '@context': 'https://schema.org',
       '@type': 'MedicalWebPage',
@@ -75,6 +76,12 @@ function buildMedicalJsonLd(guide: RheumatologyGuide) {
       ],
     },
   ];
+
+  if (guide.faqs?.length) {
+    schemas.push(buildFAQJsonLd(guide.faqs));
+  }
+
+  return schemas;
 }
 
 export function RheumatologyGuidePage({ guide }: RheumatologyGuidePageProps) {
@@ -218,6 +225,8 @@ export function RheumatologyGuidePage({ guide }: RheumatologyGuidePageProps) {
             </div>
           </div>
         </section>
+
+        {guide.faqs?.length ? <FAQSection items={guide.faqs} /> : null}
 
         <section className="container mx-auto px-4 py-14">
           <Card className="bg-primary text-primary-foreground">
