@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, ShieldCheck, Sparkles, Stethoscope } from 'lucide-react';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,9 +57,29 @@ const principles = [
   'Privacidade by design: sem coleta de dados sensíveis no ambiente público.',
 ];
 
+const hubJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Reumatismos.com — Biblioteca pública de reumatologia',
+  description: 'Hub educativo sobre fibromialgia, artrite reumatoide, lúpus, osteoporose, gota e dor lombar inflamatória.',
+  url: 'https://www.reumatismos.com/reumatismos',
+  inLanguage: 'pt-BR',
+  publisher: {
+    '@type': 'Organization',
+    name: 'UHS Health OS / Protocolo Vida',
+    url: 'https://www.reumatismos.com',
+  },
+};
+
 export default function ReumatismosKnowledge() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEOHead
+        title="Reumatismos.com — Biblioteca pública de Reumatologia"
+        description="Guias educativos sobre fibromialgia, artrite reumatoide, lúpus, osteoporose, gota e dor lombar inflamatória. Conteúdo claro, seguro e sem substituir avaliação médica."
+        path="/reumatismos"
+        jsonLd={hubJsonLd}
+      />
       <header className="border-b bg-card/80 backdrop-blur">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <Link to="/" className="flex items-center gap-3">

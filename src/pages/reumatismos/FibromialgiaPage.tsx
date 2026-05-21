@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, BookOpen, Brain, CheckCircle2, Moon, Route, ShieldCheck, Stethoscope } from 'lucide-react';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,9 +47,43 @@ const principles = [
   'O objetivo é recuperar função e autonomia, não perseguir uma cura instantânea.',
 ];
 
+const fibromyalgiaJsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalWebPage',
+    name: 'Fibromialgia: dor real, sistema sensível e cuidado progressivo',
+    description:
+      'Guia educativo sobre fibromialgia, dor crônica generalizada, fadiga, sono não reparador e sinais que pedem avaliação profissional.',
+    url: 'https://www.reumatismos.com/reumatismos/fibromialgia',
+    inLanguage: 'pt-BR',
+    medicalAudience: { '@type': 'MedicalAudience', audienceType: 'Patient' },
+    about: { '@type': 'MedicalCondition', name: 'Fibromialgia' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'UHS Health OS / Protocolo Vida',
+      url: 'https://www.reumatismos.com',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Reumatismos', item: 'https://www.reumatismos.com/reumatismos' },
+      { '@type': 'ListItem', position: 2, name: 'Fibromialgia', item: 'https://www.reumatismos.com/reumatismos/fibromialgia' },
+    ],
+  },
+];
+
 export default function FibromialgiaPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEOHead
+        title="Fibromialgia: dor real, sistema sensível e cuidado progressivo"
+        description="Guia educativo sobre fibromialgia, dor crônica generalizada, fadiga, sono não reparador, sinais de atenção e cuidado progressivo."
+        path="/reumatismos/fibromialgia"
+        type="article"
+        jsonLd={fibromyalgiaJsonLd}
+      />
       <header className="border-b bg-card/80 backdrop-blur">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <Link to="/reumatismos" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
