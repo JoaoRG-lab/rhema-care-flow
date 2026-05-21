@@ -44,6 +44,11 @@ const KnowledgeLibrary = lazy(() => import("./pages/KnowledgeLibrary"));
 const PatientEducationLibrary = lazy(() => import("./pages/PatientEducationLibrary"));
 const ReumatismosKnowledge = lazy(() => import("./pages/ReumatismosKnowledge"));
 const FibromialgiaPage = lazy(() => import("./pages/reumatismos/FibromialgiaPage"));
+const ArtriteReumatoidePage = lazy(() => import("./pages/reumatismos/ArtriteReumatoidePage"));
+const LupusPage = lazy(() => import("./pages/reumatismos/LupusPage"));
+const OsteoporosePage = lazy(() => import("./pages/reumatismos/OsteoporosePage"));
+const GotaPage = lazy(() => import("./pages/reumatismos/GotaPage"));
+const DorLombarInflamatoriaPage = lazy(() => import("./pages/reumatismos/DorLombarInflamatoriaPage"));
 const LearnPediatrics = lazy(() => import("./pages/LearnPediatrics"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const AIAssistant = lazy(() => import("./pages/AIAssistant"));
@@ -141,6 +146,11 @@ const App = () => (
                       <Route path="/learn" element={<PatientEducationLibrary />} />
                       <Route path="/reumatismos" element={<ReumatismosKnowledge />} />
                       <Route path="/reumatismos/fibromialgia" element={<FibromialgiaPage />} />
+                      <Route path="/reumatismos/artrite-reumatoide" element={<ArtriteReumatoidePage />} />
+                      <Route path="/reumatismos/lupus" element={<LupusPage />} />
+                      <Route path="/reumatismos/osteoporose" element={<OsteoporosePage />} />
+                      <Route path="/reumatismos/gota" element={<GotaPage />} />
+                      <Route path="/reumatismos/dor-lombar-inflamatoria" element={<DorLombarInflamatoriaPage />} />
                       <Route path="/learn/pediatrics" element={<LearnPediatrics />} />
                       <Route path="/tell-us" element={<TellUs />} />
                       <Route path="/scores" element={<Scores />} />
