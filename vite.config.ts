@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: 'Rhema Care Flow',
         short_name: 'RhemaCare',
-        description: 'Plataforma de gestão de saúde Rhema Care',
+        description: 'Plataforma de gest\u00e3o de sa\u00fade Rhema Care',
         theme_color: '#0d9488',
         background_color: '#f7f6f2',
         display: 'standalone',
@@ -36,7 +36,6 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            // Cache fontes do Fontshare/Google
             urlPattern: /^https:\/\/(api\.fontshare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)/,
             handler: 'CacheFirst',
             options: {
@@ -46,7 +45,6 @@ export default defineConfig({
             },
           },
           {
-            // Cache assets estáticos do Supabase Storage
             urlPattern: /^https:\/\/.*\.supabase\.co\/storage/,
             handler: 'StaleWhileRevalidate',
             options: {
@@ -60,12 +58,22 @@ export default defineConfig({
   ],
   build: {
     target: 'esnext',
+    // Resolve o warning "CJS build of Vite's Node API is deprecated"
+    commonjsOptions: { transformMixedEsModules: true },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react':    ['react', 'react-dom', 'react-router-dom'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-charts':   ['recharts'],
+        manualChunks(id) {
+          // Vendors est\u00e1ticos
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@supabase')) {
+            return 'vendor-supabase';
+          }
+          // Charts: lazy chunk separado — s\u00f3 carrega em ReportsPage
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3') || id.includes('node_modules/victory')) {
+            return 'vendor-charts';
+          }
         },
       },
     },
