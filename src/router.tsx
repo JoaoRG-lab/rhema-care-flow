@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AISiteAgentWidget } from '@/components/ai/AISiteAgentWidget2';
 
 // Carregamento imediato — rotas críticas
 import LoginPage         from './pages/LoginPage';
@@ -15,6 +16,13 @@ import ScorePage         from './pages/ScorePage';
 import TeleconsultaPage  from './pages/TeleconsultaPage';
 import SettingsPage      from './pages/SettingsPage';
 import AdminPage         from './pages/AdminPage';
+import ReumatismosKnowledge from './pages/ReumatismosKnowledge';
+import FibromialgiaPage from './pages/reumatismos/FibromialgiaPage';
+import ArtriteReumatoidePage from './pages/reumatismos/ArtriteReumatoidePage';
+import LupusPage from './pages/reumatismos/LupusPage';
+import OsteoporosePage from './pages/reumatismos/OsteoporosePage';
+import GotaPage from './pages/reumatismos/GotaPage';
+import DorLombarInflamatoriaPage from './pages/reumatismos/DorLombarInflamatoriaPage';
 import NotFound          from './pages/NotFound';
 
 // Lazy-load — chunks pesados só carregam quando o usuário navega
@@ -26,11 +34,27 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return session ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
+function PublicWithAssistant({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      {children}
+      <AISiteAgentWidget />
+    </>
+  );
+}
+
 export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reumatismos" element={<PublicWithAssistant><ReumatismosKnowledge /></PublicWithAssistant>} />
+        <Route path="/reumatismos/fibromialgia" element={<PublicWithAssistant><FibromialgiaPage /></PublicWithAssistant>} />
+        <Route path="/reumatismos/artrite-reumatoide" element={<PublicWithAssistant><ArtriteReumatoidePage /></PublicWithAssistant>} />
+        <Route path="/reumatismos/lupus" element={<PublicWithAssistant><LupusPage /></PublicWithAssistant>} />
+        <Route path="/reumatismos/osteoporose" element={<PublicWithAssistant><OsteoporosePage /></PublicWithAssistant>} />
+        <Route path="/reumatismos/gota" element={<PublicWithAssistant><GotaPage /></PublicWithAssistant>} />
+        <Route path="/reumatismos/dor-lombar-inflamatoria" element={<PublicWithAssistant><DorLombarInflamatoriaPage /></PublicWithAssistant>} />
 
         <Route path="/" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
         <Route path="/patients" element={<PrivateRoute><PatientsPage /></PrivateRoute>} />
