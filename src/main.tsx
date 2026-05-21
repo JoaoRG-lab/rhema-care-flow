@@ -1,10 +1,15 @@
-import { createRoot } from "react-dom/client";
-import '@/i18n';
-import App from "./App.tsx";
-import "./index.css";
-import { startLoopDetectorAuto } from "./lib/loopDetectorAutoStart";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { AppRouter } from './router';
+import { ToastContainer } from './components/ui/ToastContainer';
+import './index.css';
 
-// Run the recurrence/loop detector continuously from app boot.
-startLoopDetectorAuto();
+const root = document.getElementById('root');
+if (!root) throw new Error('Elemento #root nao encontrado no HTML');
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(root).render(
+  <StrictMode>
+    <AppRouter />
+    <ToastContainer />
+  </StrictMode>,
+);
