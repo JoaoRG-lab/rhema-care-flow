@@ -43,6 +43,7 @@ const Education = lazy(() => import("./pages/Education"));
 const KnowledgeLibrary = lazy(() => import("./pages/KnowledgeLibrary"));
 const PatientEducationLibrary = lazy(() => import("./pages/PatientEducationLibrary"));
 const ReumatismosKnowledge = lazy(() => import("./pages/ReumatismosKnowledge"));
+const FibromialgiaPage = lazy(() => import("./pages/reumatismos/FibromialgiaPage"));
 const LearnPediatrics = lazy(() => import("./pages/LearnPediatrics"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const AIAssistant = lazy(() => import("./pages/AIAssistant"));
@@ -139,6 +140,7 @@ const App = () => (
                       <Route path="/case-studies" element={<CaseStudies />} />
                       <Route path="/learn" element={<PatientEducationLibrary />} />
                       <Route path="/reumatismos" element={<ReumatismosKnowledge />} />
+                      <Route path="/reumatismos/fibromialgia" element={<FibromialgiaPage />} />
                       <Route path="/learn/pediatrics" element={<LearnPediatrics />} />
                       <Route path="/tell-us" element={<TellUs />} />
                       <Route path="/scores" element={<Scores />} />
