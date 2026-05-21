@@ -1,14 +1,14 @@
-name: CI
+name: Build, Lint & Security Audit
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  build-and-audit:
-    name: Build, Lint & Security Audit
+  build:
+    name: Install, Typecheck & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -21,25 +21,20 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+      - name: Install (legacy-peer-deps)
+        run: npm install --legacy-peer-deps
 
-      - name: TypeScript type-check
-        run: npx tsc --noEmit
+      - name: TypeScript check
+        run: npm run typecheck
         continue-on-error: true
 
-      - name: Vite build
+      - name: Vite Build
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_HF_TOKEN: ${{ secrets.VITE_HF_TOKEN }}
 
-      - name: Security audit (high+critical only)
+      - name: Security Audit
         run: npm audit --audit-level=high
         continue-on-error: true
-
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "::error::Build ou audit falhou. Verifique os logs acima."
