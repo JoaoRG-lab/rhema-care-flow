@@ -1,17 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-// Rate limit para usuários normais (admins têm bypass)
+const FUNCTION_VERSION = "rhema-care-v2.1";
 const RATE_LIMIT_MAX_REQUESTS = 30;
 const RATE_LIMIT_WINDOW_MINUTES = 60;
 
-// Modelos disponíveis por perfil
 const USER_MODELS = ["gpt-4o-mini", "gpt-3.5-turbo"] as const;
 const ADMIN_MODELS = [
   "gpt-4o",
@@ -31,15 +26,32 @@ const MessageSchema = z.object({
 
 const OpenAIChatRequestSchema = z.object({
   messages: z.array(MessageSchema).min(1).max(100),
-  model: z.string().optional().default("gpt-4o-mini"),
+  model: z.string().optional().default("gpt-4o"),
   temperature: z.number().min(0).max(2).optional(),
   max_tokens: z.number().min(1).max(8192).optional(),
   stream: z.boolean().optional().default(true),
 });
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method === "GET") {
+    return new Response(
+      JSON.stringify({ ok: true, function: "openai-chat", version: FUNCTION_VERSION }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Método não permitido." }),
+      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {
@@ -55,29 +67,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
-
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Não autorizado." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub;
-    const userRole = claimsData.claims.user_metadata?.role ?? claimsData.claims.role ?? "user";
+    const userId = user.id;
+    const userRole = user.user_metadata?.role ?? user.role ?? "user";
     const isAdmin = userRole === "admin" || userRole === "super_admin";
 
-    console.log(`[openai-chat] user=${userId} role=${userRole} isAdmin=${isAdmin}`);
+    console.log(`[openai-chat] user=${userId} role=${userRole} isAdmin=${isAdmin} version=${FUNCTION_VERSION}`);
 
-    // Rate limit apenas para não-admins
     if (!isAdmin) {
       const { data: rateLimitAllowed, error: rateLimitError } = await supabaseAdmin.rpc(
         "check_rate_limit",
@@ -88,12 +97,11 @@ serve(async (req) => {
           p_window_minutes: RATE_LIMIT_WINDOW_MINUTES,
         }
       );
-
       if (rateLimitError) {
         console.error("Rate limit check error:", rateLimitError);
       } else if (!rateLimitAllowed) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Maximum 30 requests per hour." }),
+          JSON.stringify({ error: "Muitas requisições. Aguarde um momento." }),
           {
             status: 429,
             headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "3600" },
@@ -127,8 +135,6 @@ serve(async (req) => {
     }
 
     const { messages, model, temperature, max_tokens, stream } = validationResult.data;
-
-    // Valida se o modelo solicitado é permitido para o perfil do usuário
     const allowedModels: readonly string[] = isAdmin ? ADMIN_MODELS : USER_MODELS;
     const effectiveModel = allowedModels.includes(model) ? model : (isAdmin ? "gpt-4o" : "gpt-4o-mini");
 
@@ -149,32 +155,18 @@ serve(async (req) => {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: effectiveModel,
-        messages,
-        temperature,
-        max_tokens,
-        stream,
-      }),
+      body: JSON.stringify({ model: effectiveModel, messages, temperature, max_tokens, stream }),
     });
 
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
       console.error("[openai-chat] OpenAI API error:", openaiResponse.status, errorText);
-
       if (openaiResponse.status === 429) {
         return new Response(
           JSON.stringify({ error: "OpenAI rate limit exceeded. Please try again later." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (openaiResponse.status === 401) {
-        return new Response(
-          JSON.stringify({ error: "OpenAI API key invalid or expired." }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
       return new Response(
         JSON.stringify({ error: "OpenAI request failed" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
