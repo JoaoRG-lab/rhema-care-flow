@@ -1,83 +1,99 @@
-import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
-import { verifyJWT } from '../_shared/auth.ts';
-import { checkRateLimit, getClientIp } from '../_shared/rateLimit.ts';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const FUNCTION_VERSION = 'rhema-care-v2.0';
+const TWILIO_SID   = Deno.env.get('TWILIO_ACCOUNT_SID')!;
+const TWILIO_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN')!;
+const TWILIO_FROM  = Deno.env.get('TWILIO_FROM_NUMBER')!;
+
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+);
+
+async function sendTwilio(to: string, body: string): Promise<{ ok: boolean; error?: string }> {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`;
+  const params = new URLSearchParams({ To: to, From: TWILIO_FROM, Body: body });
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    return { ok: false, error: err?.message ?? `HTTP ${res.status}` };
+  }
+  return { ok: true };
+}
 
 serve(async (req) => {
-  const origin = req.headers.get('origin');
-  const ip = getClientIp(req);
-
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: getCorsHeaders(origin) });
-  }
-
+  // Valida metodo
   if (req.method !== 'POST') {
-    return jsonResponse({ error: 'Método não permitido.' }, 405, origin);
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
 
-  const auth = await verifyJWT(req);
-  if (!auth) {
-    return jsonResponse({ error: 'Não autorizado.' }, 401, origin);
-  }
-
-  if (!checkRateLimit(`sms:${auth.userId}:${ip}`, 20, 60_000)) {
-    return jsonResponse({ error: 'Muitas requisições de SMS. Aguarde.' }, 429, origin);
+  // Valida JWT interno (chamada via Supabase Cron ou direto)
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
   try {
-    const { to, message, patient_id } = await req.json();
+    const now = new Date().toISOString();
 
-    if (!to || !message) {
-      return jsonResponse({ error: 'Campos obrigatórios: to, message.' }, 400, origin);
+    // Busca SMSes pendentes agendados para ate agora
+    const { data: messages, error: fetchErr } = await supabaseAdmin
+      .from('scheduled_sms')
+      .select('*')
+      .eq('status', 'pendente')
+      .lte('scheduled_at', now)
+      .limit(50);
+
+    if (fetchErr) throw fetchErr;
+    if (!messages?.length) {
+      return new Response(JSON.stringify({ sent: 0, message: 'Nenhum SMS pendente.' }), { status: 200 });
     }
 
-    // Validação simples de telefone brasileiro
-    const phoneRegex = /^\+55\d{10,11}$/;
-    if (!phoneRegex.test(to.replace(/\s/g, ''))) {
-      return jsonResponse({ error: 'Número de telefone inválido. Use formato +55...' }, 400, origin);
+    let sent = 0;
+    let failed = 0;
+
+    for (const sms of messages) {
+      const { ok, error: smsErr } = await sendTwilio(sms.phone_number, sms.message);
+
+      await supabaseAdmin
+        .from('scheduled_sms')
+        .update({
+          status:        ok ? 'sent' : 'failed',
+          sent_at:       ok ? new Date().toISOString() : null,
+          error_message: ok ? null : smsErr,
+        })
+        .eq('id', sms.id);
+
+      // Audit
+      await supabaseAdmin.from('audit_logs').insert({
+        user_id:       null,
+        action:        ok ? 'sms_sent' : 'sms_failed',
+        resource_type: 'scheduled_sms',
+        resource_id:   sms.id,
+        metadata:      { phone: sms.phone_number, error: smsErr ?? null },
+      });
+
+      ok ? sent++ : failed++;
     }
 
-    const twilioSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const twilioToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const twilioFrom = Deno.env.get('TWILIO_PHONE_NUMBER');
-
-    if (!twilioSid || !twilioToken || !twilioFrom) {
-      console.error('send-sms: credenciais Twilio não configuradas');
-      return jsonResponse({ error: 'Serviço de SMS não configurado.' }, 503, origin);
-    }
-
-    const formData = new URLSearchParams();
-    formData.append('To', to);
-    formData.append('From', twilioFrom);
-    formData.append('Body', String(message).slice(0, 160));
-
-    const twilioResp = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${btoa(`${twilioSid}:${twilioToken}`)}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData,
-      }
+    return new Response(
+      JSON.stringify({ sent, failed, total: messages.length }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
     );
-
-    if (!twilioResp.ok) {
-      const err = await twilioResp.text();
-      console.error('send-sms Twilio error', { status: twilioResp.status, err: err.slice(0, 200) });
-      return jsonResponse({ error: 'Falha ao enviar SMS.' }, 502, origin);
-    }
-
-    const twilioData = await twilioResp.json();
-    console.log('send-sms ok', { sid: twilioData.sid, to, userId: auth.userId, patient_id });
-
-    return jsonResponse({ ok: true, sid: twilioData.sid, version: FUNCTION_VERSION }, 200, origin);
-
-  } catch (error) {
-    console.error('send-sms erro interno', error instanceof Error ? error.message : String(error));
-    return jsonResponse({ error: 'Erro interno.' }, 500, origin);
+  } catch (e) {
+    console.error('[send-sms]', e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : 'Erro interno' }),
+      { status: 500 },
+    );
   }
 });
