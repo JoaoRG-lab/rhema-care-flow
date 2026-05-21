@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 const topics = [
   {
     title: 'Fibromialgia',
+    href: '/reumatismos/fibromialgia',
     summary:
       'Dor crônica generalizada, sono não reparador, fadiga e hipersensibilidade. A educação em saúde ajuda a reduzir medo, atraso diagnóstico e uso inadequado de exames.',
     tags: ['dor crônica', 'sono', 'educação'],
@@ -134,24 +135,39 @@ export default function ReumatismosKnowledge() {
               </p>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {topics.map((topic) => (
-                <Card key={topic.title} className="h-full transition hover:-translate-y-1 hover:shadow-md">
-                  <CardHeader>
-                    <CardTitle className="flex items-start gap-2 text-xl">
-                      <BookOpen className="mt-1 h-5 w-5 shrink-0 text-primary" />
-                      {topic.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm leading-relaxed text-muted-foreground">{topic.summary}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {topic.tags.map((tag) => (
-                        <Badge key={tag} variant="outline">{tag}</Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {topics.map((topic) => {
+                const card = (
+                  <Card className="h-full transition hover:-translate-y-1 hover:shadow-md">
+                    <CardHeader>
+                      <CardTitle className="flex items-start gap-2 text-xl">
+                        <BookOpen className="mt-1 h-5 w-5 shrink-0 text-primary" />
+                        {topic.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-sm leading-relaxed text-muted-foreground">{topic.summary}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {topic.tags.map((tag) => (
+                          <Badge key={tag} variant="outline">{tag}</Badge>
+                        ))}
+                      </div>
+                      {topic.href && (
+                        <p className="inline-flex items-center text-sm font-medium text-primary">
+                          Ler guia completo <ArrowRight className="ml-1 h-4 w-4" />
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+
+                return topic.href ? (
+                  <Link key={topic.title} to={topic.href} className="block h-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg">
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={topic.title}>{card}</div>
+                );
+              })}
             </div>
           </div>
         </section>
