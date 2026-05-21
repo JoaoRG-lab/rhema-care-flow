@@ -1,153 +1,98 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { verifyJWT } from '../_shared/auth.ts';
+import { checkRateLimit, getClientIp } from '../_shared/rateLimit.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-const MEMED_API_KEY = Deno.env.get('MEMED_API_KEY') ?? ''
-const MEMED_SECRET_KEY = Deno.env.get('MEMED_SECRET_KEY') ?? ''
-
-// Ambiente: production usa partners.memed.com.br, homologação usa integrations.api.memed.com.br
-const MEMED_API_BASE = Deno.env.get('MEMED_ENV') === 'production'
-  ? 'https://api.memed.com.br/v1'
-  : 'https://integrations.api.memed.com.br/v1'
-
-const MEMED_SCRIPT_URL = Deno.env.get('MEMED_ENV') === 'production'
-  ? 'https://partners.memed.com.br/integration.js'
-  : 'https://integrations.memed.com.br/modulos/plataforma.sinapse-prescricao/build/sinapse-prescricao.min.js'
-
-function memedUrl(path: string) {
-  return `${MEMED_API_BASE}${path}?api-key=${MEMED_API_KEY}&secret-key=${MEMED_SECRET_KEY}`
-}
+const FUNCTION_VERSION = 'rhema-care-v2.0';
+const MEMED_AUTH_URL = 'https://api.memed.com.br/v1/sinapse-prescricao/auth';
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const ip = getClientIp(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: getCorsHeaders(origin) });
+  }
+
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Metodo nao permitido.' }, 405, origin);
+  }
+
+  // Auth JWT obrigatorio
+  const auth = await verifyJWT(req);
+  if (!auth) {
+    return jsonResponse({ error: 'Nao autorizado.' }, 401, origin);
+  }
+
+  if (!checkRateLimit(`memed:${auth.userId}:${ip}`, 10, 60_000)) {
+    return jsonResponse({ error: 'Muitas requisicoes. Aguarde.' }, 429, origin);
   }
 
   try {
-    // Autenticar o usuário Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } }
-    )
+    const { crm, uf, specialty } = await req.json();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (!crm || !uf) {
+      return jsonResponse({ error: 'Campos obrigatorios: crm, uf.' }, 400, origin);
     }
 
-    // Buscar perfil do médico
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, crm, cpf, phone, specialty, city, state')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (!profile) {
-      return new Response(JSON.stringify({ error: 'Perfil não encontrado' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    // Validacao simples de CRM e UF
+    if (!/^\d{4,7}$/.test(String(crm))) {
+      return jsonResponse({ error: 'CRM invalido. Use apenas numeros (4-7 digitos).' }, 400, origin);
     }
 
-    // Verificar se já temos memed_user_id salvo para este médico
-    const { data: memedRecord } = await supabase
-      .from('memed_users')
-      .select('memed_user_id, token')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    let memedToken: string | null = null
-
-    if (memedRecord?.memed_user_id) {
-      // Buscar token existente
-      const getRes = await fetch(memedUrl(`/sinapse-prescricao/usuarios/${memedRecord.memed_user_id}`), {
-        headers: {
-          'Accept': 'application/vnd.api+json',
-          'Content-Type': 'application/json',
-        },
-      })
-      if (getRes.ok) {
-        const body = await getRes.json()
-        memedToken = body?.data?.attributes?.token ?? body?.token ?? null
-      }
+    const validUFs = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+    if (!validUFs.includes(String(uf).toUpperCase())) {
+      return jsonResponse({ error: 'UF invalida.' }, 400, origin);
     }
 
-    if (!memedToken) {
-      // Criar ou atualizar usuário na Memed
-      const payload = {
+    const memedApiKey = Deno.env.get('MEMED_API_KEY');
+    if (!memedApiKey) {
+      console.error('memed-token: MEMED_API_KEY nao configurada');
+      return jsonResponse({ error: 'Servico de prescricao nao configurado.' }, 503, origin);
+    }
+
+    const memedResp = await fetch(MEMED_AUTH_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${memedApiKey}`,
+      },
+      body: JSON.stringify({
         data: {
-          type: 'usuarios',
+          type: 'auth',
           attributes: {
-            external_id: user.id,
-            nome: profile.full_name ?? user.email ?? 'Médico',
-            email: user.email,
-            crm: profile.crm ?? '',
-            cpf: profile.cpf ?? '',
-            celular: profile.phone ?? '',
-            especialidade: profile.specialty ?? 'Reumatologia',
-            cidade: profile.city ?? '',
-            uf: profile.state ?? '',
+            login: String(crm),
+            cpf: auth.userId,
+            estado: String(uf).toUpperCase(),
+            especialidade: specialty ? String(specialty).slice(0, 80) : 'Clinica Medica',
           },
         },
-      }
+      }),
+    });
 
-      const postRes = await fetch(memedUrl('/sinapse-prescricao/usuarios'), {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/vnd.api+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-
-      const postBody = await postRes.json()
-
-      if (!postRes.ok) {
-        console.error('Memed POST error:', JSON.stringify(postBody))
-        return new Response(JSON.stringify({ error: 'Erro ao criar usuário Memed', details: postBody }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      const memedUserId = postBody?.data?.id ?? postBody?.id ?? null
-      memedToken = postBody?.data?.attributes?.token ?? postBody?.token ?? null
-
-      // Salvar memed_user_id para futuros logins
-      if (memedUserId) {
-        await supabase.from('memed_users').upsert({
-          user_id: user.id,
-          memed_user_id: memedUserId,
-          token: memedToken,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' })
-      }
+    if (!memedResp.ok) {
+      const err = await memedResp.text();
+      console.error('memed-token API error', { status: memedResp.status, err: err.slice(0, 200) });
+      return jsonResponse({ error: 'Falha ao autenticar com Memed.' }, 502, origin);
     }
 
-    if (!memedToken) {
-      return new Response(JSON.stringify({ error: 'Token Memed não obtido' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const data = await memedResp.json();
+    const token = data?.data?.attributes?.token;
+
+    if (!token) {
+      console.error('memed-token: token nao retornado', data);
+      return jsonResponse({ error: 'Token Memed nao obtido.' }, 502, origin);
     }
 
-    return new Response(JSON.stringify({ token: memedToken, scriptUrl: MEMED_SCRIPT_URL }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  } catch (err) {
-    console.error('memed-token error:', err)
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.log('memed-token ok', { userId: auth.userId, uf });
+
+    return jsonResponse({
+      token,
+      meta: { function: 'memed-token', version: FUNCTION_VERSION },
+    }, 200, origin);
+
+  } catch (error) {
+    console.error('memed-token erro interno', error instanceof Error ? error.message : String(error));
+    return jsonResponse({ error: 'Erro interno.' }, 500, origin);
   }
-})
+});
