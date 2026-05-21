@@ -1,135 +1,74 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { verifyJWT } from '../_shared/auth.ts';
+import { checkRateLimit, getClientIp } from '../_shared/rateLimit.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const FUNCTION_VERSION = 'rhema-care-v2.0';
 
-const BodySchema = z.object({
-  email: z.string().trim().email().max(255),
-});
+Deno.serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const ip = getClientIp(req);
 
-async function hashEmail(email: string): Promise<string> {
-  const buf = new TextEncoder().encode(email);
-  const digest = await crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: getCorsHeaders(origin) });
+  if (req.method !== 'POST') return jsonResponse({ error: 'Metodo nao permitido.' }, 405, origin);
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  const auth = await verifyJWT(req);
+  if (!auth) return jsonResponse({ error: 'Nao autorizado.' }, 401, origin);
+
+  if (!checkRateLimit(`signout-all:${auth.userId}:${ip}`, 5, 60_000)) {
+    return jsonResponse({ error: 'Muitas tentativas. Aguarde.' }, 429, origin);
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const adminClient = createClient(supabaseUrl, serviceKey);
+
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-    const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    // Verify caller's JWT
-    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Service-role client for role check + admin actions
-    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-
-    const { data: isAdminData, error: roleErr } = await admin.rpc('has_role', {
-      _user_id: userData.user.id,
-      _role: 'admin',
-    });
-    if (roleErr || !isAdminData) {
-      return new Response(JSON.stringify({ error: 'Admin role required' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const body = await req.json().catch(() => ({}));
-    const parsed = BodySchema.safeParse(body);
-    if (!parsed.success) {
-      return new Response(JSON.stringify({ error: 'Invalid input' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    const targetEmail = parsed.data.email.toLowerCase();
+    // Admin pode deslogar outro usuario; usuario comum so pode deslogar a si mesmo
+    const targetUserId = body?.target_user_id ?? auth.userId;
 
-    // Look up target user by email (paginate up to 4000 users)
-    let targetUserId: string | null = null;
-    for (let page = 1; page <= 20; page++) {
-      const { data: list, error: listErr } = await admin.auth.admin.listUsers({
-        page,
-        perPage: 200,
-      });
-      if (listErr) break;
-      const found = list.users.find((u) => u.email?.toLowerCase() === targetEmail);
-      if (found) {
-        targetUserId = found.id;
-        break;
+    // Se alvo diferente do solicitante, exige role admin
+    if (targetUserId !== auth.userId) {
+      const { data: roleData } = await adminClient
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', auth.userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (!roleData) {
+        return jsonResponse({ error: 'Acesso negado: requer role admin para deslogar outro usuario.' }, 403, origin);
       }
-      if (list.users.length < 200) break;
     }
 
-    // Always return generic success to avoid revealing account existence
-    if (!targetUserId) {
-      await admin.from('audit_logs').insert({
-        user_id: userData.user.id,
-        action: 'admin_signout_all_sessions_no_match',
-        resource_type: 'auth_user',
-        metadata: { target_email_hash: await hashEmail(targetEmail) },
-      });
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Invalida todas as sessoes do usuario alvo
+    const { error } = await adminClient.auth.admin.signOut(targetUserId, 'global');
+
+    if (error) {
+      console.error('admin-signout-all-sessions error', error.message);
+      return jsonResponse({ error: 'Falha ao encerrar sessoes.' }, 502, origin);
     }
 
-    // Revoke all refresh tokens / sessions for the target user
-    const { error: signOutErr } = await admin.auth.admin.signOut(targetUserId, 'global');
-    if (signOutErr) {
-      console.error('signOut error', signOutErr);
-      return new Response(JSON.stringify({ error: 'Failed to revoke sessions' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Audit log
+    await adminClient.from('audit_logs').insert({
+      user_id: auth.userId,
+      action: 'signout_all_sessions',
+      resource_type: 'auth',
+      metadata: { target_user_id: targetUserId, requested_by: auth.userId },
+    }).then(({ error: e }) => { if (e) console.warn('audit log error', e.message); });
 
-    await admin.from('audit_logs').insert({
-      user_id: userData.user.id,
-      action: 'admin_signout_all_sessions',
-      resource_type: 'auth_user',
-      resource_id: targetUserId,
-      metadata: { target_email_hash: await hashEmail(targetEmail) },
-    });
+    console.log('admin-signout-all-sessions ok', { requestedBy: auth.userId, targetUserId });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  } catch (err) {
-    console.error(err);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({
+      ok: true,
+      message: 'Todas as sessoes do usuario foram encerradas.',
+      target_user_id: targetUserId,
+      version: FUNCTION_VERSION,
+    }, 200, origin);
+
+  } catch (error) {
+    console.error('admin-signout-all-sessions erro interno', error instanceof Error ? error.message : String(error));
+    return jsonResponse({ error: 'Erro interno.' }, 500, origin);
   }
 });
