@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, BookOpen, Brain, CheckCircle2, Moon, Route, ShieldCheck, Stethoscope } from 'lucide-react';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { FAQSection, buildFAQJsonLd } from '@/components/reumatismos/FAQSection';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +48,29 @@ const principles = [
   'O objetivo é recuperar função e autonomia, não perseguir uma cura instantânea.',
 ];
 
+const faqItems = [
+  {
+    question: 'Fibromialgia tem cura?',
+    answer:
+      'Fibromialgia costuma ser uma condição crônica, mas pode melhorar muito com educação, sono, movimento gradual, manejo de estresse e acompanhamento. O objetivo é reduzir crises, melhorar função e recuperar qualidade de vida.',
+  },
+  {
+    question: 'Fibromialgia aparece no exame de sangue?',
+    answer:
+      'Não existe um exame de sangue único que confirme fibromialgia. Exames podem ser pedidos para afastar outras causas de dor, fadiga ou inflamação, mas exames normais não tornam a dor menos real.',
+  },
+  {
+    question: 'Fibromialgia é doença autoimune?',
+    answer:
+      'Fibromialgia não é classificada como doença autoimune típica. Ela envolve alteração no processamento da dor, sono, fadiga e sensibilidade corporal, podendo coexistir com doenças autoimunes em algumas pessoas.',
+  },
+  {
+    question: 'Exercício piora fibromialgia?',
+    answer:
+      'Exercício intenso demais, cedo demais, pode piorar sintomas. Porém movimento gradual, adaptado e progressivo é um dos pilares mais importantes do cuidado quando bem orientado.',
+  },
+];
+
 const fibromyalgiaJsonLd = [
   {
     '@context': 'https://schema.org',
@@ -72,6 +96,7 @@ const fibromyalgiaJsonLd = [
       { '@type': 'ListItem', position: 2, name: 'Fibromialgia', item: 'https://www.reumatismos.com/reumatismos/fibromialgia' },
     ],
   },
+  buildFAQJsonLd(faqItems),
 ];
 
 export default function FibromialgiaPage() {
@@ -220,6 +245,8 @@ export default function FibromialgiaPage() {
             </div>
           </div>
         </section>
+
+        <FAQSection items={faqItems} />
 
         <section className="container mx-auto px-4 py-14">
           <Card className="bg-primary text-primary-foreground">
