@@ -27,10 +27,19 @@ import NotFound          from './pages/NotFound';
 
 // Lazy-load — chunks pesados só carregam quando o usuário navega
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
+const AIIntegrationPage = lazy(() => import('./pages/AIIntegrationPage'));
+
+function Spinner() {
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <span className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full" />
+    </div>
+  );
+}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center"><span className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full" /></div>;
+  if (loading) return <Spinner />;
   return session ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
@@ -68,13 +77,25 @@ export function AppRouter() {
         <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
         <Route path="/admin" element={<PrivateRoute><AdminPage /></PrivateRoute>} />
 
-        {/* Lazy — carrega vendor-charts só quando acessado */}
+        {/* Lazy — carrega chunk separado */}
         <Route
           path="/reports"
           element={
             <PrivateRoute>
-              <Suspense fallback={<div className="flex h-screen items-center justify-center"><span className="animate-spin h-8 w-8 border-4 border-teal-600 border-t-transparent rounded-full" /></div>}>
+              <Suspense fallback={<Spinner />}>
                 <ReportsPage />
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Painel Integrativo Multi-IA */}
+        <Route
+          path="/ai-panel"
+          element={
+            <PrivateRoute>
+              <Suspense fallback={<Spinner />}>
+                <AIIntegrationPage />
               </Suspense>
             </PrivateRoute>
           }
