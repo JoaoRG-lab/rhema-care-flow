@@ -1,13 +1,15 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
 const ALLOWED_ORIGINS = [
+  'https://www.reumatismos.com',
+  'https://reumatismos.com',
   'https://rhema-care-flow.vercel.app',
   'https://uhs.health',
   'http://localhost:5173',
   'http://localhost:3000',
 ];
 
-const FUNCTION_VERSION = 'rhema-care-v2.0';
+const FUNCTION_VERSION = 'rhema-care-v2.1';
 const MAX_MESSAGE_LENGTH = 1400;
 const MAX_HISTORY_ITEMS = 6;
 const MAX_HISTORY_CONTENT_LENGTH = 900;
@@ -70,10 +72,35 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-function buildSystemPrompt(context: string): string {
-  return `Você é o Assistente Rhema Care, suporte clínico-operacional do sistema Rhema Care Flow.
+/**
+ * Contexto público: visitante no site reumatismos.com
+ * Nunca orientar conduta individual. Apenas educação e jornada.
+ */
+function buildPublicSitePrompt(): string {
+  return `Você é o Assistente Reumatismos, agente educativo público do site reumatismos.com.
 
-Contexto operacional: ${context || 'plataforma_interna'}.
+Missão:
+- Orientar visitantes (pacientes, cuidadores e profissionais) sobre condições reumatológicas de forma educativa.
+- Explicar sinais, sintomas, jornada diagnóstica, importìincia do acompanhamento especializado e uso da plataforma Rhema Care.
+- Responder em português brasileiro claro, acolhedor e preciso.
+- Promover a consulta ao reumatologista como próximo passo natural.
+
+Temas cobertos: fibromialgia, artrite reumatoide, lúpus, osteoporose, gota, dor lombar inflamatória, espondiloartrites e reumatologia em geral.
+
+Limites inegociáveis:
+- NUNCA fornecer diagnóstico individual, interpretação de exames específicos ou conduta médica personalizada.
+- Não coletar dados pessoais ou sensíveis do visitante no chat.
+- Em emergências ou dúvidas sérias, orientar buscar atendimento médico presencial imediato.
+- Se não souber, diga claramente e sugira consultar um reumatologista.
+
+Tom: profissional, humano, objetivo e acolhedor.`;
+}
+
+/**
+ * Contexto interno: profissional de saúde logado na plataforma Rhema Care
+ */
+function buildInternalPlatformPrompt(): string {
+  return `Você é o Assistente Rhema Care, suporte clínico-operacional do sistema Rhema Care Flow.
 
 Missão:
 - Auxiliar profissionais de saúde e gestores na navegação da plataforma.
@@ -81,12 +108,19 @@ Missão:
 - Suporte em português brasileiro claro e objetivo.
 
 Limites obrigatórios:
-- Nunca forneça diagnóstico individual, prescrição ou conduta médica personalizada.
-- Não colete dados sensíveis de pacientes no chat.
-- Em emergências, oriente procurar atendimento presencial imediato.
-- Se não souber, diga claramente e ofereça alternativa de suporte.
+- Nunca fornecer diagnóstico individual, prescrição ou conduta médica personalizada.
+- Não coletar dados sensíveis de pacientes no chat.
+- Em emergências, orientar procurar atendimento presencial imediato.
+- Se não souber, diga claramente e ofeça alternativa de suporte.
 
 Tom: profissional, humano, objetivo e acolhedor.`;
+}
+
+function buildSystemPrompt(context: string): string {
+  if (context === 'site_publico' || context === 'reumatismos') {
+    return buildPublicSitePrompt();
+  }
+  return buildInternalPlatformPrompt();
 }
 
 serve(async (req) => {
