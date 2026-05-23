@@ -9,13 +9,18 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
 ];
 
-const FUNCTION_VERSION = 'rhema-care-v2.1';
+const FUNCTION_VERSION = 'rhema-care-v3.0';
 const MAX_MESSAGE_LENGTH = 1400;
 const MAX_HISTORY_ITEMS = 6;
 const MAX_HISTORY_CONTENT_LENGTH = 900;
-const DEFAULT_MODEL = 'sonar-pro';
-const SECRET_NAME = 'PERPLEXITY_API_KEY';
-const PROVIDER_ENDPOINT = 'https://api.perplexity.ai/chat/completions';
+
+// Perplexity
+const PERPLEXITY_ENDPOINT = 'https://api.perplexity.ai/chat/completions';
+const DEFAULT_PERPLEXITY_MODEL = 'sonar-pro';
+
+// Gemini
+const GEMINI_MODEL = 'gemini-1.5-pro';
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // Rate limiting simples em memória (por IP)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -26,6 +31,7 @@ type ChatRole = 'user' | 'assistant' | 'system';
 type ChatMessage = { role: ChatRole; content: string };
 type IncomingMessage = { role?: unknown; content?: unknown };
 
+// ── CORS ────────────────────────────────────────────────────────────────────
 function getCorsHeaders(origin: string | null) {
   const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
@@ -43,6 +49,7 @@ function jsonResponse(body: Record<string, unknown>, status = 200, origin: strin
   });
 }
 
+// ── Utils ────────────────────────────────────────────────────────────────────
 function normalizeText(value: unknown, maxLength: number): string {
   if (typeof value !== 'string') return '';
   return value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
@@ -72,12 +79,11 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-/**
- * Contexto público: visitante no site reumatismos.com
- * Nunca orientar conduta individual. Apenas educação e jornada.
- */
-function buildPublicSitePrompt(): string {
-  return `Você é o Assistente Reumatismos, agente educativo público do site reumatismos.com.
+// ── System prompts por agente ────────────────────────────────────────────────
+function buildSystemPrompt(context: string, agent: string): string {
+  // Site público — widget reumatismos.com
+  if (context === 'site_publico' || context === 'reumatismos') {
+    return `Você é o Assistente Reumatismos, agente educativo público do site reumatismos.com.
 
 Missão:
 - Orientar visitantes (pacientes, cuidadores e profissionais) sobre condições reumatológicas de forma educativa.
@@ -94,35 +100,165 @@ Limites inegociáveis:
 - Se não souber, diga claramente e sugira consultar um reumatologista.
 
 Tom: profissional, humano, objetivo e acolhedor.`;
-}
+  }
 
-/**
- * Contexto interno: profissional de saúde logado na plataforma Rhema Care
- */
-function buildInternalPlatformPrompt(): string {
-  return `Você é o Assistente Rhema Care, suporte clínico-operacional do sistema Rhema Care Flow.
+  // Painel integrativo — agentes por papel
+  switch (agent) {
+    case 'perplexity':
+    case 'supervisor_tmr':
+      return `Você é o Perplexity, Supervisor TMR do projeto Rhema Care Flow.
 
-Missão:
-- Auxiliar profissionais de saúde e gestores na navegação da plataforma.
-- Explicar funcionalidades: agendamentos, prontuários, teleconsultas, relatórios, configurações.
-- Suporte em português brasileiro claro e objetivo.
+Papel: monitoramento do repositório JoaoRG-lab/rhema-care-flow, supervisão dos builds TMR (Triple Modular Redundancy), busca de informações em tempo real, coordenação dos agentes IA.
 
-Limites obrigatórios:
-- Nunca fornecer diagnóstico individual, prescrição ou conduta médica personalizada.
-- Não coletar dados sensíveis de pacientes no chat.
-- Em emergências, orientar procurar atendimento presencial imediato.
-- Se não souber, diga claramente e ofereça alternativa de suporte.
+Capacidades: analisar logs de CI/CD, descrever status de issues/PRs GitHub, identificar falhas de build, recomendar próximos passos ao time.
+
+Tom: técnico, preciso, direto. Responda em português brasileiro.`;
+
+    case 'codex':
+    case 'engenheiro_codigo':
+      return `Você é o Codex, Engenheiro de Código Autônomo do projeto Rhema Care Flow.
+
+Stack: Vite 5 + React + TypeScript, Tailwind CSS, Supabase, Vercel. Node 20, ESLint v8 legacy.
+
+Papel: codificação autônoma, refatoração, correção de bugs, criação de componentes, análise de TypeScript errors. Sempre seguir protocolo TMR: commits atômicos, não reativar workflows legados, não alterar arquivos médicos estáveis.
+
+Tom: técnico, objetivo, com exemplos de código quando relevante. Responda em português brasileiro.`;
+
+    case 'chatgpt':
+    case 'agente_vercel':
+      return `Você é o ChatGPT, Agente Vercel do projeto Rhema Care Flow.
+
+Papel: configuração de deploys Vercel, variáveis de ambiente, Edge Functions Supabase, configuração de domínios, revisão de YAML de workflows.
+
+Especialidade: resolver problemas de build em produção, configurar secrets no GitHub Actions, garantir que o TMR aprove os builds.
+
+Tom: técnico, prático, orientado a solução. Responda em português brasileiro.`;
+
+    case 'grok':
+    case 'auditor_seguranca':
+      return `Você é o Grok, Auditor de Segurança do projeto Rhema Care Flow.
+
+Papel: revisão de segurança de código, análise de exposição de secrets, auditoria de autenticação Supabase, verificação de CORS, análise de vulnerabilidades em dependências.
+
+Princípios: LGPD, dados de saúde sensíveis exigem proteção máxima. Identificar vetores de ataque, propor mitigações concretas.
+
+Tom: cauteloso, detalhado, orientado a risco. Responda em português brasileiro.`;
+
+    case 'gemini':
+    case 'analista_clinico':
+      return `Você é o Gemini, Analista Clínico Multimodal do projeto Rhema Care Flow.
+
+Papel: análise de imagens médicas (ultrassonografia reumatológica, radiografias), suporte a laudos assistidos por IA, análise de padrões clínicos em reumatologia.
+
+Especialidade: USG reumatológica (sinovite, tenossinovite, erosões), padrões de AR, lúpus, gota, espondiloartrites. Reumato intervenção guiada por imagem.
+
+Limites: sempre reforçar que laudos finais são responsabilidade do médico. Nunca substituir avaliação clínica.
+
+Tom: clínico, científico, preciso. Responda em português brasileiro.`;
+
+    default:
+      return `Você é o Assistente Rhema Care, suporte clínico-operacional do sistema Rhema Care Flow.
+
+Missão: auxiliar profissionais de saúde e gestores na navegação da plataforma. Suporte em português brasileiro claro e objetivo.
+
+Limites: nunca fornecer diagnóstico individual, prescrição ou conduta médica personalizada.
 
 Tom: profissional, humano, objetivo e acolhedor.`;
-}
-
-function buildSystemPrompt(context: string): string {
-  if (context === 'site_publico' || context === 'reumatismos') {
-    return buildPublicSitePrompt();
   }
-  return buildInternalPlatformPrompt();
 }
 
+// ── Provider: Perplexity ──────────────────────────────────────────────────────
+async function callPerplexity(
+  systemPrompt: string,
+  history: ChatMessage[],
+  userMessage: string,
+  origin: string | null,
+): Promise<Response> {
+  const apiKey = Deno.env.get('PERPLEXITY_API_KEY');
+  if (!apiKey) {
+    console.error('PERPLEXITY_API_KEY não configurada');
+    return jsonResponse({ error: 'Serviço temporariamente indisponível.' }, 503, origin);
+  }
+
+  const model = normalizeText(Deno.env.get('PERPLEXITY_MODEL'), 80) || DEFAULT_PERPLEXITY_MODEL;
+
+  const res = await fetch(PERPLEXITY_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...history,
+        { role: 'user', content: userMessage },
+      ],
+      temperature: 0.2,
+      max_tokens: 650,
+    }),
+  });
+
+  if (!res.ok) {
+    const details = await res.text();
+    console.error('Perplexity error', { status: res.status, details: details.slice(0, 300) });
+    return jsonResponse({ error: 'Falha ao consultar o assistente de IA.' }, 502, origin);
+  }
+
+  const result = await res.json();
+  const answer = result?.choices?.[0]?.message?.content ?? 'Sem resposta.';
+  return jsonResponse({ reply: answer, answer, meta: { provider: 'perplexity', model, version: FUNCTION_VERSION } }, 200, origin);
+}
+
+// ── Provider: Gemini ──────────────────────────────────────────────────────────
+async function callGemini(
+  systemPrompt: string,
+  history: ChatMessage[],
+  userMessage: string,
+  origin: string | null,
+): Promise<Response> {
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!apiKey) {
+    console.warn('GEMINI_API_KEY não configurada — fallback para Perplexity');
+    // Fallback gracioso: usa Perplexity com prompt de Gemini
+    return await callPerplexity(systemPrompt, history, userMessage, origin);
+  }
+
+  // Gemini usa formato diferente: contents com parts
+  const contents = [
+    ...history.map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    })),
+    { role: 'user', parts: [{ text: userMessage }] },
+  ];
+
+  const res = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents,
+      generationConfig: { temperature: 0.2, maxOutputTokens: 800 },
+      safetySettings: [
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const details = await res.text();
+    console.error('Gemini error', { status: res.status, details: details.slice(0, 300) });
+    // Fallback gracioso para Perplexity
+    console.warn('Gemini falhou — fallback para Perplexity');
+    return await callPerplexity(systemPrompt, history, userMessage, origin);
+  }
+
+  const result = await res.json();
+  const answer = result?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Sem resposta do Gemini.';
+  return jsonResponse({ reply: answer, answer, meta: { provider: 'gemini', model: GEMINI_MODEL, version: FUNCTION_VERSION } }, 200, origin);
+}
+
+// ── Handler principal ─────────────────────────────────────────────────────────
 serve(async (req) => {
   const origin = req.headers.get('origin');
   const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('cf-connecting-ip') ?? 'unknown';
@@ -139,67 +275,43 @@ serve(async (req) => {
     return jsonResponse({ error: 'Método não permitido.' }, 405, origin);
   }
 
-  // Rate limit
   if (!checkRateLimit(ip)) {
-    console.warn('ai-assistant rate-limit atingido', { ip });
+    console.warn('rate-limit atingido', { ip });
     return jsonResponse({ error: 'Muitas requisições. Aguarde um momento.' }, 429, origin);
   }
 
   try {
     const body = await req.json();
-    const { message, history = [], context = 'plataforma_interna' } = body;
+    const { message, history = [], context = 'plataforma_interna', agent = '' } = body;
     const userMessage = normalizeText(message, MAX_MESSAGE_LENGTH);
 
     if (!userMessage) {
       return jsonResponse({ error: 'Mensagem inválida ou vazia.' }, 400, origin);
     }
 
-    const providerKey = Deno.env.get(SECRET_NAME);
-    if (!providerKey) {
-      console.error('ai-assistant: PERPLEXITY_API_KEY não configurada');
-      return jsonResponse({ error: 'Serviço temporariamente indisponível.' }, 503, origin);
-    }
-
-    const safeHistory = sanitizeHistory(history);
     const safeContext = normalizeText(context, 80) || 'plataforma_interna';
-    const model = normalizeText(Deno.env.get('PERPLEXITY_MODEL'), 80) || DEFAULT_MODEL;
+    const safeAgent = normalizeText(agent, 80);
+    const safeHistory = sanitizeHistory(history);
 
-    const aiResponse = await fetch(PROVIDER_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${providerKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: buildSystemPrompt(safeContext) },
-          ...safeHistory,
-          { role: 'user', content: userMessage },
-        ],
-        temperature: 0.2,
-        max_tokens: 650,
-      }),
+    const systemPrompt = buildSystemPrompt(safeContext, safeAgent);
+
+    // Roteamento por agente/contexto
+    const useGemini =
+      safeAgent === 'gemini' ||
+      safeContext === 'analista_clinico';
+
+    console.log('ai-assistant request', {
+      provider: useGemini ? 'gemini' : 'perplexity',
+      agent: safeAgent,
+      context: safeContext,
+      historyLen: safeHistory.length,
+      version: FUNCTION_VERSION,
     });
 
-    if (!aiResponse.ok) {
-      const details = await aiResponse.text();
-      console.error('ai-assistant provider error', {
-        status: aiResponse.status,
-        details: details.slice(0, 300),
-      });
-      return jsonResponse({ error: 'Falha ao consultar o assistente de IA.' }, 502, origin);
+    if (useGemini) {
+      return await callGemini(systemPrompt, safeHistory, userMessage, origin);
     }
-
-    const result = await aiResponse.json();
-    const answer = result?.choices?.[0]?.message?.content ?? 'Não foi possível gerar uma resposta agora.';
-
-    console.log('ai-assistant ok', { model, historyLen: safeHistory.length, context: safeContext });
-
-    return jsonResponse({
-      answer,
-      meta: { function: 'ai-assistant', version: FUNCTION_VERSION, model },
-    }, 200, origin);
+    return await callPerplexity(systemPrompt, safeHistory, userMessage, origin);
 
   } catch (error) {
     console.error('ai-assistant erro interno', error instanceof Error ? error.message : String(error));
