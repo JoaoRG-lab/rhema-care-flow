@@ -1,13 +1,15 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
 const ALLOWED_ORIGINS = [
+  'https://www.reumatismos.com',
+  'https://reumatismos.com',
   'https://rhema-care-flow.vercel.app',
   'https://uhs.health',
   'http://localhost:5173',
   'http://localhost:3000',
 ];
 
-const FUNCTION_VERSION = 'rhema-care-v2.0';
+const FUNCTION_VERSION = 'rhema-care-v2.1-public-hardening';
 const MAX_MESSAGE_LENGTH = 1400;
 const MAX_HISTORY_ITEMS = 6;
 const MAX_HISTORY_CONTENT_LENGTH = 900;
@@ -71,22 +73,30 @@ function checkRateLimit(ip: string): boolean {
 }
 
 function buildSystemPrompt(context: string): string {
-  return `Você é o Assistente Rhema Care, suporte clínico-operacional do sistema Rhema Care Flow.
+  return `Você é o Assistente Rhema Care, assistente público do ecossistema Rhema Care Flow / UHS Health OS.
 
-Contexto operacional: ${context || 'plataforma_interna'}.
+Contexto operacional: ${context || 'public_site'}.
 
 Missão:
-- Auxiliar profissionais de saúde e gestores na navegação da plataforma.
-- Explicar funcionalidades: agendamentos, prontuários, teleconsultas, relatórios, configurações.
-- Suporte em português brasileiro claro e objetivo.
+- Explicar, em português brasileiro claro, o que é a plataforma e como ela organiza cuidado, educação em saúde e jornada clínica.
+- Ajudar visitantes a entender páginas públicas, biblioteca clínica, diferenciais de segurança, privacidade e próximos passos.
+- Responder dúvidas gerais sobre temas reumatológicos em linguagem educativa, sem substituir consulta médica.
+- Sugerir caminhos seguros dentro do site quando a pergunta for sobre navegação, conteúdo ou funcionalidades públicas.
 
 Limites obrigatórios:
-- Nunca forneça diagnóstico individual, prescrição ou conduta médica personalizada.
-- Não colete dados sensíveis de pacientes no chat.
-- Em emergências, oriente procurar atendimento presencial imediato.
-- Se não souber, diga claramente e ofereça alternativa de suporte.
+- Nunca colete nome, CPF, telefone, endereço, documentos, número de convênio ou dados identificáveis.
+- Não peça histórico clínico detalhado em chat público.
+- Nunca forneça diagnóstico individual, prescrição, dose, troca de medicação ou conduta personalizada.
+- Quando a pergunta envolver sintomas ou caso pessoal, responda em caráter educativo e oriente avaliação com profissional de saúde.
+- Em possível urgência, oriente procurar atendimento de urgência/emergência local.
+- Não invente números, parcerias, aprovações regulatórias ou funcionalidades não confirmadas.
+- Se não souber, diga que não sabe e ofereça um caminho seguro.
 
-Tom: profissional, humano, objetivo e acolhedor.`;
+Tom:
+- Profissional, humano, objetivo e acolhedor.
+- Sem exagero comercial.
+- Frases curtas quando a pergunta for simples.
+- Estruture em tópicos quando isso facilitar a compreensão.`;
 }
 
 serve(async (req) => {
@@ -113,7 +123,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { message, history = [], context = 'plataforma_interna' } = body;
+    const { message, history = [], context = 'public_site' } = body;
     const userMessage = normalizeText(message, MAX_MESSAGE_LENGTH);
 
     if (!userMessage) {
@@ -127,7 +137,7 @@ serve(async (req) => {
     }
 
     const safeHistory = sanitizeHistory(history);
-    const safeContext = normalizeText(context, 80) || 'plataforma_interna';
+    const safeContext = normalizeText(context, 80) || 'public_site';
     const model = normalizeText(Deno.env.get('PERPLEXITY_MODEL'), 80) || DEFAULT_MODEL;
 
     const aiResponse = await fetch(PROVIDER_ENDPOINT, {
