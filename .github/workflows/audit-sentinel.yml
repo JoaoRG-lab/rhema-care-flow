@@ -1,10 +1,26 @@
 name: Audit Sentinel
 
 on:
+  workflow_run:
+    workflows: ["TMR Deployment Auditor"]
+    types: [completed]
+  schedule:
+    - cron: '*/15 * * * *'
   push:
-    branches: ["**"]
+    branches: ['**']
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: audit-sentinel-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   sentinel-audit:
@@ -21,7 +37,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: TypeScript check
         run: npx tsc --noEmit
@@ -40,3 +56,83 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "Run: ${{ github.run_id }}"
           echo "Status: ${{ job.status }}"
+
+      - name: Open issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.sha.slice(0, 7);
+            const branch = context.ref.replace('refs/heads/', '');
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const title = `[SENTINEL] Build/TS/Lint falhou em ${sha} (${branch})`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', per_page: 50
+            });
+            const exists = issues.find(i => i.title === title);
+            if (!exists) {
+              await github.rest.issues.create({
+                owner, repo, title,
+                body: [
+                  '## Sentinel detectou falha',
+                  '',
+                  `- Branch: **${branch}**`,
+                  `- SHA: **${sha}**`,
+                  `- Run: ${runUrl}`,
+                  '',
+                  '### Checklist',
+                  '- [ ] Abrir logs do run e localizar a primeira falha',
+                  '- [ ] Verificar: TypeScript? peer deps? import quebrado?',
+                  '- [ ] Corrigir em branch separada e submeter pelo TMR',
+                  '',
+                  '_Criado automaticamente pelo Audit Sentinel._'
+                ].join('\n'),
+                labels: ['needs-review', 'ai-report', 'sentinel']
+              });
+            }
+
+  tmr-watchdog:
+    name: TMR Watchdog
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run'
+    steps:
+      - name: Evaluate TMR result
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const wr = context.payload.workflow_run;
+            const conclusion = wr?.conclusion || 'unknown';
+            const sha = (wr?.head_sha || '').slice(0, 7);
+            const branch = wr?.head_branch || 'unknown';
+            const runUrl = wr?.html_url || '';
+            if (conclusion === 'success') { return; }
+            const title = `[SENTINEL] TMR travado em ${sha} (${branch})`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', per_page: 50
+            });
+            const exists = issues.find(i => i.title === title);
+            if (!exists) {
+              await github.rest.issues.create({
+                owner, repo, title,
+                body: [
+                  '## Sentinel: TMR falhou',
+                  '',
+                  `- Branch: **${branch}**`,
+                  `- SHA: **${sha}**`,
+                  `- Conclusion: **${conclusion}**`,
+                  `- Run: ${runUrl}`,
+                  '',
+                  '### Acao sugerida',
+                  '1. Abrir logs do run e localizar a primeira falha.',
+                  '2. Identificar: build? secret? dep? TypeScript?',
+                  '3. Corrigir em branch separada e submeter novamente ao TMR.',
+                  '',
+                  '_Criado automaticamente pelo Audit Sentinel._'
+                ].join('\n'),
+                labels: ['needs-review', 'ai-report', 'sentinel', 'tmr-killed']
+              });
+            }
