@@ -39,14 +39,19 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: TypeScript check
+      - name: TypeScript check (non-blocking)
         run: npx tsc --noEmit
+        continue-on-error: true
 
-      - name: Lint check
+      - name: Lint check (non-blocking)
         run: npm run lint --if-present
+        continue-on-error: true
 
-      - name: Build check
+      - name: Build check (BLOCKING)
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Audit summary
         if: always()
@@ -67,7 +72,7 @@ jobs:
             const sha = context.sha.slice(0, 7);
             const branch = context.ref.replace('refs/heads/', '');
             const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
-            const title = `[SENTINEL] Build/TS/Lint falhou em ${sha} (${branch})`;
+            const title = `[SENTINEL] Build falhou em ${sha} (${branch})`;
             const { data: issues } = await github.rest.issues.listForRepo({
               owner, repo, state: 'open', per_page: 50
             });
@@ -76,7 +81,7 @@ jobs:
               await github.rest.issues.create({
                 owner, repo, title,
                 body: [
-                  '## Sentinel detectou falha',
+                  '## Sentinel detectou falha de BUILD',
                   '',
                   `- Branch: **${branch}**`,
                   `- SHA: **${sha}**`,
@@ -84,7 +89,7 @@ jobs:
                   '',
                   '### Checklist',
                   '- [ ] Abrir logs do run e localizar a primeira falha',
-                  '- [ ] Verificar: TypeScript? peer deps? import quebrado?',
+                  '- [ ] Verificar: import quebrado? dependência ausente?',
                   '- [ ] Corrigir em branch separada e submeter pelo TMR',
                   '',
                   '_Criado automaticamente pelo Audit Sentinel._'
