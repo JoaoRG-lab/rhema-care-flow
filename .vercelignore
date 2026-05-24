@@ -1,11 +1,36 @@
+# Arquivos que o Vercel nao precisa processar no build
+
+# CI/CD e configs de outras plataformas
+.github/
+netlify.toml
+wrangler.toml
+
+# Blockchain / Anchor / Solana — nao faz parte do build frontend
+anchor/
+solana
+deploy-anchor.sh
+
+# Documentacao e tooling interno
+docs/
+tools/
+
+# Arquivos de agentes e governanca
+AGENTS.md
+DEPLOY.md
+DEPLOY_INSTRUCTIONS.md
+CONTRIBUTING.md
+SETUP.md
+SYNC.md
+LOVABLE_REPOSITORY_SKILL.md
+gpt-engineer.json
+.rhema-canonical.json
+.cursor/
+.lovable/
+
+# Segredos
+.env
+.env.*
+
+# Lock file duplicados
 bun.lock
 bun.lockb
-.env
-.env.local
-supabase/
-docs/
-*.sh
-*.md
-!README.md
-anchor/
-wrangler.toml
