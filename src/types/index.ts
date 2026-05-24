@@ -3,6 +3,7 @@
 // ============================================================
 
 export type Role = 'admin' | 'medico' | 'enfermeiro' | 'moderator' | 'user';
+export type UserRole = Role;
 
 export interface Profile {
   id: string;
@@ -17,6 +18,8 @@ export interface Profile {
   created_at: string;
   updated_at: string;
 }
+
+export type UserProfile = Profile;
 
 export interface PatientCard {
   id: string;
