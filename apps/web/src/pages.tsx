@@ -25,17 +25,19 @@ export function Dashboard() {
 
   return (
     <section>
-      <Header title="Dashboard" subtitle="Visão operacional do núcleo clínico multi-especialidade." />
+      <Header title="Dashboard" subtitle="Centro operacional do UHS HealthOS para cuidado longitudinal multi-especialidade." />
       <Alert message={error} />
       <div className="grid cards">
-        <Kpi label="Pacientes" value={data?.patients ?? '—'} />
-        <Kpi label="Agendamentos" value={data?.appointments ?? '—'} />
-        <Kpi label="Hoje" value={data?.scheduled_today ?? '—'} />
+        <Kpi label="Pacientes acompanhados" value={data?.patients ?? '—'} />
+        <Kpi label="Atendimentos registrados" value={data?.appointments ?? '—'} />
+        <Kpi label="Eventos de hoje" value={data?.scheduled_today ?? '—'} />
       </div>
       <div className="card">
-        <h2>Escopo do MVP</h2>
+        <h2>Plataforma clínica em staging</h2>
         <p>
-          Base soberana para pacientes, agenda, scores e futura camada IA. Sem Vercel, Supabase Auth, OAuth ou Magic Link neste núcleo.
+          O UHS HealthOS nasce como uma camada operacional clínica ampla para pacientes, agenda,
+          linhas de cuidado, indicadores e futura inteligência clínica. Rhema Care Flow é a primeira
+          vertical operacional, com Reumatologia como domínio inicial de validação — não como limite da plataforma.
         </p>
       </div>
     </section>
@@ -58,7 +60,7 @@ export function Patients() {
 
   return (
     <section>
-      <Header title="Pacientes" subtitle="Cadastro clínico geral, com suporte futuro a linhas de cuidado por especialidade." />
+      <Header title="Pacientes" subtitle="Registro longitudinal de pacientes para múltiplas linhas clínicas e especialidades." />
       <Alert message={error} />
       <div className="card table-card">
         <table>
@@ -96,7 +98,7 @@ export function NewPatient({ onCreated }: { onCreated: () => void }) {
 
   return (
     <section>
-      <Header title="Novo paciente" subtitle="Registro mínimo para qualquer linha clínica do UHS HealthOS." />
+      <Header title="Novo paciente" subtitle="Entrada clínica estruturada para acompanhamento longitudinal no UHS HealthOS." />
       <Alert message={error} />
       <form className="card form" onSubmit={submit}>
         <input placeholder="Nome completo" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
@@ -140,7 +142,7 @@ export function Schedule() {
 
   return (
     <section>
-      <Header title="Agenda" subtitle="Consultas, teleconsultas e pontos de cuidado." />
+      <Header title="Agenda" subtitle="Organização de consultas, teleconsultas e pontos de cuidado longitudinal." />
       <Alert message={error} />
       <form className="card form inline" onSubmit={submit}>
         <input placeholder="Paciente" value={form.patient_name} onChange={(e) => setForm({ ...form, patient_name: e.target.value })} />
@@ -171,7 +173,7 @@ export function Scores() {
 
   return (
     <section>
-      <Header title="Scores" subtitle="Calculadoras clínicas locais. Reumatologia é o primeiro pacote vertical; o módulo é extensível." />
+      <Header title="Scores" subtitle="Módulo de indicadores clínicos extensível por especialidade e linha de cuidado." />
       <div className="card form">
         <h2>DAS28-CRP</h2>
         <input type="number" placeholder="Articulações dolorosas" value={tj} onChange={(e) => setTj(Number(e.target.value))} />
