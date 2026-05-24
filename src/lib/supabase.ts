@@ -1,18 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+const supabasePublishableKey = (
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+) as string | undefined;
 
-export const supabaseEnvError = !supabaseUrl || !supabasePublishableKey
-  ? 'Configuração Supabase ausente. Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no ambiente de produção.'
-  : null;
-
-const safeSupabaseUrl = supabaseUrl ?? 'https://placeholder.supabase.co';
-const safeSupabaseKey = supabasePublishableKey ?? 'placeholder-publishable-key';
+// Aviso em console — não trava a app
+if (!supabaseUrl || !supabasePublishableKey) {
+  console.warn(
+    '[Rhema] Variáveis de ambiente do Supabase ausentes.\n' +
+    'Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no Vercel.\n' +
+    'O login não funcionará até que sejam configuradas.'
+  );
+}
 
 export const supabase = createClient(
-  safeSupabaseUrl,
-  safeSupabaseKey,
+  supabaseUrl ?? 'https://placeholder.supabase.co',
+  supabasePublishableKey ?? 'placeholder-publishable-key',
   {
     auth: {
       persistSession: true,
@@ -21,3 +26,6 @@ export const supabase = createClient(
     },
   },
 );
+
+// Mantido para compatibilidade com imports existentes — sempre null agora
+export const supabaseEnvError: string | null = null;

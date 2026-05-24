@@ -14,7 +14,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const { success, error: toastError, info } = useToast();
 
-  // Redireciona se ja autenticado
+  // Redireciona se já autenticado
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate('/', { replace: true });
@@ -50,6 +50,8 @@ export function LoginPage() {
     setLoading(false);
     if (error) { toastError('Credenciais inválidas', error.message); return; }
     success('Bem-vindo!');
+    // Redireciona imediatamente — não espera onAuthStateChange
+    navigate('/', { replace: true });
   }
 
   async function handleGoogle() {
@@ -171,7 +173,7 @@ export function LoginPage() {
                     onClick={async () => {
                       if (!email.trim()) { toastError('Informe o e-mail primeiro'); return; }
                       await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/settings` });
-                      info('E-mail de redefinicao enviado!', email);
+                      info('E-mail de redefinição enviado!', email);
                     }}
                     className="text-xs text-teal-600 dark:text-teal-400 hover:underline"
                   >
