@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
+  base: '/',
   build: {
     target: 'es2020',
     sourcemap: false,
@@ -16,16 +17,21 @@ export default defineConfig({
       input: 'index.html',
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          charts: ['recharts'],
+          vendor:   ['react', 'react-dom', 'recharts'],
+          router:   ['react-router-dom'],
           supabase: ['@supabase/supabase-js'],
         },
       },
     },
   },
+  optimizeDeps: {
+    exclude: [],
+  },
   server: {
     port: 5173,
     open: true,
+  },
+  esbuild: {
+    exclude: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.tsx', '**/*.spec.tsx'],
   },
 });
