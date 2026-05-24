@@ -12,31 +12,20 @@ export default defineConfig({
   build: {
     target: 'es2020',
     sourcemap: false,
-    // Exclui arquivos de teste do bundle de produção
-    // Evita que vitest (describe/it/expect) quebre o build no Vercel
     rollupOptions: {
-      external: [],
       input: 'index.html',
       output: {
         manualChunks: {
-          vendor:   ['react', 'react-dom'],
-          router:   ['react-router-dom'],
-          charts:   ['recharts'],
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          charts: ['recharts'],
           supabase: ['@supabase/supabase-js'],
         },
       },
     },
   },
-  // Exclui padrões de teste do processamento do Vite
-  optimizeDeps: {
-    exclude: [],
-  },
   server: {
     port: 5173,
     open: true,
-  },
-  // Garante que arquivos .test.ts/.spec.ts não sejam incluídos no build
-  esbuild: {
-    exclude: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.tsx', '**/*.spec.tsx'],
   },
 });
