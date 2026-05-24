@@ -1,7 +1,62 @@
-- uses: cloudflare/wrangler-action@v3
-  with:
-    apiToken: *** accountId: *** command: pages deploy dist --project-name=rhema-care-flow --branch=pr-45
-    quiet: false
-    # Força a instalação da versão mais recente que corrige o bug
-    wranglerVersion: '4'
-    
+name: GitHub Pages Backup (Audited Main)
+
+on:
+  workflow_run:
+    workflows: ["TMR Deployment Auditor"]
+    types: [completed]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages-backup
+  cancel-in-progress: true
+
+jobs:
+  deploy-pages:
+    name: Deploy audited main to GitHub Pages backup
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout audited commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install
+        run: npm install --legacy-peer-deps
+
+      - name: Build Pages backup
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /rhema-care-flow/
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Add SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy backup site
+        id: deployment
+        uses: actions/deploy-pages@v4

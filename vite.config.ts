@@ -4,12 +4,14 @@ import path from 'path';
 
 // PWA removido do build — causa peer dep crash no Vercel Node 20
 // Reativar localmente com: npm i vite-plugin-pwa -D
+const publicBasePath = process.env.VITE_BASE_PATH || '/';
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
-  base: '/',
+  base: publicBasePath,
   build: {
     target: 'es2020',
     sourcemap: false,
