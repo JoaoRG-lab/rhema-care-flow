@@ -41,6 +41,15 @@ function SupabaseConfigError({ message }: { message: string }) {
   );
 }
 
+function defaultName(user: User) {
+  return (
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    user.email?.split('@')[0] ||
+    'Usuario'
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -48,17 +57,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      const [{ data: profileData }, { data: roleData }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
-      ]);
-      setProfile(profileData as UserProfile | null);
-      setRole((roleData?.role as UserRole) ?? null);
-    } catch (e) {
-      console.error('[AuthContext] fetchProfile error', e);
+  const ensureProfile = useCallback(async (currentUser: User) => {
+    const { data: existingProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+
+    if (profileError) throw profileError;
+
+    let finalProfile = existingProfile as UserProfile | null;
+
+    if (!finalProfile) {
+      const { data: createdProfile, error: createProfileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: currentUser.id,
+          full_name: defaultName(currentUser),
+          avatar_url: currentUser.user_metadata?.avatar_url ?? null,
+        })
+        .select('*')
+        .single();
+
+      if (createProfileError) throw createProfileError;
+      finalProfile = createdProfile as UserProfile;
     }
+
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+
+    if (roleError) throw roleError;
+
+    let finalRole = (roleData?.role as UserRole | undefined) ?? null;
+
+    if (!finalRole) {
+      const { data: createdRole, error: createRoleError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: currentUser.id, role: 'user' })
+        .select('role')
+        .single();
+
+      if (!createRoleError) finalRole = createdRole?.role as UserRole;
+    }
+
+    try {
+      await supabase.from('user_ai_credits').insert({ user_id: currentUser.id });
+    } catch {
+      // Non-critical: existing row or restricted policy should not block login.
+    }
+
+    setProfile(finalProfile);
+    setRole(finalRole ?? 'user');
   }, []);
 
   useEffect(() => {
@@ -67,27 +119,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Inicializa sessao existente
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    let mounted = true;
+
+    async function applySession(s: Session | null) {
+      if (!mounted) return;
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) fetchProfile(s.user.id).finally(() => setLoading(false));
-      else setLoading(false);
-    }).catch((e) => {
-      console.error('[AuthContext] getSession error', e);
-      setLoading(false);
-    });
 
-    // Escuta mudancas de auth
+      if (s?.user) {
+        try {
+          await ensureProfile(s.user);
+        } catch (e) {
+          console.error('[AuthContext] ensureProfile error', e);
+        }
+      } else {
+        setProfile(null);
+        setRole(null);
+      }
+
+      if (mounted) setLoading(false);
+    }
+
+    supabase.auth.getSession()
+      .then(({ data: { session: s } }) => applySession(s))
+      .catch((e) => {
+        console.error('[AuthContext] getSession error', e);
+        if (mounted) setLoading(false);
+      });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) fetchProfile(s.user.id);
-      else { setProfile(null); setRole(null); }
+      applySession(s);
     });
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [ensureProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     if (supabaseEnvError) return { error: supabaseEnvError };
@@ -103,8 +171,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (user && !supabaseEnvError) await fetchProfile(user.id);
-  }, [user, fetchProfile]);
+    if (user && !supabaseEnvError) await ensureProfile(user);
+  }, [user, ensureProfile]);
 
   if (supabaseEnvError) {
     return <SupabaseConfigError message={supabaseEnvError} />;
@@ -115,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user, session, profile, role, loading,
       signIn, signOut, refreshProfile,
       isAdmin: role === 'admin',
-      isMedico: role === 'medico' || role === 'admin',
+      isMedico: role === 'medico' || role === 'admin' || role === 'user',
     }}>
       {children}
     </AuthContext.Provider>
