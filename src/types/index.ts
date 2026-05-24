@@ -2,41 +2,60 @@
 // Rhema Care Flow — Tipos globais TypeScript
 // ============================================================
 
-export type Role = 'admin' | 'medico' | 'enfermeiro';
+export type Role = 'admin' | 'medico' | 'enfermeiro' | 'moderator' | 'user';
 
 export interface Profile {
   id: string;
+  user_id?: string;
   full_name: string | null;
-  phone: string | null;
-  role: Role;
+  phone?: string | null;
+  specialty?: string | null;
+  institution?: string | null;
+  role?: Role;
   avatar_url: string | null;
-  active: boolean;
+  active?: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface Patient {
+export interface PatientCard {
   id: string;
-  name: string;
-  birthdate: string;
-  cpf: string | null;
-  phone: string | null;
+  user_id: string;
+  patient_code: string;
+  full_name: string;
+  date_of_birth: string | null;
+  gender: 'M' | 'F' | 'outro' | null;
+  phone_number: string | null;
   email: string | null;
   address: string | null;
-  diagnosis: string | null;
   active: boolean;
-  created_by: string;
+  mrn_last4: string | null;
+  diagnosis_tags: string[];
+  therapy_tags: string[];
+  risk_flags: string[];
+  last_visit_date: string | null;
+  next_followup_date: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
+
+export type PatientCardInsert = Omit<PatientCard, 'id' | 'user_id' | 'created_at' | 'updated_at'> & {
+  user_id?: string;
+};
+
+export type Patient = PatientCard;
 
 export interface Visit {
   id: string;
-  patient_id: string;
-  doctor_id: string;
+  patient_card_id: string;
+  user_id: string;
   visit_date: string;
-  chief_complaint: string | null;
-  notes: string | null;
+  disease_activity?: Record<string, unknown> | null;
+  actions?: string[] | null;
+  labs_ordered?: string[] | null;
+  imaging?: string[] | null;
+  next_steps?: string | null;
   created_at: string;
 }
 
@@ -52,12 +71,11 @@ export interface Prontuario {
 
 export interface Score {
   id: string;
-  patient_id: string;
-  author_id: string;
-  score_type: 'DAS28' | 'SDAI' | 'Wells' | 'BASFI';
-  score_value: number;
-  inputs: Record<string, number>;
-  interpretation: string;
+  patient_card_id: string | null;
+  user_id: string;
+  score_type: string;
+  calculated_score: number | null;
+  data_json: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -94,7 +112,6 @@ export interface AuditLog {
   created_at: string;
 }
 
-// Paginacao generica
 export interface PaginatedResult<T> {
   data: T[];
   count: number;
@@ -103,20 +120,17 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
-// Toast — alinhado com useToast.ts e ToastContainer
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export interface Toast {
   id: string;
   type: ToastType;
   title: string;
-  /** Texto secundário exibido abaixo do título */
   description?: string;
   duration?: number;
 }
 
-// WebRTC sinalizacao
 export type SignalingPayload =
-  | { type: 'offer';     sdp: RTCSessionDescriptionInit }
-  | { type: 'answer';    sdp: RTCSessionDescriptionInit }
-  | { type: 'ice';       candidate: RTCIceCandidateInit }
+  | { type: 'offer'; sdp: RTCSessionDescriptionInit }
+  | { type: 'answer'; sdp: RTCSessionDescriptionInit }
+  | { type: 'ice'; candidate: RTCIceCandidateInit }
   | { type: 'hangup' };
