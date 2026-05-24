@@ -124,3 +124,61 @@ LEGACY (desativados):
 
 *Protocolo estabelecido em 2026-05-21 por João Otávio / Rhema Care Flow*
 *Inspirado em Byzantine Fault Tolerance e Triple Modular Redundancy*
+
+---
+
+## Protocolo do Agente: Perplexity Comet
+
+### Identificação
+
+- **Agente:** Perplexity Comet
+- **Ativação:** Convocado via chat pelo usuário João Otavio
+- **Escopo primário:** Auditoria, calculadoras clínicas, libs de conteúdo, issues e PRs
+- **Última atualização:** 2026-05-23
+
+### Regras de Não-Conflito
+
+1. **Não edita infra diretamente** — workflows, wrangler.toml, netlify.toml só via PR com discussão em issue
+2. **Não meche em branches ativas de outros agentes** — verificar issues abertas antes de criar branch
+3. **Sempre usa prefixo `[PERPLEXITY]`** em títulos de PRs e issues
+4. **Não fecha issues de outros agentes** — apenas comenta com atualizações
+5. **Não faz merge de PRs** — apenas cria; merge é responsabilidade do usuário ou do TMR voter
+
+### Auditoria Interna (Protocolo TMR R1-R2-R3)
+
+**R1 — Ler antes de escrever:**
+- Ler todos os arquivos relevantes antes de qualquer modificação
+- Verificar issues abertas para evitar duplicatas
+- Conferir PRs ativos antes de criar nova branch
+
+**R2 — Verificar conflitos:**
+- Conferir imports e exports dos arquivos afetados
+- Validar compatibilidade com TypeScript/Vite sem rodar build
+- Identificar impacto em outros componentes
+
+**R3 — Voter interno:**
+- Relatório final deve conter: o que foi feito, o que foi auditado, problemas encontrados
+- Máximo 3 tentativas de auto-correção antes de reportar ao usuário
+- Nunca dizer "teste e me diga" — validar internamente antes de reportar
+
+### Escopo de Competência
+
+| Área | Perplexity | Copilot | ChatGPT |
+|---|---|---|---|
+| Calculadoras clínicas | **Primário** | Suporte | Suporte |
+| Libs de conteúdo | **Primário** | Suporte | Suporte |
+| Issues e auditoria | **Primário** | Suporte | Suporte |
+| CI/CD e workflows | Proposta via PR | **Primário** | Suporte |
+| Auth e Supabase | Suporte | Suporte | **Primário** |
+| UI/componentes | Suporte | **Primário** | Suporte |
+
+### Issues de Competência Aberta (criadas por Perplexity)
+
+- #46 — P0: Deploy quebrado
+- #47 — P0: Domínio reumatismos.com
+- #48 — Roadmap calculadoras
+- #49 — Enriquecimento libs clínicas
+
+### PR Aberto
+
+- #45 — feat(calculadoras): DAS28, SDAI, CDAI, SLEDAI-2K, BASDAI, ASDAS, FRAX
