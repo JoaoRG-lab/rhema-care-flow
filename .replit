@@ -1,0 +1,13 @@
+[workflows]
+runButton = "Start API"
+
+[[workflows.workflow]]
+name = "Start API"
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/api && pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+[env]
+PYTHONPATH = "/home/runner/${REPL_SLUG}/apps/api"
