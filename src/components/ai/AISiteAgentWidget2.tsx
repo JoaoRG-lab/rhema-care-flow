@@ -8,6 +8,8 @@ interface Message {
   content: string;
 }
 
+const MAX_INPUT_LENGTH = 600;
+
 const INITIAL_MESSAGE: Message = {
   id: '1',
   role: 'assistant',
@@ -86,6 +88,14 @@ export function AISiteAgentWidget() {
       ]);
     } catch {
       setIsTemporarilyUnavailable(true);
+          content:
+            (data as any)?.reply ||
+            (data as any)?.answer ||
+            'Consegui receber sua pergunta, mas não obtive resposta estruturada agora.',
+        },
+      ]);
+    } catch {
+      setIsDegraded(true);
       setMessages((prev) => [
         ...prev,
         {
@@ -102,7 +112,7 @@ export function AISiteAgentWidget() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {isOpen && (
-        <div className="bg-white dark:bg-slate-900 w-80 sm:w-96 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col mb-4 transition-all duration-300 ease-in-out">
+        <div className="bg-white dark:bg-slate-900 w-[calc(100vw-2rem)] max-w-96 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col mb-4 transition-all duration-300 ease-in-out">
           {/* Header */}
           <div className="bg-teal-700 text-white p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -156,6 +166,15 @@ export function AISiteAgentWidget() {
             <div ref={messagesEndRef} />
           </div>
 
+          <div className="border-t border-slate-200 bg-white px-4 py-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
+              <Link to="/reumatismos" className="hover:text-teal-700">Guias</Link>
+              <Link to="/reumatismos/fibromialgia" className="hover:text-teal-700">Fibromialgia</Link>
+              <Link to="/reumatismos/artrite-reumatoide" className="hover:text-teal-700">Artrite reumatoide</Link>
+              <Link to="/tell-us" className="hover:text-teal-700">Contato</Link>
+            </div>
+          </div>
+
           {/* Input */}
           <form
             onSubmit={handleSendMessage}
@@ -171,8 +190,8 @@ export function AISiteAgentWidget() {
             />
             <button
               type="submit"
-              disabled={!input.trim() || isLoading}
-              className="bg-teal-700 hover:bg-teal-800 disabled:bg-teal-400 text-white rounded-full p-2 transition-colors flex items-center justify-center w-10 h-10"
+              disabled={!input.trim() || isLoading || isDegraded}
+              className="bg-teal-700 hover:bg-teal-800 disabled:bg-teal-400 text-white rounded-full p-2 transition-colors flex items-center justify-center w-10 h-10 disabled:cursor-not-allowed"
               aria-label="Enviar mensagem"
             >
               <Send className="w-4 h-4" />
