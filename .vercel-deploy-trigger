@@ -1,0 +1,2 @@
+deploy-trigger: 2026-05-24T09:04:00-03:00
+reason: force-redeploy após cancels em cascata
