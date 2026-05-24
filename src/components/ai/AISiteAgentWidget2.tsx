@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { AlertCircle, Bot, MessageCircle, Send, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
@@ -15,18 +14,33 @@ const INITIAL_MESSAGE: Message = {
   id: '1',
   role: 'assistant',
   content:
-    'Olá! Sou o Assistente Reumatismos. Posso responder dúvidas educativas sobre doenças reumatológicas, sinais de alerta e jornada até o especialista. Como posso ajudar?',
+    'Olá! Sou o Assistente Reumatismos. Posso ajudar com dúvidas educativas sobre doenças reumatológicas, sinais de alerta e jornada até o especialista. Como posso ajudar?',
 };
 
 const FALLBACK_MESSAGE =
-  'No momento, o assistente de IA não está disponível. Você ainda pode navegar pelos guias públicos de reumatologia. Em sintomas intensos, piora rápida, febre persistente, falta de ar, dor torácica ou perda funcional importante, procure atendimento presencial.';
+  'O assistente de IA não respondeu agora. Você ainda pode navegar pelos guias públicos do site. Para sintomas intensos, piora rápida ou dúvida clínica pessoal, procure avaliação presencial.';
+
+const TIMEOUT_MS = 18_000;
+
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('timeout')), ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
 export function AISiteAgentWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDegraded, setIsDegraded] = useState(false);
+  const [isTemporarilyUnavailable, setIsTemporarilyUnavailable] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,30 +49,45 @@ export function AISiteAgentWidget() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    const text = input.trim().slice(0, MAX_INPUT_LENGTH);
-    if (!text || isDegraded) return;
+    const text = input.trim();
+    if (!text || isLoading) return;
 
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: text };
+    const history = messages.slice(-8);
+
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-assistant', {
-        body: {
-          message: text,
-          history: messages.slice(-6),
-          context: 'site_publico',
-        },
-      });
+      const { data, error } = await withTimeout(
+        supabase.functions.invoke('ai-assistant', {
+          body: {
+            message: text,
+            history,
+            context: 'site_publico',
+          },
+        }),
+        TIMEOUT_MS,
+      );
+
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
+      const answer = (data as any)?.reply || (data as any)?.answer;
+      if (!answer) throw new Error('empty-assistant-response');
+
+      setIsTemporarilyUnavailable(false);
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
+          content: answer,
+        },
+      ]);
+    } catch {
+      setIsTemporarilyUnavailable(true);
           content:
             (data as any)?.reply ||
             (data as any)?.answer ||
@@ -102,14 +131,13 @@ export function AISiteAgentWidget() {
             </button>
           </div>
 
-          {isDegraded && (
-            <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100">
-              <div className="flex items-start gap-2">
+          {isTemporarilyUnavailable && (
+            <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+              <div className="flex gap-2">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <div>
-                  <p className="font-medium">Modo leitura ativado</p>
-                  <p className="mt-0.5">A IA está indisponível agora. Use os guias públicos enquanto isso.</p>
-                </div>
+                <p>
+                  IA temporariamente indisponível. O site continua funcionando; use os guias públicos para navegação educativa.
+                </p>
               </div>
             </div>
           )}
@@ -155,11 +183,10 @@ export function AISiteAgentWidget() {
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value.slice(0, MAX_INPUT_LENGTH))}
-              placeholder={isDegraded ? 'IA indisponível no momento' : 'Pergunte sobre reumatologia...'}
-              className="flex-1 bg-slate-100 dark:bg-slate-800 text-sm rounded-full px-4 py-2 outline-none focus:ring-2 focus:ring-teal-500/50 text-slate-800 dark:text-slate-200 disabled:cursor-not-allowed disabled:opacity-70"
-              disabled={isLoading || isDegraded}
-              maxLength={MAX_INPUT_LENGTH}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={isTemporarilyUnavailable ? 'Tente novamente mais tarde...' : 'Pergunte sobre reumatologia...'}
+              className="flex-1 bg-slate-100 dark:bg-slate-800 text-sm rounded-full px-4 py-2 outline-none focus:ring-2 focus:ring-teal-500/50 text-slate-800 dark:text-slate-200"
+              disabled={isLoading}
             />
             <button
               type="submit"
