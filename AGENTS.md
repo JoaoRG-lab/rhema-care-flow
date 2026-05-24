@@ -1,14 +1,15 @@
 # AGENTS.md — Governança Multi-Agente UHS Health OS
 
-> **Fonte de verdade:** `JoaoRG-lab/rhema-care-flow` branch `main`  
-> **Atualizado:** 2026-05-23 · **Autor:** [PERPLEXITY]
+> **Fonte de verdade:** `JoaoRG-lab/rhema-care-flow` branch `main`
+> Este arquivo só deve ser editado via PR a partir de `main` — nunca diretamente em feature branches.
+> **Atualizado:** 2026-05-24 · **Autor:** [PERPLEXITY]
 
 ---
 
 ## Regra de Ouro
 
-**Um agente, uma issue, uma branch, um PR.**  
-Nunca dois agentes editam o mesmo arquivo ao mesmo tempo.  
+**Um agente, uma issue, uma branch, um PR.**
+Nunca dois agentes editam o mesmo arquivo ao mesmo tempo.
 Nunca ninguém commita direto em `main`.
 
 ---
@@ -17,11 +18,12 @@ Nunca ninguém commita direto em `main`.
 
 | Agente | Escopo principal | Labels de issues | Branches |
 |---|---|---|---|
-| **Perplexity** | Calculadoras clínicas, scores, bibliotecas médicas, auditoria DNS/domínio, AGENTS.md | `[PERPLEXITY]` | `feat/perplexity-*` |
+| **Perplexity** | Calculadoras clínicas, scores, bibliotecas médicas, AGENTS.md | `[PERPLEXITY]` | `feat/perplexity-*` |
 | **GitHub Copilot** | Refatoração TypeScript, testes, lint, acessibilidade UI | `[COPILOT]` | `fix/copilot-*` |
 | **ChatGPT / Codex** | Novos componentes React, Edge Functions, integrações Supabase | `[CODEX]` | `feat/codex-*` |
 | **Grok** | Blockchain/Solana, URV Privacy Module, scripts Rust/Anchor | `[GROK]` | `feat/grok-*` |
 | **Lovable** | UI visual, design system, shadcn/ui tweaks | `[LOVABLE]` | `feat/lovable-*` |
+| **DevOps / Infra** | Auditoria DNS/domínio, variáveis de ambiente, workflows CI/CD | `[DEVOPS]` | `fix/devops-*` |
 
 ---
 
@@ -58,15 +60,13 @@ main ──► branch curta ──► PR atômico ──► Audit Sentinel ─�
 
 > ⚠️ Se `reumatismos.com` estiver fora do ar e `orientanovvs.org` funcionando, o problema está na zona DNS do `reumatismos.com` — verificar registros A/CNAME no painel do registrador ou Cloudflare.
 
-### Variáveis de ambiente obrigatórias (Vercel → Settings → Environment Variables)
+### Variáveis de ambiente obrigatórias
 
-```
-VITE_SUPABASE_URL=https://rfsaxstpfpigrjyiochi.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<chave anon pública>
-PERPLEXITY_API_KEY=<chave Perplexity para Edge Function>
-```
+As variáveis de ambiente **não devem ser listadas neste arquivo**. Consulte:
+- `.env.example` — nomes e descrições de cada variável
+- `.github/SECRETS.md` — instruções de onde configurar no Vercel e Supabase
 
-Não usar `VITE_SUPABASE_ANON_KEY` — nome correto é `VITE_SUPABASE_PUBLISHABLE_KEY`.
+> Regra: nenhum nome de secret ou chave de API deve aparecer no AGENTS.md.
 
 ---
 
@@ -109,22 +109,31 @@ O campo `site_publico: true` indica widget público — sem diagnóstico individ
 
 ---
 
-## Auditoria Interna (Perplexity)
+## Issues ativas de referência
 
-Esta seção é a redundância interna do agente Perplexity.
+| Issue | Título | Responsável |
+|---|---|---|
+| #40 | Trilho operacional (ponto de entrada) | [PERPLEXITY] |
+| #41 | Roadmap de melhoria contínua | [PERPLEXITY] |
+| #37 | Auditoria viva pós-merges | [PERPLEXITY] |
+| #16 | Vercel domain — configuração e validação | [DEVOPS] |
+| #17 | Supabase keys — rotação e variáveis | [DEVOPS] |
+| #18 | DNS — auditoria de registros A/CNAME | [DEVOPS] |
+| #6  | Sementeira de módulos clínicos | [PERPLEXITY] |
 
-### Checklist pré-PR
+> Issues fechadas devem ser removidas desta tabela no mesmo PR que as encerra.
+
+---
+
+## Checklist pré-PR (todos os agentes)
+
+> O checklist específico de cada agente fica no template de PR (`.github/PULL_REQUEST_TEMPLATE.md`).
+> Este checklist é o mínimo universal obrigatório para qualquer PR neste repositório.
+
 - [ ] Branch criada a partir da `main` atual
-- [ ] Nenhum arquivo de workflow tocado
-- [ ] Nenhum secret ou valor real no código
+- [ ] Nenhum arquivo de workflow tocado sem issue `[DEVOPS]` aprovada
+- [ ] Nenhum secret, chave real ou token no código
 - [ ] Diff ≤ 400 linhas
 - [ ] `VITE_SUPABASE_PUBLISHABLE_KEY` (não `ANON_KEY`)
 - [ ] Componentes React com `export default` e tipos TypeScript completos
 - [ ] Calculadoras com fórmulas validadas por referência clínica citada
-
-### Issues que este agente monitora
-- #40 — trilho operacional (ponto de entrada)
-- #41 — roadmap de melhoria contínua
-- #37 — auditoria viva pós-merges
-- #16 / #17 / #18 — pendências Vercel/Supabase/domínio
-- #6 — sementeira de módulos
