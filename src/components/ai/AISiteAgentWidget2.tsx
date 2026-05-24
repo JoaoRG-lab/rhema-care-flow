@@ -51,7 +51,7 @@ export function AISiteAgentWidget() {
     if (!text || isLoading) return;
 
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: text };
-    const history = [...messages, userMessage].slice(-8);
+    const history = messages.slice(-8);
 
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
