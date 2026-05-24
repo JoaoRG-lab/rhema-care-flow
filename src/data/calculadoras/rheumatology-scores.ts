@@ -43,10 +43,10 @@ export function calcDAS28(input: DAS28Input): ScoreResult {
   if (score < 3.2) {
     return { score, activity: 'low', label: 'Baixa atividade', color: 'green', description: 'DAS28 2,6–3,2.', reference: 'Prevoo et al. Arthritis Rheum. 1995;38:44-8' };
   }
-  if (score < 5.1) {
+  if (score <= 5.1) {
     return { score, activity: 'moderate', label: 'Atividade moderada', color: 'orange', description: 'DAS28 3,2–5,1.', reference: 'Prevoo et al. Arthritis Rheum. 1995;38:44-8' };
   }
-  return { score, activity: 'high', label: 'Alta atividade', color: 'red', description: 'DAS28 ≥ 5,1.', reference: 'Prevoo et al. Arthritis Rheum. 1995;38:44-8' };
+  return { score, activity: 'high', label: 'Alta atividade', color: 'red', description: 'DAS28 > 5,1.', reference: 'Prevoo et al. Arthritis Rheum. 1995;38:44-8' };
 }
 
 export interface SDAIInput {
@@ -176,16 +176,16 @@ export interface ASDASInput {
 
 export function calcASDAS_CRP(input: ASDASInput): ScoreResult {
   const score = Number((
-    0.12 * input.back_pain +
-    0.06 * input.morning_stiffness_duration +
-    0.11 * input.patient_global +
-    0.07 * input.peripheral_pain +
-    0.58 * Math.log(input.crp + 1)
+    0.121 * input.back_pain +
+    0.058 * input.morning_stiffness_duration +
+    0.110 * input.patient_global +
+    0.073 * input.peripheral_pain +
+    0.579 * Math.log(input.crp + 1)
   ).toFixed(2));
 
   if (score < 1.3) return { score, activity: 'remission', label: 'Inatividade', color: 'green', description: 'ASDAS < 1,3.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
   if (score < 2.1) return { score, activity: 'low', label: 'Baixa atividade', color: 'yellow', description: 'ASDAS 1,3–2,1.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
-  if (score < 3.5) return { score, activity: 'moderate', label: 'Alta atividade', color: 'orange', description: 'ASDAS 2,1–3,5.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
+  if (score < 3.5) return { score, activity: 'high', label: 'Alta atividade', color: 'orange', description: 'ASDAS 2,1–3,5.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
   return { score, activity: 'very_high', label: 'Atividade muito alta', color: 'red', description: 'ASDAS ≥ 3,5.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
 }
 
