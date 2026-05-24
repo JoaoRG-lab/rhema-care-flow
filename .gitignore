@@ -19,6 +19,10 @@ out/
 .env.test.local
 .env.production.local
 
+# Lock file duplicates — manter apenas package-lock.json
+bun.lock
+bun.lockb
+
 # Supabase local
 supabase/.branches
 supabase/.temp
