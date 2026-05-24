@@ -185,8 +185,8 @@ export function calcASDAS_CRP(input: ASDASInput): ScoreResult {
 
   if (score < 1.3) return { score, activity: 'remission', label: 'Inatividade', color: 'green', description: 'ASDAS < 1,3.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
   if (score < 2.1) return { score, activity: 'low', label: 'Baixa atividade', color: 'yellow', description: 'ASDAS 1,3–2,1.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
-  if (score < 3.5) return { score, activity: 'high', label: 'Alta atividade', color: 'orange', description: 'ASDAS 2,1–3,5.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
-  return { score, activity: 'very_high', label: 'Atividade muito alta', color: 'red', description: 'ASDAS ≥ 3,5.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
+  if (score <= 3.5) return { score, activity: 'high', label: 'Alta atividade', color: 'orange', description: 'ASDAS 2,1–3,5.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
+  return { score, activity: 'very_high', label: 'Atividade muito alta', color: 'red', description: 'ASDAS > 3,5.', reference: 'van der Heijde D et al. Ann Rheum Dis. 2009;68:1811-8' };
 }
 
 export interface FRAXInput {
