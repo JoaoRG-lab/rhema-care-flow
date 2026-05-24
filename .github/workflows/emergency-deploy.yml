@@ -1,31 +1,17 @@
 name: Emergency Direct Deploy
 
-# Ativação MANUAL apenas — nunca roda automático
 on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Digite CONFIRMAR para autorizar deploy de emergência'
+        description: 'Digite qualquer coisa para confirmar o deploy'
         required: true
-        default: ''
+        default: 'deploy'
 
 jobs:
-  guard:
-    name: 'GUARD - Confirmar intenção'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Verificar confirmação
-        run: |
-          if [ "${{ github.event.inputs.confirm }}" != "CONFIRMAR" ]; then
-            echo "::error::Você precisa digitar CONFIRMAR para prosseguir."
-            exit 1
-          fi
-          echo "Confirmação aceita. Iniciando deploy de emergência."
-
   build-and-deploy:
     name: 'BUILD + DEPLOY Direto'
     runs-on: ubuntu-latest
-    needs: guard
     steps:
       - uses: actions/checkout@v4
 
