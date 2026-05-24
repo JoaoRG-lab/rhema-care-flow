@@ -2,11 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-/**
- * ADR-002: manualChunks para reduzir bundles >500kb
- * Blockchain (Solana) e PDF são lazy — carregados sob demanda.
- * Ver docs/adr/ADR-002-bundle-split-vite.md
- */
+// PWA removido do build — causa peer dep crash no Vercel Node 20
+// Reativar localmente com: npm i vite-plugin-pwa -D
+const publicBasePath = process.env.VITE_BASE_PATH || '/';
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -18,6 +17,7 @@ export default defineConfig({
     host: '::',
     port: 8080,
   },
+  base: publicBasePath,
   build: {
     chunkSizeWarningLimit: 500,
     rollupOptions: {
