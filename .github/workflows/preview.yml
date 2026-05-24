@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   preview:
-    name: Preview to Cloudflare Pages (PR)
+    name: Preview → Cloudflare Pages (PR)
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -22,10 +22,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
           cache: 'npm'
 
-      # npm ci fails on the repository's current peer dependency conflicts.
+      # FIX: npm ci → npm install --legacy-peer-deps
+      # npm ci falha com peer dep conflicts (causa dos +30 deploys)
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
@@ -35,16 +36,15 @@ jobs:
           VITE_SUPABASE_URL:             ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Deploy preview to Cloudflare Pages
+      - name: Deploy preview → Cloudflare Pages
         id: preview
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken:  ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=rhema-care-flow --branch=pr-${{ github.event.pull_request.number }} --commit-hash=${{ github.event.pull_request.head.sha }} --commit-message="Preview PR ${{ github.event.pull_request.number }}"
-          wranglerVersion: '4.94.0'
+          command: pages deploy dist --project-name=rhema-care-flow --branch=pr-${{ github.event.pull_request.number }}
 
-      - name: Comment preview URL on PR
+      - name: Comentar URL no PR
         uses: actions/github-script@v7
         with:
           script: |
@@ -53,7 +53,7 @@ jobs:
               owner: context.repo.owner,
               repo:  context.repo.repo,
               body: [
-                '## Preview Deploy',
+                '## 🔍 Preview Deploy',
                 '',
                 '| Branch | Commit | URL |',
                 '|--------|--------|-----|',
