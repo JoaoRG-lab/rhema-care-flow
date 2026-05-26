@@ -26,7 +26,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!api|assets|favicon.ico|robots.txt|manifest.webmanifest|site.webmanifest).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
