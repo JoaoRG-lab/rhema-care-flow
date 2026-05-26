@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { invokeEdgeFn } from '@/lib/invokeEdgeFn';
 
-interface CodeAgentDryRunResult {
+interface CodeAgentResult {
   success: boolean;
   dryRun: boolean;
   changed: boolean;
   repo?: string;
   baseBranch?: string;
+  branch?: string;
   targetFile?: string;
   preview?: string;
+  fileUrl?: string;
+  commit?: { sha: string; html_url: string };
+  pullRequest?: { number: number; html_url: string } | null;
   validation?: {
     changed: boolean;
     previousBytes: number;
@@ -18,27 +22,35 @@ interface CodeAgentDryRunResult {
 
 const DEFAULT_TARGET = 'src/pages/ReumatismosKnowledge.tsx';
 const DEFAULT_INSTRUCTION = 'Melhore a clareza do texto preservando imports, rotas e estrutura do arquivo.';
+const CONFIRM_TEXT = 'CRIAR PR';
 
 export function CodeAgentDryRunPanel() {
   const [targetFile, setTargetFile] = useState(DEFAULT_TARGET);
   const [instruction, setInstruction] = useState(DEFAULT_INSTRUCTION);
-  const [loading, setLoading] = useState(false);
+  const [confirmation, setConfirmation] = useState('');
+  const [loading, setLoading] = useState<'dry-run' | 'draft-pr' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<CodeAgentDryRunResult | null>(null);
+  const [result, setResult] = useState<CodeAgentResult | null>(null);
 
-  async function runDryRun() {
-    setLoading(true);
+  async function runAgent(mode: 'dry-run' | 'draft-pr') {
+    setLoading(mode);
     setError(null);
     setResult(null);
 
     try {
-      const { data, error } = await invokeEdgeFn<CodeAgentDryRunResult>('code-editor-agent', {
+      const createsDraftPr = mode === 'draft-pr';
+      if (createsDraftPr && confirmation.trim() !== CONFIRM_TEXT) {
+        setError(`Digite ${CONFIRM_TEXT} para liberar a criação de um PR rascunho.`);
+        return;
+      }
+
+      const { data, error } = await invokeEdgeFn<CodeAgentResult>('code-editor-agent', {
         repo: 'JoaoRG-lab/rhema-care-flow',
         baseBranch: 'main',
         targetFile: targetFile.trim(),
         instruction: instruction.trim(),
-        dryRun: true,
-        createPullRequest: false,
+        dryRun: !createsDraftPr,
+        createPullRequest: createsDraftPr,
       });
 
       if (error || !data) {
@@ -47,29 +59,33 @@ export function CodeAgentDryRunPanel() {
       }
 
       setResult(data);
+      if (data.pullRequest?.html_url) setConfirmation('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro inesperado ao executar dry-run.');
+      setError(err instanceof Error ? err.message : 'Erro inesperado ao executar a ação.');
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   }
 
+  const canRun = Boolean(targetFile.trim() && instruction.trim() && !loading);
+  const canCreateDraftPr = canRun && confirmation.trim() === CONFIRM_TEXT;
+
   return (
     <section className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-sm font-bold text-blue-900">Code Agent · dry-run seguro</h2>
+          <h2 className="text-sm font-bold text-blue-900">Code Agent · revisão segura</h2>
           <p className="text-xs text-blue-700">
-            Testa o backend de alteração de código sem criar branch, commit ou PR.
+            Primeiro testa em dry-run. Depois pode criar uma branch e um PR rascunho para revisão, sem merge automático.
           </p>
         </div>
         <button
           type="button"
-          onClick={runDryRun}
-          disabled={loading || !targetFile.trim() || !instruction.trim()}
+          onClick={() => runAgent('dry-run')}
+          disabled={!canRun}
           className="mt-2 rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-300 sm:mt-0"
         >
-          {loading ? 'Executando…' : 'Rodar dry-run'}
+          {loading === 'dry-run' ? 'Executando…' : 'Rodar dry-run'}
         </button>
       </div>
 
@@ -95,6 +111,31 @@ export function CodeAgentDryRunPanel() {
         </label>
       </div>
 
+      <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <label className="block flex-1 text-xs font-medium text-amber-900">
+            Confirmação para criar PR rascunho
+            <input
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              className="mt-1 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs text-gray-800 outline-none focus:border-amber-500"
+              placeholder={`Digite ${CONFIRM_TEXT}`}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => runAgent('draft-pr')}
+            disabled={!canCreateDraftPr}
+            className="rounded-lg bg-amber-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-800 disabled:cursor-not-allowed disabled:bg-amber-300"
+          >
+            {loading === 'draft-pr' ? 'Criando PR…' : 'Criar draft PR'}
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-amber-800">
+          Segurança: essa ação cria branch e PR rascunho. Ela não faz merge e não altera a main diretamente.
+        </p>
+      </div>
+
       {error && (
         <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
           {error}
@@ -107,13 +148,40 @@ export function CodeAgentDryRunPanel() {
             <span className="rounded-full bg-blue-100 px-2 py-1 font-semibold text-blue-800">
               {result.changed ? 'alteração proposta' : 'sem alteração'}
             </span>
-            <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">dry-run</span>
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">
+              {result.dryRun ? 'dry-run' : 'draft PR'}
+            </span>
+            {result.branch && (
+              <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">{result.branch}</span>
+            )}
             {result.validation && (
               <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">
                 {result.validation.previousBytes} → {result.validation.nextBytes} bytes
               </span>
             )}
           </div>
+
+          {result.pullRequest?.html_url && (
+            <a
+              href={result.pullRequest.html_url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
+            >
+              Abrir PR rascunho #{result.pullRequest.number}
+            </a>
+          )}
+
+          {result.commit?.html_url && (
+            <a
+              href={result.commit.html_url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="ml-2 inline-flex rounded-lg bg-gray-700 px-3 py-2 text-xs font-semibold text-white hover:bg-gray-800"
+            >
+              Abrir commit
+            </a>
+          )}
 
           {result.preview && (
             <pre className="max-h-64 overflow-auto rounded-lg bg-gray-950 p-3 text-[11px] leading-relaxed text-gray-100">
