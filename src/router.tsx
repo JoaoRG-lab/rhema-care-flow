@@ -26,6 +26,10 @@ import GotaPage from './pages/reumatismos/GotaPage';
 import DorLombarInflamatoriaPage from './pages/reumatismos/DorLombarInflamatoriaPage';
 import NotFound          from './pages/NotFound';
 
+// GitHub Pages publica o app em /rhema-care-flow/.
+// Em Vercel/domínio próprio, import.meta.env.BASE_URL normalmente é '/'.
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 // Lazy-load — chunks pesados só carregam quando o usuário navega
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 const AIIntegrationPage = lazy(() => import('./pages/AIIntegrationPage'));
@@ -64,7 +68,7 @@ function PublicWithAssistant({ children }: { children: React.ReactNode }) {
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={routerBasename}>
       <Routes>
         {/* Rota raiz — redireciona conforme autenticação */}
         <Route path="/" element={<RootRedirect />} />
