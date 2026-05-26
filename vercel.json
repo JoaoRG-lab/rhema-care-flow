@@ -4,7 +4,6 @@
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)",
@@ -26,8 +25,8 @@
   ],
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/((?!assets/|favicon.ico|manifest.webmanifest|robots.txt|og-image.png|apple-touch-icon.png).*)",
+      "destination": "/"
     }
   ]
 }
