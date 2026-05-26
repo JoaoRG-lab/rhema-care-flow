@@ -1,26 +1,16 @@
-// Verify a GitHub PAT has push access to a list of target repositories.
-// The token is used in-memory only and never persisted.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { z } from "https://esm.sh/zod@3.23.8";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { errorResponse } from "../_shared/errors.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const repoPath = z
-  .string()
-  .trim()
-  .regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/);
+interface VerifyRequest {
+  targets?: string[];
+}
 
-const bodySchema = z.object({
-  token: z.string().min(20).max(500),
-  targets: z.array(repoPath).min(1).max(50),
-});
-
-interface TargetResult {
+interface VerifyResult {
   repo: string;
   ok: boolean;
   status: number;
@@ -29,77 +19,62 @@ interface TargetResult {
   archived?: boolean;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body, null, 2), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function isRepoPath(value: string) {
+  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value);
+}
+
+async function verifyRepo(repoCredential: string, repo: string): Promise<VerifyResult> {
+  if (!isRepoPath(repo)) return { repo, ok: false, status: 400, reason: "Invalid owner/repo format" };
+
+  const [owner, name] = repo.split("/");
+  const response = await fetch(`https://api.github.com/repos/${owner}/${name}`, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${repoCredential}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+
+  if (!response.ok) return { repo, ok: false, status: response.status, reason: `GitHub returned ${response.status}` };
+
+  const data = await response.json();
+  const push = Boolean(data.permissions?.push || data.permissions?.admin || data.permissions?.maintain);
+  const archived = Boolean(data.archived);
+  return {
+    repo,
+    ok: push && !archived,
+    status: response.status,
+    reason: archived ? "Repository is archived" : push ? "Writable" : "Credential cannot push to this repository",
+    push,
+    archived,
+  };
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
   try {
-    // Require an authenticated Supabase user
-    const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return json({ error: "Unauthorized" }, 401);
-    }
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) return json({ error: "Unauthorized" }, 401);
+    const repoCredential = Deno.env.get("REPO_WRITE_TOKEN");
+    if (!repoCredential) throw new Error("REPO_WRITE_TOKEN is not configured");
 
-    const parsed = bodySchema.safeParse(await req.json());
-    if (!parsed.success) {
-      return json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400);
-    }
-    const { token, targets } = parsed.data;
+    const body = (await req.json()) as VerifyRequest;
+    const targets = body.targets ?? [];
+    if (!Array.isArray(targets) || targets.length === 0) return jsonResponse({ error: "targets must be a non-empty array" }, 400);
+    if (targets.length > 20) return jsonResponse({ error: "maximum 20 targets per verification" }, 400);
 
-    const results: TargetResult[] = await Promise.all(
-      targets.map(async (repo) => {
-        try {
-          const res = await fetch(`https://api.github.com/repos/${repo}`, {
-            headers: {
-              Accept: "application/vnd.github+json",
-              Authorization: `Bearer ${token}`,
-              "X-GitHub-Api-Version": "2022-11-28",
-              "User-Agent": "uhs-mirror-verify",
-            },
-          });
+    const uniqueTargets = [...new Set(targets.map((t) => String(t).trim()).filter(Boolean))];
+    const results = await Promise.all(uniqueTargets.map((repo) => verifyRepo(repoCredential, repo)));
 
-          if (res.status === 200) {
-            const data = await res.json();
-            const push = Boolean(data?.permissions?.push);
-            const archived = Boolean(data?.archived);
-            if (archived) {
-              return { repo, ok: false, status: 200, reason: "Repository is archived", push, archived };
-            }
-            if (!push) {
-              return { repo, ok: false, status: 200, reason: "Token lacks push permission", push, archived };
-            }
-            return { repo, ok: true, status: 200, reason: "Writable", push, archived };
-          }
-
-          const reason =
-            res.status === 404
-              ? "Not found or token has no access"
-              : res.status === 401
-              ? "Token unauthorized (401)"
-              : res.status === 403
-              ? "Forbidden — check token scopes / SSO (403)"
-              : `HTTP ${res.status}`;
-          return { repo, ok: false, status: res.status, reason };
-        } catch (err) {
-          return {
-            repo,
-            ok: false,
-            status: 0,
-            reason: err instanceof Error ? err.message : "Network error",
-          };
-        }
-      })
-    );
-
-    return json({
+    return jsonResponse({
+      success: true,
       results,
       summary: {
         total: results.length,
@@ -107,14 +82,8 @@ Deno.serve(async (req) => {
         failed: results.filter((r) => !r.ok).length,
       },
     });
-  } catch (err) {
-    return json({ error: err instanceof Error ? err.message : "Server error" }, 500);
+  } catch (error) {
+    console.error("verify-mirror-access error:", error);
+    return errorResponse(error, { status: 500, code: "VERIFY_MIRROR_ACCESS_ERROR", headers: corsHeaders });
   }
 });
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
