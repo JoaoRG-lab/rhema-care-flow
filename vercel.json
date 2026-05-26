@@ -25,8 +25,8 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/|favicon.ico|manifest.webmanifest|robots.txt|og-image.png|apple-touch-icon.png).*)",
-      "destination": "/"
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
