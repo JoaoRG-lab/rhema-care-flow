@@ -1,8 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-const FALLBACK_SUPABASE_URL = 'https://rfsaxstpfpigrjyiochi.supabase.co';
-const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_J8dthJB66ld8lhRIg4e8SA_ro6sr_na';
-
 function stripEnvNoise(value: string | undefined): string | undefined {
   if (!value) return undefined;
 
@@ -33,9 +30,6 @@ const rawSupabasePublishableKey = (
 const envSupabaseUrl = stripEnvNoise(rawSupabaseUrl);
 const envSupabasePublishableKey = keepAsciiOnly(rawSupabasePublishableKey);
 
-const supabaseUrl = envSupabaseUrl || FALLBACK_SUPABASE_URL;
-const supabasePublishableKey = envSupabasePublishableKey || FALLBACK_SUPABASE_PUBLISHABLE_KEY;
-
 const keyWasSanitized = Boolean(
   rawSupabasePublishableKey &&
   envSupabasePublishableKey &&
@@ -48,23 +42,25 @@ const urlWasSanitized = Boolean(
   rawSupabaseUrl !== envSupabaseUrl
 );
 
-const usingFallbackConfig = !envSupabaseUrl || !envSupabasePublishableKey;
+export const supabaseEnvError = !envSupabaseUrl || !envSupabasePublishableKey
+  ? 'Configuração Supabase ausente. Configure as variáveis públicas do frontend no ambiente de produção.'
+  : null;
 
-export const supabaseEnvError: string | null = null;
-
-export const supabaseEnvWarning = usingFallbackConfig
-  ? 'Usando configuração pública fallback do Supabase. Revise as Environment Variables da Vercel para remover aspas, espaços invisíveis ou texto extra.'
-  : keyWasSanitized || urlWasSanitized
-    ? 'As variáveis do Supabase foram sanitizadas no navegador. Revise os Environment Variables da Vercel e cole VITE_SUPABASE_URL/VITE_SUPABASE_PUBLISHABLE_KEY como texto puro.'
-    : null;
+export const supabaseEnvWarning = !supabaseEnvError && (keyWasSanitized || urlWasSanitized)
+  ? 'As variáveis públicas do Supabase foram sanitizadas no navegador. Revise o ambiente de produção e use texto puro.'
+  : null;
 
 if (supabaseEnvWarning) {
   console.warn(`[Rhema] ${supabaseEnvWarning}`);
 }
 
+if (supabaseEnvError) {
+  console.warn(`[Rhema] ${supabaseEnvError}`);
+}
+
 export const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey,
+  envSupabaseUrl ?? 'https://placeholder.supabase.co',
+  envSupabasePublishableKey ?? 'placeholder-publishable-key',
   {
     auth: {
       persistSession: true,
