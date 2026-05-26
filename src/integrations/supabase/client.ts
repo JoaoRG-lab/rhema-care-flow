@@ -2,23 +2,65 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const SUPABASE_PUBLISHABLE_KEY = (
+// Public Supabase frontend configuration. This is a publishable/anon key, not a service-role secret.
+const FALLBACK_SUPABASE_URL = 'https://rfsaxstpfpigrjyiochi.supabase.co';
+const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_J8dthJB66ld8lhRIg4e8SA_ro6sr_na';
+
+function stripEnvNoise(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+
+  return value
+    .trim()
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/^["'`“”‘’]+|["'`“”‘’]+$/g, '')
+    .replace(/\s+/g, '');
+}
+
+function keepAsciiOnly(value: string | undefined): string | undefined {
+  const cleaned = stripEnvNoise(value);
+  if (!cleaned) return undefined;
+
+  let result = '';
+  for (const char of cleaned) {
+    if (char.charCodeAt(0) <= 127) result += char;
+  }
+  return result || undefined;
+}
+
+function isSupabaseUrl(value: string | undefined): value is string {
+  return Boolean(value && /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(value));
+}
+
+function isSupabasePublicKey(value: string | undefined): value is string {
+  return Boolean(value && (value.startsWith('sb_publishable_') || value.startsWith('eyJ')));
+}
+
+const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const rawSupabasePublishableKey = (
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
   import.meta.env.VITE_SUPABASE_ANON_KEY
 ) as string | undefined;
+
+const envSupabaseUrl = stripEnvNoise(rawSupabaseUrl);
+const envSupabasePublishableKey = keepAsciiOnly(rawSupabasePublishableKey);
+
+const supabaseUrl = isSupabaseUrl(envSupabaseUrl) ? envSupabaseUrl : FALLBACK_SUPABASE_URL;
+const supabasePublishableKey = isSupabasePublicKey(envSupabasePublishableKey)
+  ? envSupabasePublishableKey
+  : FALLBACK_SUPABASE_PUBLISHABLE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(
-  SUPABASE_URL ?? 'https://placeholder.supabase.co',
-  SUPABASE_PUBLISHABLE_KEY ?? 'placeholder-anon-key',
+  supabaseUrl,
+  supabasePublishableKey,
   {
     auth: {
       storage: localStorage,
       persistSession: true,
       autoRefreshToken: true,
-    }
-  }
+      detectSessionInUrl: true,
+    },
+  },
 );
