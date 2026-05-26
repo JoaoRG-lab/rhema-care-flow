@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
+const FALLBACK_SUPABASE_URL = 'https://rfsaxstpfpigrjyiochi.supabase.co';
+const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_J8dthJB66ld8lhRIg4e8SA_ro6sr_na';
+
 function stripEnvNoise(value: string | undefined): string | undefined {
   if (!value) return undefined;
 
@@ -18,7 +21,7 @@ function keepAsciiOnly(value: string | undefined): string | undefined {
   for (const char of cleaned) {
     if (char.charCodeAt(0) <= 127) result += char;
   }
-  return result;
+  return result || undefined;
 }
 
 const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -27,40 +30,41 @@ const rawSupabasePublishableKey = (
   import.meta.env.VITE_SUPABASE_ANON_KEY
 ) as string | undefined;
 
-const supabaseUrl = stripEnvNoise(rawSupabaseUrl);
-const supabasePublishableKey = keepAsciiOnly(rawSupabasePublishableKey);
+const envSupabaseUrl = stripEnvNoise(rawSupabaseUrl);
+const envSupabasePublishableKey = keepAsciiOnly(rawSupabasePublishableKey);
+
+const supabaseUrl = envSupabaseUrl || FALLBACK_SUPABASE_URL;
+const supabasePublishableKey = envSupabasePublishableKey || FALLBACK_SUPABASE_PUBLISHABLE_KEY;
 
 const keyWasSanitized = Boolean(
   rawSupabasePublishableKey &&
-  supabasePublishableKey &&
-  rawSupabasePublishableKey !== supabasePublishableKey
+  envSupabasePublishableKey &&
+  rawSupabasePublishableKey !== envSupabasePublishableKey
 );
 
 const urlWasSanitized = Boolean(
   rawSupabaseUrl &&
-  supabaseUrl &&
-  rawSupabaseUrl !== supabaseUrl
+  envSupabaseUrl &&
+  rawSupabaseUrl !== envSupabaseUrl
 );
 
-export const supabaseEnvError = !supabaseUrl || !supabasePublishableKey
-  ? 'Variáveis de ambiente do Supabase ausentes ou inválidas. Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no Vercel usando valores puros, sem aspas, emojis, quebras de linha ou texto extra.'
-  : null;
+const usingFallbackConfig = !envSupabaseUrl || !envSupabasePublishableKey;
 
-export const supabaseEnvWarning = keyWasSanitized || urlWasSanitized
-  ? 'As variáveis do Supabase foram sanitizadas no navegador. Revise os Environment Variables da Vercel e cole VITE_SUPABASE_URL/VITE_SUPABASE_PUBLISHABLE_KEY como texto puro.'
-  : null;
+export const supabaseEnvError: string | null = null;
 
-if (supabaseEnvError) {
-  console.warn(`[Rhema] ${supabaseEnvError}`);
-}
+export const supabaseEnvWarning = usingFallbackConfig
+  ? 'Usando configuração pública fallback do Supabase. Revise as Environment Variables da Vercel para remover aspas, espaços invisíveis ou texto extra.'
+  : keyWasSanitized || urlWasSanitized
+    ? 'As variáveis do Supabase foram sanitizadas no navegador. Revise os Environment Variables da Vercel e cole VITE_SUPABASE_URL/VITE_SUPABASE_PUBLISHABLE_KEY como texto puro.'
+    : null;
 
 if (supabaseEnvWarning) {
   console.warn(`[Rhema] ${supabaseEnvWarning}`);
 }
 
 export const supabase = createClient(
-  supabaseUrl ?? 'https://placeholder.supabase.co',
-  supabasePublishableKey ?? 'placeholder-publishable-key',
+  supabaseUrl,
+  supabasePublishableKey,
   {
     auth: {
       persistSession: true,
