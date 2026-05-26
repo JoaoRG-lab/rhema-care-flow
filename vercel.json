@@ -3,7 +3,9 @@
   "framework": "vite",
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
   "outputDirectory": "dist",
+  "ignoreCommand": "exit 1",
   "cleanUrls": true,
   "headers": [
     {
