@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { AppShell } from '../components/layout/AppShell';
+import { ClinicalCriteriaCards } from '../components/criteria/ClinicalCriteriaCards';
 import { useScores } from '../hooks/useScores';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -10,10 +11,24 @@ import {
   type ClinicalScoreDefinition,
   type ScoreField,
 } from '../lib/clinicalScores';
+import type { CriteriaDomain } from '../lib/clinicalCriteria';
 
 interface ScorePageProps {
   patientId?: string;
   patientName?: string;
+}
+
+function criteriaDomainForArea(area: ClinicalScoreDefinition['area']): CriteriaDomain | undefined {
+  const map: Partial<Record<ClinicalScoreDefinition['area'], CriteriaDomain>> = {
+    'Artrite Reumatoide': 'Artrite Reumatoide',
+    Espondiloartrite: 'Espondiloartrite',
+    Lúpus: 'Lúpus',
+    Classificação: 'Artrite Reumatoide',
+    'Dor e função': 'Fibromialgia',
+    Osteoporose: 'Osteoporose',
+    'Segurança terapêutica': 'Segurança Terapêutica',
+  };
+  return map[area];
 }
 
 function clamp(value: number, min = 0, max = Number.POSITIVE_INFINITY) {
@@ -63,9 +78,7 @@ function ScoreInput({ field, value, onChange }: { field: ScoreField; value: numb
         className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-teal-500"
       >
         {(field.options ?? []).map((option) => (
-          <option key={`${field.id}-${option.value}`} value={option.value}>
-            {option.label}
-          </option>
+          <option key={`${field.id}-${option.value}`} value={option.value}>{option.label}</option>
         ))}
       </select>
     );
@@ -97,6 +110,7 @@ export function ScorePage({ patientId, patientName }: ScorePageProps) {
   const chartData = useMemo(() => scoreChartData(activeScore, values), [activeScore, values]);
   const interpretation = result !== null ? activeScore.interpret(result, values) : null;
   const latest = patientId ? latestByType(activeScore.id) : null;
+  const criteriaDomain = criteriaDomainForArea(activeScore.area);
   const trendData = useMemo(() => scores
     .filter((score) => score.score_type === activeScore.id)
     .slice()
@@ -173,6 +187,16 @@ export function ScorePage({ patientId, patientName }: ScorePageProps) {
               <div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="text-sm font-bold text-gray-900">Evolução longitudinal</h3><p className="text-xs text-gray-500">Histórico salvo para {activeScore.name}.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">{trendData.length} registro(s)</span></div>
               {trendData.length >= 2 ? <div className="h-64"><ResponsiveContainer width="100%" height="100%"><LineChart data={trendData} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip formatter={(value) => [`${value}`, activeScore.name]} /><Line type="monotone" dataKey="value" stroke="#0d9488" strokeWidth={3} dot={{ r: 4 }} /></LineChart></ResponsiveContainer></div> : <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">Salve pelo menos dois resultados deste score para visualizar tendência longitudinal.</p>}
             </section>
+
+            {criteriaDomain && (
+              <section className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-600">Camada interpretativa</p>
+                  <h3 className="text-lg font-bold text-gray-900">Critérios e raciocínio clínico relacionado</h3>
+                </div>
+                <ClinicalCriteriaCards domain={criteriaDomain} compact />
+              </section>
+            )}
 
             <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
               <h3 className="mb-3 text-sm font-bold text-gray-900">Referências e ressalvas operacionais</h3>
