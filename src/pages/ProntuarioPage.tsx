@@ -3,6 +3,14 @@ import { AppShell } from '../components/layout/AppShell';
 import { useProntuario } from '../hooks/useProntuario';
 import { useAuth } from '../contexts/AuthContext';
 import type { ProntuarioEntry } from '../types';
+import {
+  applyPrescriptionTemplate,
+  formatPrescription,
+  prescriptionTemplates,
+  validatePrescriptionItem,
+  type PrescriptionDraftItem,
+  type PrescriptionRiskLevel,
+} from '../lib/prescriptionEngine';
 
 const ENTRY_TYPES: { value: ProntuarioEntry['entry_type']; label: string }[] = [
   { value: 'anamnese',   label: 'Anamnese' },
@@ -27,18 +35,7 @@ interface ProntuarioPageProps {
   patientName?: string;
 }
 
-interface PrescriptionItem {
-  medication: string;
-  concentration: string;
-  route: string;
-  dose: string;
-  frequency: string;
-  duration: string;
-  quantity: string;
-  instructions: string;
-}
-
-const emptyPrescriptionItem: PrescriptionItem = {
+const emptyPrescriptionItem: PrescriptionDraftItem = {
   medication: '',
   concentration: '',
   route: 'VO',
@@ -51,51 +48,29 @@ const emptyPrescriptionItem: PrescriptionItem = {
 
 const ROUTES = ['VO', 'SC', 'IM', 'EV', 'Tópico', 'Inalatória', 'Ocular', 'Outro'];
 
-function hasPrescriptionContent(item: PrescriptionItem) {
+function hasPrescriptionContent(item: PrescriptionDraftItem) {
   return Object.values(item).some((value) => value.trim().length > 0);
 }
 
-function prescriptionWarnings(items: PrescriptionItem[]) {
-  const warnings: string[] = [];
-  const filled = items.filter(hasPrescriptionContent);
-
-  filled.forEach((item, index) => {
-    const label = item.medication.trim() || `Item ${index + 1}`;
-    if (!item.medication.trim()) warnings.push(`${label}: nome do medicamento ausente.`);
-    if (!item.dose.trim()) warnings.push(`${label}: dose ausente.`);
-    if (!item.frequency.trim()) warnings.push(`${label}: frequência ausente.`);
-    if (!item.route.trim()) warnings.push(`${label}: via ausente.`);
-  });
-
-  return warnings;
+function alertClass(level: PrescriptionRiskLevel) {
+  if (level === 'danger') return 'border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300';
+  if (level === 'warning') return 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300';
+  return 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950/20 dark:text-blue-300';
 }
 
-function formatPrescription(items: PrescriptionItem[]) {
-  const filled = items.filter(hasPrescriptionContent);
-  const warnings = prescriptionWarnings(filled);
+function PrescriptionComposer({
+  items,
+  onChange,
+  onUseText,
+}: {
+  items: PrescriptionDraftItem[];
+  onChange: (items: PrescriptionDraftItem[]) => void;
+  onUseText: (text: string) => void;
+}) {
+  const formatted = useMemo(() => formatPrescription(items), [items]);
+  const alerts = formatted.alerts;
 
-  const body = filled.map((item, index) => {
-    const title = `${index + 1}. ${item.medication.trim() || '[medicamento não informado]}`;
-    const concentration = item.concentration.trim() ? ` ${item.concentration.trim()}` : '';
-    const route = item.route.trim() ? `\n   Via: ${item.route.trim()}` : '';
-    const dose = item.dose.trim() ? `\n   Dose: ${item.dose.trim()}` : '';
-    const frequency = item.frequency.trim() ? `\n   Frequência: ${item.frequency.trim()}` : '';
-    const duration = item.duration.trim() ? `\n   Duração: ${item.duration.trim()}` : '';
-    const quantity = item.quantity.trim() ? `\n   Quantidade: ${item.quantity.trim()}` : '';
-    const instructions = item.instructions.trim() ? `\n   Orientações: ${item.instructions.trim()}` : '';
-
-    return `${title}${concentration}${route}${dose}${frequency}${duration}${quantity}${instructions}`;
-  }).join('\n\n');
-
-  const safety = warnings.length
-    ? `\n\nPendências de segurança:\n${warnings.map((warning) => `- ${warning}`).join('\n')}`
-    : '\n\nChecagem mínima: medicamento, dose, via e frequência informados nos itens preenchidos.';
-
-  return `PRESCRIÇÃO\n\n${body || '[sem itens preenchidos]'}${safety}\n\nObservação: conferir alergias, função renal/hepática, gestação quando aplicável, interações, disponibilidade local e protocolo institucional antes de entregar ao paciente.`;
-}
-
-function PrescriptionComposer({ items, onChange, onUseText }: { items: PrescriptionItem[]; onChange: (items: PrescriptionItem[]) => void; onUseText: (text: string) => void }) {
-  function update(index: number, field: keyof PrescriptionItem, value: string) {
+  function update(index: number, field: keyof PrescriptionDraftItem, value: string) {
     onChange(items.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item));
   }
 
@@ -108,55 +83,99 @@ function PrescriptionComposer({ items, onChange, onUseText }: { items: Prescript
     onChange(next.length ? next : [{ ...emptyPrescriptionItem }]);
   }
 
-  const warnings = prescriptionWarnings(items);
+  function applyTemplate(templateId: string) {
+    const draft = applyPrescriptionTemplate(templateId);
+    if (!draft) return;
+    const firstEmptyIndex = items.findIndex((item) => !hasPrescriptionContent(item));
+    if (firstEmptyIndex >= 0) {
+      onChange(items.map((item, index) => index === firstEmptyIndex ? draft : item));
+      return;
+    }
+    onChange([...items, draft]);
+  }
 
   return (
     <div className="space-y-3 rounded-xl border border-purple-200 bg-purple-50/60 p-3 dark:border-purple-900 dark:bg-purple-950/20">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">Compositor estruturado de prescrição</p>
-          <p className="text-xs text-purple-700 dark:text-purple-300">Gera texto padronizado e aponta campos mínimos ausentes.</p>
+          <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">Prescrição estruturada RhemaFlow</p>
+          <p className="text-xs text-purple-700 dark:text-purple-300">Templates próprios, validação mínima, alertas de segurança e texto final padronizado.</p>
         </div>
         <button
           type="button"
-          onClick={() => onUseText(formatPrescription(items))}
+          onClick={() => onUseText(formatted.text)}
           className="rounded-lg bg-purple-600 px-3 py-2 text-xs font-semibold text-white hover:bg-purple-700"
         >
           Usar texto gerado
         </button>
       </div>
 
-      {items.map((item, index) => (
-        <div key={index} className="rounded-lg border border-purple-100 bg-white p-3 shadow-sm dark:border-purple-900 dark:bg-gray-900">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wide text-purple-700 dark:text-purple-300">Item {index + 1}</span>
-            <button type="button" onClick={() => removeItem(index)} className="text-xs text-red-500 hover:underline">Remover</button>
+      <div className="rounded-lg border border-purple-100 bg-white p-3 dark:border-purple-900 dark:bg-gray-900">
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-purple-700 dark:text-purple-300">Modelo rápido</label>
+        <select
+          defaultValue=""
+          onChange={(event) => {
+            if (event.target.value) applyTemplate(event.target.value);
+            event.currentTarget.value = '';
+          }}
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800"
+        >
+          <option value="">Selecionar template...</option>
+          {prescriptionTemplates.map((template) => (
+            <option key={template.id} value={template.id}>{template.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {items.map((item, index) => {
+        const itemAlerts = hasPrescriptionContent(item) ? validatePrescriptionItem(item) : [];
+        return (
+          <div key={index} className="rounded-lg border border-purple-100 bg-white p-3 shadow-sm dark:border-purple-900 dark:bg-gray-900">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wide text-purple-700 dark:text-purple-300">Item {index + 1}</span>
+              <button type="button" onClick={() => removeItem(index)} className="text-xs text-red-500 hover:underline">Remover</button>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              <input value={item.medication} onChange={(e) => update(index, 'medication', e.target.value)} placeholder="Medicamento" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
+              <input value={item.concentration} onChange={(e) => update(index, 'concentration', e.target.value)} placeholder="Concentração/apresentação" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
+              <select value={item.route} onChange={(e) => update(index, 'route', e.target.value)} className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800">
+                {ROUTES.map((route) => <option key={route} value={route}>{route}</option>)}
+              </select>
+              <input value={item.dose} onChange={(e) => update(index, 'dose', e.target.value)} placeholder="Dose" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
+              <input value={item.frequency} onChange={(e) => update(index, 'frequency', e.target.value)} placeholder="Frequência" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
+              <input value={item.duration} onChange={(e) => update(index, 'duration', e.target.value)} placeholder="Duração" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
+              <input value={item.quantity} onChange={(e) => update(index, 'quantity', e.target.value)} placeholder="Quantidade" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
+              <input value={item.instructions} onChange={(e) => update(index, 'instructions', e.target.value)} placeholder="Orientações adicionais" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
+            </div>
+            {itemAlerts.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {itemAlerts.map((alert) => (
+                  <div key={`${alert.title}-${alert.message}`} className={`rounded-lg border p-2 text-xs ${alertClass(alert.level)}`}>
+                    <strong>{alert.title}:</strong> {alert.message}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="grid gap-2 md:grid-cols-2">
-            <input value={item.medication} onChange={(e) => update(index, 'medication', e.target.value)} placeholder="Medicamento" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
-            <input value={item.concentration} onChange={(e) => update(index, 'concentration', e.target.value)} placeholder="Concentração/apresentação" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
-            <select value={item.route} onChange={(e) => update(index, 'route', e.target.value)} className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800">
-              {ROUTES.map((route) => <option key={route} value={route}>{route}</option>)}
-            </select>
-            <input value={item.dose} onChange={(e) => update(index, 'dose', e.target.value)} placeholder="Dose" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
-            <input value={item.frequency} onChange={(e) => update(index, 'frequency', e.target.value)} placeholder="Frequência" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
-            <input value={item.duration} onChange={(e) => update(index, 'duration', e.target.value)} placeholder="Duração" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
-            <input value={item.quantity} onChange={(e) => update(index, 'quantity', e.target.value)} placeholder="Quantidade" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
-            <input value={item.instructions} onChange={(e) => update(index, 'instructions', e.target.value)} placeholder="Orientações adicionais" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800" />
-          </div>
-        </div>
-      ))}
+        );
+      })}
 
       <button type="button" onClick={addItem} className="rounded-lg border border-purple-200 px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-100 dark:border-purple-900 dark:text-purple-300">
         Adicionar medicamento
       </button>
 
-      {warnings.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
-          <p className="font-semibold">Campos mínimos pendentes:</p>
-          <ul className="mt-1 list-disc pl-4">
-            {warnings.map((warning) => <li key={warning}>{warning}</li>)}
-          </ul>
+      <div className={`rounded-lg border p-2 text-xs ${formatted.canFinalize ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+        {formatted.summary}
+        {!formatted.canFinalize && <span className="ml-1 font-semibold">Revise alertas críticos antes de finalizar.</span>}
+      </div>
+
+      {alerts.length > 0 && (
+        <div className="space-y-1">
+          {alerts.map((alert) => (
+            <div key={`${alert.level}-${alert.title}-${alert.message}`} className={`rounded-lg border p-2 text-xs ${alertClass(alert.level)}`}>
+              <strong>{alert.title}:</strong> {alert.message}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -169,7 +188,7 @@ export function ProntuarioPage({ patientId, patientName }: ProntuarioPageProps) 
   const [showForm, setShowForm] = useState(false);
   const [entryType, setEntryType] = useState<ProntuarioEntry['entry_type']>('evolucao');
   const [content, setContent] = useState('');
-  const [prescriptionItems, setPrescriptionItems] = useState<PrescriptionItem[]>([{ ...emptyPrescriptionItem }]);
+  const [prescriptionItems, setPrescriptionItems] = useState<PrescriptionDraftItem[]>([{ ...emptyPrescriptionItem }]);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -177,8 +196,9 @@ export function ProntuarioPage({ patientId, patientName }: ProntuarioPageProps) 
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    const generated = entryType === 'prescricao' ? formatPrescription(prescriptionItems) : null;
     const nextContent = entryType === 'prescricao' && !content.trim() && prescriptionItems.some(hasPrescriptionContent)
-      ? formatPrescription(prescriptionItems)
+      ? generated?.text ?? ''
       : content.trim();
 
     if (!nextContent.trim() || !user) return;
