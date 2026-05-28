@@ -3,7 +3,7 @@ export type PrescriptionRiskLevel = 'info' | 'warning' | 'danger';
 export interface PrescriptionTemplate {
   id: string;
   label: string;
-  category: 'analgesic' | 'anti-inflammatory' | 'csdmard' | 'supplement' | 'gastroprotection' | 'bone-health' | 'other';
+  category: 'analgesic' | 'anti-inflammatory' | 'csdmard' | 'supplement' | 'gastroprotection' | 'bone-health' | 'corticosteroid' | 'biologic-screening' | 'other';
   medication: string;
   concentration: string;
   route: string;
@@ -62,6 +62,20 @@ export const prescriptionTemplates: PrescriptionTemplate[] = [
     safetyNotes: ['Conferir alergia prévia.', 'Cautela em histórico hematológico relevante.'],
   },
   {
+    id: 'naproxen-safety-shell',
+    label: 'Naproxeno — estrutura com alerta de AINE',
+    category: 'anti-inflammatory',
+    medication: 'Naproxeno',
+    concentration: '[preencher apresentação]',
+    route: 'VO',
+    dose: '[preencher dose]',
+    frequency: '[preencher frequência]',
+    duration: 'menor tempo necessário',
+    quantity: '[preencher quantidade]',
+    instructions: 'Usar após alimentação se apropriado. Conferir contraindicações e risco gastrointestinal, renal e cardiovascular.',
+    safetyNotes: ['AINE: revisar DRC, anticoagulação, úlcera, IC/HAS e risco CV.', 'Evitar duplicidade com outros AINEs.'],
+  },
+  {
     id: 'omeprazol-20-gastroprotection',
     label: 'Omeprazol 20 mg — gastroproteção',
     category: 'gastroprotection',
@@ -90,6 +104,20 @@ export const prescriptionTemplates: PrescriptionTemplate[] = [
     safetyNotes: ['Conferir função renal.', 'Evitar excesso de cálcio em hipercalcemia/nefrólitíase ativa.'],
   },
   {
+    id: 'prednisone-taper-shell',
+    label: 'Prednisona — estrutura com plano de desmame',
+    category: 'corticosteroid',
+    medication: 'Prednisona',
+    concentration: '[preencher apresentação]',
+    route: 'VO',
+    dose: '[preencher dose atual]',
+    frequency: 'pela manhã, conforme plano',
+    duration: '[preencher duração e desmame]',
+    quantity: '[preencher quantidade]',
+    instructions: 'Registrar objetivo, menor dose pelo menor tempo possível, plano de redução e medidas preventivas conforme risco.',
+    safetyNotes: ['Checar PA, glicemia, osteoporose, infecção, glaucoma/catarata e risco gastrointestinal.', 'Registrar plano de desmame quando aplicável.'],
+  },
+  {
     id: 'methotrexate-safety-shell',
     label: 'Metotrexato — estrutura segura sem dose pré-preenchida',
     category: 'csdmard',
@@ -103,6 +131,62 @@ export const prescriptionTemplates: PrescriptionTemplate[] = [
     instructions: 'Atenção: uso semanal, nunca diário. Associar orientação sobre ácido fólico quando indicado. Conferir hemograma, função hepática/renal, gestação, álcool e interações.',
     safetyNotes: ['Alerta de dose semanal.', 'Checar gestação/contracepção.', 'Checar hemograma, TGO/TGP, creatinina.', 'Evitar prescrição automática sem revisão clínica.'],
   },
+  {
+    id: 'folic-acid-mtx-shell',
+    label: 'Ácido fólico — suporte ao metotrexato',
+    category: 'supplement',
+    medication: 'Ácido fólico',
+    concentration: '[preencher apresentação]',
+    route: 'VO',
+    dose: '[preencher dose]',
+    frequency: '[preencher esquema, evitando confusão com o dia do MTX quando aplicável]',
+    duration: 'enquanto houver indicação',
+    quantity: '[preencher quantidade]',
+    instructions: 'Alinhar esquema ao uso de metotrexato e evitar instruções ambíguas.',
+    safetyNotes: ['Conferir esquema local associado ao MTX.', 'Evitar ambiguidade de dias.'],
+  },
+  {
+    id: 'leflunomide-safety-shell',
+    label: 'Leflunomida — estrutura com monitorização',
+    category: 'csdmard',
+    medication: 'Leflunomida',
+    concentration: '[preencher apresentação]',
+    route: 'VO',
+    dose: '[preencher dose]',
+    frequency: '1 vez ao dia, conforme indicação',
+    duration: 'uso contínuo conforme acompanhamento',
+    quantity: '[preencher quantidade]',
+    instructions: 'Conferir TGO/TGP, hemograma, PA, gestação/contracepção e interações. Registrar orientação de sinais de toxicidade.',
+    safetyNotes: ['Hepatotoxicidade.', 'Teratogenicidade.', 'Monitorização laboratorial.'],
+  },
+  {
+    id: 'hydroxychloroquine-safety-shell',
+    label: 'Hidroxicloroquina — estrutura com oftalmo',
+    category: 'csdmard',
+    medication: 'Hidroxicloroquina',
+    concentration: '[preencher apresentação]',
+    route: 'VO',
+    dose: '[preencher dose conforme peso/contexto]',
+    frequency: '[preencher frequência]',
+    duration: 'uso contínuo conforme acompanhamento',
+    quantity: '[preencher quantidade]',
+    instructions: 'Conferir dose por peso, função renal, risco retiniano e acompanhamento oftalmológico conforme protocolo.',
+    safetyNotes: ['Risco retiniano.', 'Dose por peso.', 'Ajuste/risco em DRC.'],
+  },
+  {
+    id: 'biologic-screening-checklist',
+    label: 'Checklist pré-biológico/JAK — rastreios',
+    category: 'biologic-screening',
+    medication: 'Checklist pré-imunossupressão avançada',
+    concentration: 'não se aplica',
+    route: 'Interno',
+    dose: 'não se aplica',
+    frequency: 'antes de iniciar/renovar terapia conforme risco',
+    duration: 'revisão periódica',
+    quantity: 'não se aplica',
+    instructions: 'Revisar TB, HBV, HCV/HIV quando indicado, vacinas, hemograma, renal/hepático, gestação/contracepção e contraindicações específicas.',
+    safetyNotes: ['Não é receita; é checklist de segurança.', 'Documentar resultados antes de terapia avançada.'],
+  },
 ];
 
 const medicationAliases: Array<[RegExp, string]> = [
@@ -113,6 +197,7 @@ const medicationAliases: Array<[RegExp, string]> = [
   [/ibuprofeno|naproxeno|diclofenaco|cetoprofeno|nimesulida|aine|anti-inflamat/i, 'AINE'],
   [/paracetamol/i, 'Paracetamol'],
   [/dipirona|metamizol/i, 'Dipirona'],
+  [/ácido fólico|acido folico|folic acid/i, 'Ácido fólico'],
 ];
 
 export function normalizeMedicationName(input: string) {
@@ -147,31 +232,17 @@ export function validatePrescriptionItem(item: PrescriptionDraftItem): Prescript
   if (!item.dose.trim()) alerts.push({ level: 'danger', title: 'Dose ausente', message: 'Informe a dose para reduzir risco de prescrição ambígua.' });
   if (!item.frequency.trim()) alerts.push({ level: 'danger', title: 'Frequência ausente', message: 'Informe frequência/intervalo de administração.' });
   if (!item.route.trim()) alerts.push({ level: 'warning', title: 'Via ausente', message: 'Informe via de administração.' });
+  if (/\[preencher|não informado|nao informado/i.test(`${item.concentration} ${item.dose} ${item.frequency} ${item.quantity}`)) alerts.push({ level: 'warning', title: 'Campo placeholder', message: 'Há campos ainda marcados para preenchimento manual.' });
 
   if (medication === 'Metotrexato') {
-    if (/di[aá]ri|todo dia|1x ao dia|uma vez ao dia/.test(lower)) {
-      alerts.push({ level: 'danger', title: 'Metotrexato com frequência suspeita', message: 'Metotrexato reumatológico costuma ser semanal. Frequência diária pode ser evento grave; revisar imediatamente.' });
-    }
-    if (!/semana|semanal|1x\/sem|uma vez por semana/.test(lower)) {
-      alerts.push({ level: 'warning', title: 'Confirmar frequência semanal', message: 'Deixe explícito o dia fixo semanal e revise ácido fólico/exames basais.' });
-    }
+    if (/di[aá]ri|todo dia|1x ao dia|uma vez ao dia/.test(lower)) alerts.push({ level: 'danger', title: 'Metotrexato com frequência suspeita', message: 'Metotrexato reumatológico costuma ser semanal. Frequência diária pode ser evento grave; revisar imediatamente.' });
+    if (!/semana|semanal|1x\/sem|uma vez por semana/.test(lower)) alerts.push({ level: 'warning', title: 'Confirmar frequência semanal', message: 'Deixe explícito o dia fixo semanal e revise ácido fólico/exames basais.' });
   }
 
-  if (medication === 'AINE') {
-    alerts.push({ level: 'warning', title: 'AINE: checagem de segurança', message: 'Conferir DRC, HAS/IC, anticoagulação, gastrite/úlcera, idade, risco CV e interações.' });
-  }
-
-  if (medication === 'Hidroxicloroquina') {
-    alerts.push({ level: 'info', title: 'HCQ: monitorização', message: 'Conferir peso/dose, risco retiniano, função renal e acompanhamento oftalmológico conforme protocolo.' });
-  }
-
-  if (medication === 'Leflunomida') {
-    alerts.push({ level: 'warning', title: 'Leflunomida: segurança', message: 'Conferir TGO/TGP, hemograma, gestação/contracepção, PA e interações.' });
-  }
-
-  if (medication === 'Prednisona') {
-    alerts.push({ level: 'info', title: 'Corticoide: plano de desmame', message: 'Registrar dose, duração, plano de redução e medidas de proteção conforme risco.' });
-  }
+  if (medication === 'AINE') alerts.push({ level: 'warning', title: 'AINE: checagem de segurança', message: 'Conferir DRC, HAS/IC, anticoagulação, gastrite/úlcera, idade, risco CV e interações.' });
+  if (medication === 'Hidroxicloroquina') alerts.push({ level: 'info', title: 'HCQ: monitorização', message: 'Conferir peso/dose, risco retiniano, função renal e acompanhamento oftalmológico conforme protocolo.' });
+  if (medication === 'Leflunomida') alerts.push({ level: 'warning', title: 'Leflunomida: segurança', message: 'Conferir TGO/TGP, hemograma, gestação/contracepção, PA e interações.' });
+  if (medication === 'Prednisona') alerts.push({ level: 'info', title: 'Corticoide: plano de desmame', message: 'Registrar dose, duração, plano de redução e medidas de proteção conforme risco.' });
 
   return alerts;
 }
