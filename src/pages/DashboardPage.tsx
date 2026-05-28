@@ -33,6 +33,30 @@ const STATUS_COLOR: Record<string, string> = {
   cancelled: '#f87171',
 };
 
+const clinicalActions = [
+  {
+    to: '/scores',
+    title: 'Scores e critérios',
+    description: 'DAS28, CDAI, SDAI, BASDAI, ASDAS, SLEDAI, WPI/SSS e gráficos longitudinais.',
+    accent: 'text-teal-700 bg-teal-50 border-teal-100 dark:text-teal-300 dark:bg-teal-950/30 dark:border-teal-900',
+    icon: 'M3 3v18h18M7 15l3-3 3 2 5-7',
+  },
+  {
+    to: '/therapeutic-safety',
+    title: 'Segurança Rx',
+    description: 'Checklist pré-imunossupressão, risco infeccioso, vacinas, exames basais e alertas terapêuticos.',
+    accent: 'text-amber-700 bg-amber-50 border-amber-100 dark:text-amber-300 dark:bg-amber-950/30 dark:border-amber-900',
+    icon: 'M9 12l2 2 4-4M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z',
+  },
+  {
+    to: '/patients',
+    title: 'Prescrição no prontuário',
+    description: 'Abra um paciente e use o compositor estruturado com templates, alertas e impressão/PDF.',
+    accent: 'text-purple-700 bg-purple-50 border-purple-100 dark:text-purple-300 dark:bg-purple-950/30 dark:border-purple-900',
+    icon: 'M9 12h6m-6 4h6M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z',
+  },
+];
+
 function KPICard({ label, value, icon, color, sub }: {
   label: string; value: number | string; icon: React.ReactNode;
   color: string; sub?: string;
@@ -48,6 +72,21 @@ function KPICard({ label, value, icon, color, sub }: {
         {sub && <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">{sub}</p>}
       </div>
     </div>
+  );
+}
+
+function ClinicalActionCard({ action }: { action: typeof clinicalActions[number] }) {
+  return (
+    <Link to={action.to} className={`group rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${action.accent}`}>
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/80 shadow-sm dark:bg-gray-900/70">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d={action.icon} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+      <h2 className="text-sm font-bold text-gray-950 dark:text-gray-100">{action.title}</h2>
+      <p className="mt-1 text-xs leading-relaxed opacity-80">{action.description}</p>
+      <span className="mt-4 inline-flex text-xs font-semibold group-hover:underline">Abrir módulo →</span>
+    </Link>
   );
 }
 
@@ -103,14 +142,7 @@ export default function DashboardPage() {
         (teleStatusRes.data ?? []).forEach(({ status }: { status: string }) => {
           statusMap[status] = (statusMap[status] ?? 0) + 1;
         });
-        setDist(
-          Object.entries(statusMap).map(([name, value]) => ({
-            name: name.replace('_', ' ').replace(/^./, (c) => c.toUpperCase()),
-            value,
-            color: STATUS_COLOR[name] ?? '#94a3b8',
-          }))
-        );
-
+        setDist(Object.entries(statusMap).map(([name, value]) => ({ name: name.replace('_', ' ').replace(/^./, (c) => c.toUpperCase()), value, color: STATUS_COLOR[name] ?? '#94a3b8' })));
         setRecent((recentRes.data ?? []) as RecentTeleconsulta[]);
 
         const months: SeriesPoint[] = [];
@@ -152,18 +184,10 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {loadError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
-          Erro ao carregar dados: {loadError}
-        </div>
-      )}
+      {loadError && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">Erro ao carregar dados: {loadError}</div>}
 
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
-          ))}
-        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}</div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard label="Pacientes ativos" value={kpi.patients} color="bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400" icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>} />
@@ -173,36 +197,19 @@ export default function DashboardPage() {
         </div>
       )}
 
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {clinicalActions.map((action) => <ClinicalActionCard key={action.to} action={action} />)}
+      </section>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Atividade nos últimos 6 meses</h2>
-          {loading ? <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" /> : (
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={series} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} />
-                <XAxis dataKey="label" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 12 }} tickLine={false} axisLine={false} allowDecimals={false} />
-                <Tooltip />
-                <Area type="monotone" dataKey="consultas" stroke="#0d9488" fill="#0d9488" fillOpacity={0.16} strokeWidth={2} name="Teleconsultas" />
-                <Area type="monotone" dataKey="scores" stroke="#818cf8" fill="#818cf8" fillOpacity={0.16} strokeWidth={2} name="Scores" />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
+          {loading ? <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" /> : <ResponsiveContainer width="100%" height={200}><AreaChart data={series} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} /><XAxis dataKey="label" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} /><YAxis tick={{ fontSize: 12 }} tickLine={false} axisLine={false} allowDecimals={false} /><Tooltip /><Area type="monotone" dataKey="consultas" stroke="#0d9488" fill="#0d9488" fillOpacity={0.16} strokeWidth={2} name="Teleconsultas" /><Area type="monotone" dataKey="scores" stroke="#818cf8" fill="#818cf8" fillOpacity={0.16} strokeWidth={2} name="Scores" /></AreaChart></ResponsiveContainer>}
         </div>
 
         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Status das teleconsultas</h2>
-          {loading ? <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" /> : dist.length === 0 ? <div className="h-48 flex items-center justify-center text-sm text-gray-400">Sem dados</div> : (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie data={dist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} paddingAngle={3}>
-                  {dist.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                </Pie>
-                <Tooltip formatter={(v) => [`${v} teleconsultas`]} />
-                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
+          {loading ? <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" /> : dist.length === 0 ? <div className="h-48 flex items-center justify-center text-sm text-gray-400">Sem dados</div> : <ResponsiveContainer width="100%" height={200}><PieChart><Pie data={dist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} paddingAngle={3}>{dist.map((entry, i) => <Cell key={i} fill={entry.color} />)}</Pie><Tooltip formatter={(v) => [`${v} teleconsultas`]} /><Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} /></PieChart></ResponsiveContainer>}
         </div>
       </div>
 
@@ -218,11 +225,8 @@ export default function DashboardPage() {
                 const name = a.patient_name || a.patient_cards?.full_name || a.patient_cards?.patient_code || '—';
                 return (
                   <li key={a.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{name}</p>
-                      <p className="text-xs text-gray-400">{new Date(`${a.scheduled_date}T${a.start_time}`).toLocaleString('pt-BR')}</p>
-                    </div>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{a.status}</span>
+                    <div><p className="text-sm font-medium text-gray-900 dark:text-gray-100">{name}</p><p className="text-xs text-gray-500 dark:text-gray-500">{a.scheduled_date} · {a.start_time}</p></div>
+                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">{a.status}</span>
                   </li>
                 );
               })}
@@ -230,19 +234,15 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-1">Atalhos rápidos</h2>
-          {[
-            { to: '/patients/new', label: 'Novo paciente' },
-            { to: '/teleconsulta', label: 'Teleconsulta' },
-            { to: '/scores', label: 'Novo score' },
-            { to: '/reports', label: 'Gerar relatório' },
-          ].map(({ to, label }) => (
-            <Link key={to} to={to} className="flex items-center gap-3 p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl hover:border-teal-200 dark:hover:border-teal-800 hover:shadow-md transition-all group">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-auto text-gray-300 dark:text-gray-700 group-hover:text-teal-500 transition-colors"><path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </Link>
-          ))}
+        <div className="bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-5 text-white shadow-sm">
+          <h2 className="text-lg font-bold mb-2">Ações rápidas</h2>
+          <div className="space-y-2 mt-4">
+            <Link to="/patients/new" className="block bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 text-sm transition-colors">+ Novo paciente</Link>
+            <Link to="/teleconsulta" className="block bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 text-sm transition-colors">Iniciar teleconsulta</Link>
+            <Link to="/scores" className="block bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 text-sm transition-colors">Calcular score clínico</Link>
+            <Link to="/therapeutic-safety" className="block bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 text-sm transition-colors">Checar segurança terapêutica</Link>
+            <Link to="/reports" className="block bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 text-sm transition-colors">Gerar relatório</Link>
+          </div>
         </div>
       </div>
     </div>
