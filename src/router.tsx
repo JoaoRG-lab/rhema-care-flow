@@ -34,6 +34,7 @@ const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '');
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 const AIIntegrationPage = lazy(() => import('./pages/AIIntegrationPage'));
 const SupabaseRuntimeDiagnostics = lazy(() => import('./pages/SupabaseRuntimeDiagnostics'));
+const TherapeuticSafetyPage = lazy(() => import('./pages/TherapeuticSafetyPage'));
 
 function Spinner() {
   return (
@@ -109,6 +110,17 @@ export function AppRouter() {
         <Route path="/teleconsulta" element={<PrivateRoute><TeleconsultaPage /></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
         <Route path="/admin" element={<PrivateRoute><AdminPage /></PrivateRoute>} />
+
+        <Route
+          path="/therapeutic-safety"
+          element={
+            <PrivateRoute>
+              <Suspense fallback={<Spinner />}>
+                <TherapeuticSafetyPage />
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
 
         <Route
           path="/reports"
