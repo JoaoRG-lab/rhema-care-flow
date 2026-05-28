@@ -2,9 +2,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Public Supabase frontend configuration. This is a publishable/anon key, not a service-role secret.
-const FALLBACK_SUPABASE_URL = 'https://rfsaxstpfpigrjyiochi.supabase.co';
+// Canonical Supabase frontend configuration for Rhema-care-flow.
+// This is a publishable/anon key, not a service-role secret.
+const CANONICAL_SUPABASE_PROJECT_ID = 'rfsaxstpfpigrjyiochi';
+const CANONICAL_SUPABASE_URL = 'https://rfsaxstpfpigrjyiochi.supabase.co';
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_J8dthJB66ld8lhRIg4e8SA_ro6sr_na';
+const DEPRECATED_SUPABASE_PROJECT_IDS = new Set(['rqaqdhmdeyzyjglhxrne']);
 
 function stripEnvNoise(value: string | undefined): string | undefined {
   if (!value) return undefined;
@@ -27,8 +30,18 @@ function keepAsciiOnly(value: string | undefined): string | undefined {
   return result || undefined;
 }
 
-function isSupabaseUrl(value: string | undefined): value is string {
-  return Boolean(value && /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(value));
+function extractProjectIdFromUrl(value: string | undefined): string | undefined {
+  const match = value?.match(/^https:\/\/([a-z0-9-]+)\.supabase\.co$/i);
+  return match?.[1];
+}
+
+function isCanonicalSupabaseUrl(value: string | undefined): value is string {
+  return extractProjectIdFromUrl(value) === CANONICAL_SUPABASE_PROJECT_ID;
+}
+
+function isDeprecatedSupabaseUrl(value: string | undefined): boolean {
+  const projectId = extractProjectIdFromUrl(value);
+  return Boolean(projectId && DEPRECATED_SUPABASE_PROJECT_IDS.has(projectId));
 }
 
 function isSupabasePublicKey(value: string | undefined): value is string {
@@ -44,8 +57,18 @@ const rawSupabasePublishableKey = (
 const envSupabaseUrl = stripEnvNoise(rawSupabaseUrl);
 const envSupabasePublishableKey = keepAsciiOnly(rawSupabasePublishableKey);
 
-const supabaseUrl = isSupabaseUrl(envSupabaseUrl) ? envSupabaseUrl : FALLBACK_SUPABASE_URL;
-const supabasePublishableKey = isSupabasePublicKey(envSupabasePublishableKey)
+if (isDeprecatedSupabaseUrl(envSupabaseUrl)) {
+  // Keep this visible in devtools: it is the exact failure mode that breaks Edge Functions/JWT.
+  console.warn(
+    `[Supabase] Ignoring deprecated project URL ${envSupabaseUrl}. Using canonical project ${CANONICAL_SUPABASE_PROJECT_ID}.`,
+  );
+}
+
+const supabaseUrl = isCanonicalSupabaseUrl(envSupabaseUrl)
+  ? envSupabaseUrl
+  : CANONICAL_SUPABASE_URL;
+
+const supabasePublishableKey = isSupabasePublicKey(envSupabasePublishableKey) && isCanonicalSupabaseUrl(envSupabaseUrl)
   ? envSupabasePublishableKey
   : FALLBACK_SUPABASE_PUBLISHABLE_KEY;
 
