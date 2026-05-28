@@ -33,6 +33,7 @@ const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '');
 // Lazy-load — chunks pesados só carregam quando o usuário navega
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 const AIIntegrationPage = lazy(() => import('./pages/AIIntegrationPage'));
+const SupabaseRuntimeDiagnostics = lazy(() => import('./pages/SupabaseRuntimeDiagnostics'));
 
 function Spinner() {
   return (
@@ -76,6 +77,16 @@ export function AppRouter() {
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+
+        {/* Diagnóstico público temporário */}
+        <Route
+          path="/debug/supabase"
+          element={
+            <Suspense fallback={<Spinner />}>
+              <SupabaseRuntimeDiagnostics />
+            </Suspense>
+          }
+        />
 
         {/* Conteúdo público com assistente */}
         <Route path="/reumatismos" element={<PublicWithAssistant><ReumatismosKnowledge /></PublicWithAssistant>} />
