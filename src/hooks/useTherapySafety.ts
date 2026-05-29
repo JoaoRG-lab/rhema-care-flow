@@ -1,17 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-
-export interface TherapySafetyChecklistRecord {
-  id: string;
-  patient_id: string;
-  user_id: string;
-  checklist: Record<string, boolean>;
-  completion: number;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import type { TherapySafetyChecklistRecord } from '../types';
 
 export function useTherapySafety(patientId?: string) {
   const { user } = useAuth();
