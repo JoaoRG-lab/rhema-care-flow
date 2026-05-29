@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AISiteAgentWidget } from '@/components/ai/AISiteAgentWidget2';
 
-// Carregamento imediato — rotas críticas
 import LoginPage         from './pages/LoginPage';
 import AuthCallback      from './pages/AuthCallback';
 import DashboardPage     from './pages/DashboardPage';
@@ -85,6 +84,7 @@ export function AppRouter() {
         <Route path="/patients/new" element={<PrivateRoute><NewPatientPage /></PrivateRoute>} />
         <Route path="/patients/:id" element={<PrivateRoute><PatientDetailPage /></PrivateRoute>} />
         <Route path="/patients/:id/edit" element={<PrivateRoute><PatientEditPage /></PrivateRoute>} />
+        <Route path="/patients/:patientId/scores" element={<PrivateRoute><ScorePage /></PrivateRoute>} />
         <Route path="/patients/:patientId/therapeutic-safety" element={<PrivateRoute><Suspense fallback={<Spinner />}><TherapeuticSafetyPage /></Suspense></PrivateRoute>} />
         <Route path="/prontuario/:id" element={<PrivateRoute><ProntuarioPage /></PrivateRoute>} />
         <Route path="/schedule" element={<PrivateRoute><SchedulePage /></PrivateRoute>} />
