@@ -62,6 +62,8 @@ export interface Visit {
   created_at: string;
 }
 
+export type VisitStatus = 'agendada' | 'em_andamento' | 'concluida' | 'cancelada' | 'faltou';
+
 export interface Prontuario {
   id: string;
   patient_id: string;
@@ -72,6 +74,20 @@ export interface Prontuario {
   updated_at: string;
 }
 
+export type ProntuarioEntryType = 'anamnese' | 'evolucao' | 'prescricao' | 'exame' | 'laudo' | 'outro';
+
+export interface ProntuarioEntry {
+  id: string;
+  patient_id: string;
+  author_id: string;
+  visit_id: string | null;
+  entry_type: ProntuarioEntryType;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  author?: Pick<Profile, 'full_name'> | null;
+}
+
 export interface Score {
   id: string;
   patient_card_id: string | null;
@@ -79,6 +95,16 @@ export interface Score {
   score_type: string;
   calculated_score: number | null;
   data_json: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface ScoreEntry {
+  id: string;
+  patient_id: string;
+  visit_id: string | null;
+  score_type: string;
+  score_value: number;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -92,6 +118,30 @@ export interface Exam {
   mime_type: string;
   description: string | null;
   created_at: string;
+}
+
+export type ClinicalTimelineEventType = 'score' | 'prescription' | 'safety' | 'visit' | 'note';
+
+export interface ClinicalTimelineEvent {
+  id: string;
+  patient_id: string;
+  user_id: string;
+  event_type: ClinicalTimelineEventType;
+  title: string;
+  description: string | null;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface TherapySafetyChecklistRecord {
+  id: string;
+  patient_id: string;
+  user_id: string;
+  checklist: Record<string, boolean>;
+  completion: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Notification {
