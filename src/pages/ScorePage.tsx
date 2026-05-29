@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { AppShell } from '../components/layout/AppShell';
 import { ClinicalCriteriaCards } from '../components/criteria/ClinicalCriteriaCards';
+import { useClinicalTimeline } from '../hooks/useClinicalTimeline';
 import { useScores } from '../hooks/useScores';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -61,9 +63,7 @@ function ScoreInput({ field, value, onChange }: { field: ScoreField; value: numb
       <button
         type="button"
         onClick={() => onChange(value ? 0 : 1)}
-        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-          value ? 'border-teal-300 bg-teal-50 text-teal-700' : 'border-gray-200 bg-white text-gray-600 hover:border-teal-200'
-        }`}
+        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${value ? 'border-teal-300 bg-teal-50 text-teal-700' : 'border-gray-200 bg-white text-gray-600 hover:border-teal-200'}`}
       >
         {value ? 'Sim' : 'Não'}
       </button>
@@ -72,14 +72,8 @@ function ScoreInput({ field, value, onChange }: { field: ScoreField; value: numb
 
   if (field.kind === 'select') {
     return (
-      <select
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-teal-500"
-      >
-        {(field.options ?? []).map((option) => (
-          <option key={`${field.id}-${option.value}`} value={option.value}>{option.label}</option>
-        ))}
+      <select value={value} onChange={(event) => onChange(Number(event.target.value))} className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-teal-500">
+        {(field.options ?? []).map((option) => <option key={`${field.id}-${option.value}`} value={option.value}>{option.label}</option>)}
       </select>
     );
   }
@@ -97,8 +91,11 @@ function ScoreInput({ field, value, onChange }: { field: ScoreField; value: numb
 }
 
 export function ScorePage({ patientId, patientName }: ScorePageProps) {
+  const params = useParams<{ patientId?: string }>();
+  const effectivePatientId = patientId ?? params.patientId ?? '';
   const { user } = useAuth();
-  const { scores, saveScore, latestByType } = useScores(patientId ?? '');
+  const { scores, saveScore, latestByType } = useScores(effectivePatientId);
+  const { addEvent } = useClinicalTimeline(effectivePatientId);
 
   const [activeScore, setActiveScore] = useState<ClinicalScoreDefinition>(clinicalScores[0]);
   const [values, setValues] = useState<Record<string, number>>(() => createInitialValues(clinicalScores[0]));
@@ -109,7 +106,7 @@ export function ScorePage({ patientId, patientName }: ScorePageProps) {
   const areas = useMemo(() => Array.from(new Set(clinicalScores.map((score) => score.area))), []);
   const chartData = useMemo(() => scoreChartData(activeScore, values), [activeScore, values]);
   const interpretation = result !== null ? activeScore.interpret(result, values) : null;
-  const latest = patientId ? latestByType(activeScore.id) : null;
+  const latest = effectivePatientId ? latestByType(activeScore.id) : null;
   const criteriaDomain = criteriaDomainForArea(activeScore.area);
   const trendData = useMemo(() => scores
     .filter((score) => score.score_type === activeScore.id)
@@ -142,11 +139,19 @@ export function ScorePage({ patientId, patientName }: ScorePageProps) {
   }
 
   async function handleSave() {
-    if (result === null || !patientId || !user) return;
+    if (result === null || !effectivePatientId || !user) return;
     setSaving(true);
     try {
-      await saveScore(activeScore.id, result, undefined, values);
-      setSaved(true);
+      const savedScore = await saveScore(activeScore.id, result, undefined, values);
+      if (!savedScore.error) {
+        await addEvent({
+          event_type: 'score',
+          title: `${activeScore.name}: ${result}`,
+          description: interpretation?.label ?? 'Score clínico salvo.',
+          payload: { scoreType: activeScore.id, scoreValue: result, values, interpretation },
+        });
+        setSaved(true);
+      }
     } finally {
       setSaving(false);
     }
@@ -161,6 +166,7 @@ export function ScorePage({ patientId, patientName }: ScorePageProps) {
             <h1 className="text-2xl font-bold text-gray-900">Scores, critérios e calculadoras</h1>
             <p className="max-w-3xl text-sm text-gray-500">Calculadoras reumatológicas para apoio longitudinal. Use como ferramenta clínica auxiliar: classificação não substitui diagnóstico, exame físico ou julgamento presencial.</p>
             {patientName && <p className="mt-1 text-sm text-gray-500">Paciente: {patientName}</p>}
+            {effectivePatientId && <p className="mt-1 text-xs font-semibold text-teal-700">Modo paciente-específico ativo.</p>}
           </div>
           {latest && <div className="rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-800">Último {activeScore.name}: <strong>{latest.score_value}</strong> · {new Date(latest.created_at).toLocaleDateString('pt-BR')}</div>}
         </div>
@@ -178,31 +184,16 @@ export function ScorePage({ patientId, patientName }: ScorePageProps) {
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4"><p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Distribuição dos componentes</p><div className="h-56"><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 12, top: 4, bottom: 4 }}><CartesianGrid strokeDasharray="3 3" horizontal={false} /><XAxis type="number" domain={[0, 100]} hide /><YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11 }} /><Tooltip formatter={(value, _name, item) => [`${item.payload.value}`, 'Valor']} /><Bar dataKey="normalized" radius={[0, 8, 8, 0]} fill="#0d9488" /></BarChart></ResponsiveContainer></div></div>
                   {result !== null && interpretation && <div className={`rounded-2xl border p-4 ${severityClass(interpretation.severity)}`}><p className="text-xs font-semibold uppercase tracking-wide opacity-80">Resultado</p><div className="mt-1 flex items-end justify-between gap-3"><span className="text-4xl font-bold tabular-nums">{result}</span><span className="text-sm font-bold">{interpretation.label}</span></div><p className="mt-3 text-sm leading-relaxed">{interpretation.clinicalNote}</p></div>}
-                  <div className="flex gap-3"><button onClick={calculate} className="flex-1 rounded-2xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700">Calcular</button>{result !== null && patientId && <button onClick={handleSave} disabled={saving || saved} className="rounded-2xl border border-teal-300 px-4 py-3 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 disabled:opacity-50">{saved ? 'Salvo ✓' : saving ? 'Salvando…' : 'Salvar'}</button>}</div>
+                  <div className="flex gap-3"><button onClick={calculate} className="flex-1 rounded-2xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700">Calcular</button>{result !== null && effectivePatientId && <button onClick={handleSave} disabled={saving || saved} className="rounded-2xl border border-teal-300 px-4 py-3 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 disabled:opacity-50">{saved ? 'Salvo ✓' : saving ? 'Salvando…' : 'Salvar'}</button>}</div>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="text-sm font-bold text-gray-900">Evolução longitudinal</h3><p className="text-xs text-gray-500">Histórico salvo para {activeScore.name}.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">{trendData.length} registro(s)</span></div>
-              {trendData.length >= 2 ? <div className="h-64"><ResponsiveContainer width="100%" height="100%"><LineChart data={trendData} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip formatter={(value) => [`${value}`, activeScore.name]} /><Line type="monotone" dataKey="value" stroke="#0d9488" strokeWidth={3} dot={{ r: 4 }} /></LineChart></ResponsiveContainer></div> : <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">Salve pelo menos dois resultados deste score para visualizar tendência longitudinal.</p>}
-            </section>
+            <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm"><div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="text-sm font-bold text-gray-900">Evolução longitudinal</h3><p className="text-xs text-gray-500">Histórico salvo para {activeScore.name}.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">{trendData.length} registro(s)</span></div>{trendData.length >= 2 ? <div className="h-64"><ResponsiveContainer width="100%" height="100%"><LineChart data={trendData} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip formatter={(value) => [`${value}`, activeScore.name]} /><Line type="monotone" dataKey="value" stroke="#0d9488" strokeWidth={3} dot={{ r: 4 }} /></LineChart></ResponsiveContainer></div> : <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">Salve pelo menos dois resultados deste score para visualizar tendência longitudinal.</p>}</section>
 
-            {criteriaDomain && (
-              <section className="space-y-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-600">Camada interpretativa</p>
-                  <h3 className="text-lg font-bold text-gray-900">Critérios e raciocínio clínico relacionado</h3>
-                </div>
-                <ClinicalCriteriaCards domain={criteriaDomain} compact />
-              </section>
-            )}
+            {criteriaDomain && <section className="space-y-3"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-600">Camada interpretativa</p><h3 className="text-lg font-bold text-gray-900">Critérios e raciocínio clínico relacionado</h3></div><ClinicalCriteriaCards domain={criteriaDomain} compact /></section>}
 
-            <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-3 text-sm font-bold text-gray-900">Referências e ressalvas operacionais</h3>
-              <ul className="space-y-2 text-sm text-gray-600">{activeScore.references.map((reference) => <li key={reference} className="flex gap-2"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-teal-500" /><span>{reference}</span></li>)}</ul>
-              <p className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">Ferramenta de apoio. Critérios classificatórios não equivalem automaticamente a diagnóstico individual; sempre correlacionar com história, exame, exames complementares e diferenciais.</p>
-            </section>
+            <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm"><h3 className="mb-3 text-sm font-bold text-gray-900">Referências e ressalvas operacionais</h3><ul className="space-y-2 text-sm text-gray-600">{activeScore.references.map((reference) => <li key={reference} className="flex gap-2"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-teal-500" /><span>{reference}</span></li>)}</ul><p className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">Ferramenta de apoio. Critérios classificatórios não equivalem automaticamente a diagnóstico individual; sempre correlacionar com história, exame, exames complementares e diferenciais.</p></section>
           </main>
         </div>
       </div>
