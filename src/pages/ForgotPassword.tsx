@@ -20,19 +20,15 @@ import { useAuth } from '@/contexts/AuthContext';
 
 type ResetStatus = 'idle' | 'requested' | 'sent' | 'expired' | 'error' | 'rate_limited';
 
-// Default backoff window when the auth service rate-limits us. Supabase
-// typically allows another attempt after ~60s.
 const RATE_LIMIT_WAIT_S = 60;
 
 const emailSchema = z
   .string()
   .trim()
-  .min(1, { message: 'Email is required' })
-  .max(255, { message: 'Email is too long' })
-  .email({ message: 'Enter a valid email address' });
+  .min(1, { message: 'E-mail obrigatório' })
+  .max(255, { message: 'E-mail muito longo' })
+  .email({ message: 'Informe um e-mail válido' });
 
-// Reset links typically expire after ~1 hour. We surface a "link expired"
-// banner after this window so the user can resend without confusion.
 const LINK_TTL_MS = 60 * 60 * 1000;
 const RESEND_COOLDOWN_S = 30;
 const STORAGE_KEY = 'uhs:forgot-password:state';
@@ -49,7 +45,6 @@ const loadPersisted = (): PersistedState | null => {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as PersistedState;
     if (!parsed?.email || !parsed?.sentAt) return null;
-    // Drop if link already expired beyond TTL.
     if (Date.now() - parsed.sentAt >= LINK_TTL_MS) return null;
     return parsed;
   } catch {
@@ -71,28 +66,24 @@ export default function ForgotPassword() {
   const [now, setNow] = useState(Date.now());
   const [retryIn, setRetryIn] = useState(0);
 
-  // Tick every second so the "sent X min ago" + expiry banner update live.
   useEffect(() => {
     if (status !== 'sent') return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [status]);
 
-  // Auto-flip to "expired" once the link TTL passes.
   useEffect(() => {
     if (status === 'sent' && sentAt && now - sentAt >= LINK_TTL_MS) {
       setStatus('expired');
     }
   }, [now, sentAt, status]);
 
-  // Resend cooldown countdown.
   useEffect(() => {
     if (cooldown <= 0) return;
     const id = setInterval(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
     return () => clearInterval(id);
   }, [cooldown]);
 
-  // Rate-limit retry countdown — flips status back to idle when it hits 0.
   useEffect(() => {
     if (retryIn <= 0) return;
     const id = setInterval(() => {
@@ -105,15 +96,11 @@ export default function ForgotPassword() {
     return () => clearInterval(id);
   }, [retryIn]);
 
-  // Refs for keyboard-friendly focus transitions on status change.
   const statusRegionRef = useRef<HTMLDivElement>(null);
   const resendButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Move focus to the most relevant element when status changes so keyboard
-  // and screen-reader users land on the new content immediately.
   useEffect(() => {
     if (status === 'sent' || status === 'expired') {
-      // Defer to allow the alert + retry actions to render first.
       const id = window.setTimeout(() => {
         resendButtonRef.current?.focus();
       }, 50);
@@ -131,8 +118,6 @@ export default function ForgotPassword() {
       const { error } = await resetPassword(target);
       if (error) {
         if (/rate|too many|429/i.test(error.message)) {
-          // Try to extract a wait hint like "after 42 seconds" from the
-          // upstream error; otherwise fall back to a sensible default.
           const match = error.message.match(/(\d+)\s*(second|minute)/i);
           const waitSeconds = match
             ? Number(match[1]) * (match[2].toLowerCase().startsWith('m') ? 60 : 1)
@@ -142,7 +127,6 @@ export default function ForgotPassword() {
           setErrorMsg(null);
           return;
         }
-        // Treat other errors as success to prevent account enumeration.
       }
       const sentTimestamp = Date.now();
       const cooldownUntil = sentTimestamp + RESEND_COOLDOWN_S * 1000;
@@ -155,11 +139,11 @@ export default function ForgotPassword() {
           JSON.stringify({ email: target, sentAt: sentTimestamp, cooldownUntil }),
         );
       } catch {
-        // Storage unavailable — cooldown will reset on reload, acceptable fallback.
+        // Storage indisponível — cooldown reseta no reload, fallback aceitável.
       }
     } catch {
       setStatus('error');
-      setErrorMsg('Something went wrong. Please try again shortly.');
+      setErrorMsg('Algo deu errado. Tente novamente em instantes.');
     }
   };
 
@@ -169,7 +153,7 @@ export default function ForgotPassword() {
 
     const parsed = emailSchema.safeParse(email);
     if (!parsed.success) {
-      setFieldError(parsed.error.issues[0]?.message ?? 'Invalid email');
+      setFieldError(parsed.error.issues[0]?.message ?? 'E-mail inválido');
       return;
     }
     await sendReset(parsed.data.toLowerCase());
@@ -191,18 +175,13 @@ export default function ForgotPassword() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl flex items-center gap-2">
             <Mail className="h-6 w-6 text-primary" />
-            Forgot password
+            Esqueci a senha
           </CardTitle>
           <CardDescription>
-            Enter your account email and we'll send you a link to reset your password.
+            Informe o e-mail da sua conta e enviaremos um link para redefinir sua senha.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/*
-            Status banners — wrapped in a polite live region so screen readers
-            announce transitions (requested → sent → expired/error) without
-            stealing focus. Errors use assertive to interrupt.
-          */}
           <div
             ref={statusRegionRef}
             tabIndex={-1}
@@ -214,9 +193,9 @@ export default function ForgotPassword() {
             {status === 'requested' && (
               <Alert>
                 <Send className="h-4 w-4 animate-pulse" aria-hidden="true" />
-                <AlertTitle>Sending request…</AlertTitle>
+                <AlertTitle>Enviando solicitação…</AlertTitle>
                 <AlertDescription>
-                  Contacting the authentication service.
+                  Contatando o serviço de autenticação.
                 </AlertDescription>
               </Alert>
             )}
@@ -227,12 +206,12 @@ export default function ForgotPassword() {
                 <AlertTitle>E-mail enviado</AlertTitle>
                 <AlertDescription className="space-y-1">
                   <p>
-                    If an account exists for <span className="font-medium">{email}</span>,
-                    a reset link is on its way. Check your inbox and spam folder.
+                    Se uma conta existir para <span className="font-medium">{email}</span>,
+                    um link de redefinição foi enviado. Verifique sua caixa de entrada e spam.
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Sent {minutesAgo === 0 ? 'just now' : `${minutesAgo} min ago`} ·
-                    Link expires in ~{minutesLeft} min
+                    Enviado {minutesAgo === 0 ? 'agora mesmo' : `há ${minutesAgo} min`} ·
+                    Link expira em ~{minutesLeft} min
                   </p>
                 </AlertDescription>
               </Alert>
@@ -243,7 +222,7 @@ export default function ForgotPassword() {
                 <Clock className="h-4 w-4" aria-hidden="true" />
                 <AlertTitle>Link expirado</AlertTitle>
                 <AlertDescription>
-                  Your previous reset link has expired. Send a new one to continue.
+                  Seu link de redefinição expirou. Solicite um novo abaixo.
                 </AlertDescription>
               </Alert>
             )}
@@ -251,16 +230,16 @@ export default function ForgotPassword() {
             {status === 'rate_limited' && (
               <Alert variant="destructive">
                 <Clock className="h-4 w-4" aria-hidden="true" />
-                <AlertTitle>Too many attempts</AlertTitle>
+                <AlertTitle>Muitas tentativas</AlertTitle>
                 <AlertDescription className="space-y-3">
                   <p>
-                    Our authentication service is temporarily limiting reset
-                    requests for this address to protect your account.
+                    O serviço está temporariamente limitando solicitações para este
+                    endereço para proteger sua conta.
                   </p>
                   <p className="text-sm">
                     {retryIn > 0 ? (
                       <>
-                        You can try again in{' '}
+                        Você pode tentar novamente em{' '}
                         <span className="font-semibold tabular-nums">
                           {Math.floor(retryIn / 60) > 0
                             ? `${Math.floor(retryIn / 60)}m ${retryIn % 60}s`
@@ -269,7 +248,7 @@ export default function ForgotPassword() {
                         .
                       </>
                     ) : (
-                      <>You can try again now.</>
+                      <>Você já pode tentar novamente.</>
                     )}
                   </p>
                   <Button
@@ -282,7 +261,7 @@ export default function ForgotPassword() {
                     }}
                   >
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    {retryIn > 0 ? `Retry in ${retryIn}s` : 'Retry now'}
+                    {retryIn > 0 ? `Tentar em ${retryIn}s` : 'Tentar agora'}
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -291,17 +270,16 @@ export default function ForgotPassword() {
             {status === 'error' && errorMsg && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                <AlertTitle>Couldn't send email</AlertTitle>
+                <AlertTitle>Não foi possível enviar o e-mail</AlertTitle>
                 <AlertDescription>{errorMsg}</AlertDescription>
               </Alert>
             )}
           </div>
 
-          {/* Form / retry actions */}
           {status === 'sent' || status === 'expired' ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Didn't receive it? You can resend the link below.
+                Não recebeu? Você pode reenviar o link abaixo.
               </p>
               <div className="flex gap-2">
                 <Button
@@ -311,7 +289,7 @@ export default function ForgotPassword() {
                   className="flex-1"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend reset email'}
+                  {cooldown > 0 ? `Reenviar em ${cooldown}s` : 'Reenviar e-mail'}
                 </Button>
                 <Button
                   variant="outline"
@@ -322,7 +300,7 @@ export default function ForgotPassword() {
                     try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
                   }}
                 >
-                  Use a different email
+                  Usar outro e-mail
                 </Button>
               </div>
             </div>
@@ -334,7 +312,7 @@ export default function ForgotPassword() {
                   id="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder="voce@exemplo.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -356,10 +334,10 @@ export default function ForgotPassword() {
                 {status === 'requested' ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Sending reset link...
+                    Enviando link...
                   </>
                 ) : (
-                  'Send reset link'
+                  'Enviar link de redefinição'
                 )}
               </Button>
             </form>
@@ -371,7 +349,7 @@ export default function ForgotPassword() {
               className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              Back to login
+              Voltar ao login
             </Link>
           </div>
         </CardContent>
