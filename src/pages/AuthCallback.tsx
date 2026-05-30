@@ -85,7 +85,7 @@ export default function AuthCallback() {
       } catch (err) {
         console.error("Auth callback error:", err);
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Authentication failed");
+        setError(err instanceof Error ? err.message : "Autenticação falhou");
         setTimeout(() => navigate("/login", { replace: true }), 2000);
       }
     };
@@ -111,7 +111,7 @@ export default function AuthCallback() {
           </div>
           <div className="text-destructive text-lg font-medium">Erro de Autenticação</div>
           <p className="text-muted-foreground">{error}</p>
-          <p className="text-sm text-muted-foreground">Redirecting to login...</p>
+          <p className="text-sm text-muted-foreground">Redirecionando para o login...</p>
         </div>
       </div>
     );
@@ -127,8 +127,8 @@ export default function AuthCallback() {
           <span className="text-2xl font-semibold text-foreground">RheumaFlow</span>
         </div>
         <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-        <h2 className="text-xl font-semibold text-foreground">Completing sign in...</h2>
-        <p className="text-muted-foreground">Please wait while we verify your credentials</p>
+        <h2 className="text-xl font-semibold text-foreground">Concluindo autenticação...</h2>
+        <p className="text-muted-foreground">Aguarde enquanto verificamos suas credenciais</p>
       </div>
     </div>
   );

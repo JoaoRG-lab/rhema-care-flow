@@ -35,9 +35,9 @@ export default function Login() {
     const { error } = await resetPassword(resetEmail);
     setResetLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error('Erro ao enviar redefinição: ' + error.message);
     } else {
-      toast.success('Password reset link sent. Check your email.');
+      toast.success('Link enviado! Verifique seu e-mail.');
       setResetOpen(false);
       setResetEmail('');
     }
@@ -50,10 +50,10 @@ export default function Login() {
     const { error } = await signIn(email, password);
 
     if (error) {
-      toast.error(error.message);
+      toast.error('Credenciais inválidas. Verifique e-mail e senha.');
       setLoading(false);
     } else {
-      toast.success('Welcome back!');
+      toast.success('Bem-vindo de volta!');
       navigate(redirectTo);
     }
   };
@@ -68,12 +68,12 @@ export default function Login() {
         },
       });
       if (error) {
-        toast.error(error.message);
+        toast.error('Falha ao entrar com Google: ' + error.message);
         setGoogleLoading(false);
       }
       // If successful, the page will redirect
     } catch (err) {
-      toast.error('Failed to sign in with Google');
+      toast.error('Falha ao entrar com Google. Tente novamente.');
       setGoogleLoading(false);
     }
   };
@@ -88,10 +88,10 @@ export default function Login() {
         
         <div className="space-y-6 max-w-md">
           <h2 className="text-3xl font-bold leading-tight">
-            Privacy-preserving clinical workflows with blockchain-verified integrity
+            Fluxos clínicos com privacidade preservada e integridade verificada por blockchain
           </h2>
           <p className="text-white/70 text-lg">
-            Your patients' data sovereignty, protected by cryptographic proofs. Zero PHI on-chain.
+            A soberania dos dados dos seus pacientes, protegida por provas criptográficas. Zero PHI on-chain.
           </p>
           <div className="flex flex-wrap gap-2">
             <TrustBadge variant="privacy" size="sm" />
@@ -101,7 +101,7 @@ export default function Login() {
 
         <div className="flex items-center gap-3 text-white/50 text-sm">
           <Lock className="h-4 w-4" />
-          <span>End-to-end encrypted • HIPAA aligned</span>
+          <span>Criptografia ponta a ponta • Alinhado à LGPD</span>
         </div>
       </div>
 
@@ -113,7 +113,7 @@ export default function Login() {
               <UHSLogo size="md" />
             </Link>
             <h1 className="text-2xl font-bold">Bem-vindo de volta</h1>
-            <p className="text-muted-foreground mt-2">Sign in to your UHS Health OS account</p>
+            <p className="text-muted-foreground mt-2">Acesse sua conta UHS Health OS</p>
           </div>
 
           {/* Google Sign In */}
@@ -146,7 +146,7 @@ export default function Login() {
                 />
               </svg>
             )}
-            Continue with Google
+            Entrar com Google
           </Button>
 
           <div className="relative mb-4">
@@ -154,19 +154,19 @@ export default function Login() {
               <Separator className="w-full" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+              <span className="bg-background px-2 text-muted-foreground">Ou continue com e-mail</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="doctor@clinic.com"
+                placeholder="medico@clinica.com"
                 required
                 className="mt-1 h-11 rounded-xl"
               />
@@ -213,7 +213,7 @@ export default function Login() {
           <div className="mt-8 pt-6 border-t border-border">
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <Shield className="h-3.5 w-3.5" />
-              <span>Protected by UHS Health OS security</span>
+              <span>Protegido pela segurança UHS Health OS</span>
             </div>
           </div>
         </div>
@@ -222,31 +222,31 @@ export default function Login() {
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reset your password</DialogTitle>
+            <DialogTitle>Redefinir senha</DialogTitle>
             <DialogDescription>
-              Enter your email and we'll send you a secure link to reset your password.
+              Insira seu e-mail e enviaremos um link seguro para redefinir sua senha.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div>
-              <Label htmlFor="reset-email">Email</Label>
+              <Label htmlFor="reset-email">E-mail</Label>
               <Input
                 id="reset-email"
                 type="email"
                 value={resetEmail}
                 onChange={(e) => setResetEmail(e.target.value)}
-                placeholder="doctor@clinic.com"
+                placeholder="medico@clinica.com"
                 required
                 className="mt-1 h-11 rounded-xl"
               />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setResetOpen(false)} disabled={resetLoading}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={resetLoading}>
                 {resetLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Send reset link
+                Enviar link
               </Button>
             </DialogFooter>
           </form>
