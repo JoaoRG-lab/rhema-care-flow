@@ -1,19 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-
-export type ClinicalTimelineEventType = 'score' | 'prescription' | 'safety' | 'visit' | 'note';
-
-export interface ClinicalTimelineEvent {
-  id: string;
-  patient_id: string;
-  user_id: string;
-  event_type: ClinicalTimelineEventType;
-  title: string;
-  description: string | null;
-  payload: Record<string, unknown>;
-  created_at: string;
-}
+import type { ClinicalTimelineEvent, ClinicalTimelineEventType } from '../types';
 
 export function useClinicalTimeline(patientId?: string) {
   const { user } = useAuth();
