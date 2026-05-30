@@ -31,6 +31,7 @@ const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 const AIIntegrationPage = lazy(() => import('./pages/AIIntegrationPage'));
 const SupabaseRuntimeDiagnostics = lazy(() => import('./pages/SupabaseRuntimeDiagnostics'));
 const TherapeuticSafetyPage = lazy(() => import('./pages/TherapeuticSafetyPage'));
+const PatientProblemsPage = lazy(() => import('./pages/PatientProblemsPage'));
 
 function Spinner() {
   return (
@@ -53,12 +54,7 @@ function RootRedirect() {
 }
 
 function PublicWithAssistant({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      {children}
-      <AISiteAgentWidget />
-    </>
-  );
+  return <>{children}<AISiteAgentWidget /></>;
 }
 
 export function AppRouter() {
@@ -68,9 +64,7 @@ export function AppRouter() {
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-
         <Route path="/debug/supabase" element={<Suspense fallback={<Spinner />}><SupabaseRuntimeDiagnostics /></Suspense>} />
-
         <Route path="/reumatismos" element={<PublicWithAssistant><ReumatismosKnowledge /></PublicWithAssistant>} />
         <Route path="/reumatismos/fibromialgia" element={<PublicWithAssistant><FibromialgiaPage /></PublicWithAssistant>} />
         <Route path="/reumatismos/artrite-reumatoide" element={<PublicWithAssistant><ArtriteReumatoidePage /></PublicWithAssistant>} />
@@ -78,12 +72,12 @@ export function AppRouter() {
         <Route path="/reumatismos/osteoporose" element={<PublicWithAssistant><OsteoporosePage /></PublicWithAssistant>} />
         <Route path="/reumatismos/gota" element={<PublicWithAssistant><GotaPage /></PublicWithAssistant>} />
         <Route path="/reumatismos/dor-lombar-inflamatoria" element={<PublicWithAssistant><DorLombarInflamatoriaPage /></PublicWithAssistant>} />
-
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
         <Route path="/patients" element={<PrivateRoute><PatientsPage /></PrivateRoute>} />
         <Route path="/patients/new" element={<PrivateRoute><NewPatientPage /></PrivateRoute>} />
         <Route path="/patients/:id" element={<PrivateRoute><PatientDetailPage /></PrivateRoute>} />
         <Route path="/patients/:id/edit" element={<PrivateRoute><PatientEditPage /></PrivateRoute>} />
+        <Route path="/patients/:patientId/problems" element={<PrivateRoute><Suspense fallback={<Spinner />}><PatientProblemsPage /></Suspense></PrivateRoute>} />
         <Route path="/patients/:patientId/scores" element={<PrivateRoute><ScorePage /></PrivateRoute>} />
         <Route path="/patients/:patientId/therapeutic-safety" element={<PrivateRoute><Suspense fallback={<Spinner />}><TherapeuticSafetyPage /></Suspense></PrivateRoute>} />
         <Route path="/prontuario/:id" element={<PrivateRoute><ProntuarioPage /></PrivateRoute>} />
@@ -95,7 +89,6 @@ export function AppRouter() {
         <Route path="/therapeutic-safety" element={<PrivateRoute><Suspense fallback={<Spinner />}><TherapeuticSafetyPage /></Suspense></PrivateRoute>} />
         <Route path="/reports" element={<PrivateRoute><Suspense fallback={<Spinner />}><ReportsPage /></Suspense></PrivateRoute>} />
         <Route path="/ai-panel" element={<PrivateRoute><Suspense fallback={<Spinner />}><AIIntegrationPage /></Suspense></PrivateRoute>} />
-
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
