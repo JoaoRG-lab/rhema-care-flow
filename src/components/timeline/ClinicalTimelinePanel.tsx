@@ -1,4 +1,4 @@
-import type { ClinicalTimelineEvent } from '../../hooks/useClinicalTimeline';
+import type { ClinicalTimelineEvent } from '../../types';
 
 interface ClinicalTimelinePanelProps {
   events: ClinicalTimelineEvent[];
@@ -12,6 +12,9 @@ const EVENT_LABELS: Record<ClinicalTimelineEvent['event_type'], string> = {
   safety: 'Segurança',
   visit: 'Visita',
   note: 'Nota',
+  problem: 'Problema',
+  goal: 'Meta',
+  followup: 'Follow-up',
 };
 
 const EVENT_CLASS: Record<ClinicalTimelineEvent['event_type'], string> = {
@@ -20,6 +23,9 @@ const EVENT_CLASS: Record<ClinicalTimelineEvent['event_type'], string> = {
   safety: 'bg-amber-50 text-amber-800 border-amber-100',
   visit: 'bg-blue-50 text-blue-800 border-blue-100',
   note: 'bg-gray-50 text-gray-700 border-gray-100',
+  problem: 'bg-indigo-50 text-indigo-800 border-indigo-100',
+  goal: 'bg-emerald-50 text-emerald-800 border-emerald-100',
+  followup: 'bg-cyan-50 text-cyan-800 border-cyan-100',
 };
 
 export function ClinicalTimelinePanel({ events, loading, error }: ClinicalTimelinePanelProps) {
