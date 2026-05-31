@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { ProblemListPanel } from '../components/problems/ProblemListPanel';
+import { ProblemSummaryCards } from '../components/problems/ProblemSummaryCards';
 import { useProblems } from '../hooks/useProblems';
 import { useClinicalTimeline } from '../hooks/useClinicalTimeline';
 import { clinicalProblemTemplates } from '../lib/problemRegistry';
@@ -64,6 +65,8 @@ export default function PatientProblemsPage() {
             Estruture o cuidado por problema, meta, intervenção, segurança e seguimento longitudinal. Reumatologia é um pacote maduro, mas a base serve para todas as clínicas.
           </p>
         </header>
+
+        <ProblemSummaryCards problems={problems} />
 
         <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-4">
