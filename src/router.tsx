@@ -32,6 +32,7 @@ const AIIntegrationPage = lazy(() => import('./pages/AIIntegrationPage'));
 const SupabaseRuntimeDiagnostics = lazy(() => import('./pages/SupabaseRuntimeDiagnostics'));
 const TherapeuticSafetyPage = lazy(() => import('./pages/TherapeuticSafetyPage'));
 const PatientProblemsPage = lazy(() => import('./pages/PatientProblemsPage'));
+const ProblemDetailPage = lazy(() => import('./pages/ProblemDetailPage'));
 
 function Spinner() {
   return (
@@ -78,6 +79,7 @@ export function AppRouter() {
         <Route path="/patients/:id" element={<PrivateRoute><PatientDetailPage /></PrivateRoute>} />
         <Route path="/patients/:id/edit" element={<PrivateRoute><PatientEditPage /></PrivateRoute>} />
         <Route path="/patients/:patientId/problems" element={<PrivateRoute><Suspense fallback={<Spinner />}><PatientProblemsPage /></Suspense></PrivateRoute>} />
+        <Route path="/patients/:patientId/problems/:problemId" element={<PrivateRoute><Suspense fallback={<Spinner />}><ProblemDetailPage /></Suspense></PrivateRoute>} />
         <Route path="/patients/:patientId/scores" element={<PrivateRoute><ScorePage /></PrivateRoute>} />
         <Route path="/patients/:patientId/therapeutic-safety" element={<PrivateRoute><Suspense fallback={<Spinner />}><TherapeuticSafetyPage /></Suspense></PrivateRoute>} />
         <Route path="/prontuario/:id" element={<PrivateRoute><ProntuarioPage /></PrivateRoute>} />
