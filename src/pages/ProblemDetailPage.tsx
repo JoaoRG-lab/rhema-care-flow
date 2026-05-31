@@ -6,6 +6,7 @@ import { ProblemFollowupsPanel } from '../components/problems/ProblemFollowupsPa
 import { ClinicalTimelinePanel } from '../components/timeline/ClinicalTimelinePanel';
 import { useClinicalTimeline } from '../hooks/useClinicalTimeline';
 import { useProblems } from '../hooks/useProblems';
+import { getScoreDefinitionsForProblem } from '../lib/problemScoreRegistry';
 import { supabase } from '../lib/supabase';
 import type { ProblemInstance, ProblemSeverity, ProblemStatus } from '../types';
 
@@ -40,6 +41,34 @@ function PillList({ title, items, tone }: { title: string; items: string[]; tone
       ) : (
         <div className="mt-3 flex flex-wrap gap-2">
           {items.map((item) => <span key={item} className={`rounded-full border px-3 py-1 text-xs font-semibold ${toneClass}`}>{item}</span>)}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RecommendedScoresPanel({ problem, patientId }: { problem: ProblemInstance; patientId: string }) {
+  const scores = getScoreDefinitionsForProblem(problem.template_id, problem.title);
+
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-purple-600">Outcome tracking</p>
+          <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Scores recomendados</h2>
+        </div>
+        <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">{scores.length}</span>
+      </div>
+      {scores.length === 0 ? (
+        <p className="rounded-xl bg-gray-50 p-3 text-sm text-gray-500 dark:bg-gray-800">Nenhum score específico mapeado para este problema ainda.</p>
+      ) : (
+        <div className="space-y-2">
+          {scores.map((score) => (
+            <a key={score.id} href={`/patients/${patientId}/scores?score=${score.id}`} className="block rounded-2xl border border-purple-100 bg-purple-50 p-3 text-left transition hover:bg-purple-100">
+              <p className="text-sm font-bold text-purple-900">{score.name}</p>
+              <p className="mt-1 text-xs leading-relaxed text-purple-800">{score.description}</p>
+            </a>
+          ))}
         </div>
       )}
     </section>
@@ -156,6 +185,7 @@ export default function ProblemDetailPage() {
               <button onClick={() => patchProblem({ summary })} disabled={saving} className="mt-3 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50">Salvar resumo</button>
             </article>
 
+            <RecommendedScoresPanel problem={problem} patientId={patientId} />
             <ProblemGoalsPanel problem={problem} />
             <ProblemFollowupsPanel problem={problem} />
             <ClinicalTimelinePanel events={relatedEvents} loading={timelineLoading} error={timelineError} />
