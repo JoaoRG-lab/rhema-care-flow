@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { PrescriptionComposer } from './PrescriptionComposer';
 import { PrescriptionCard } from './PrescriptionCard';
 import { PrescriptionSignDialog } from './PrescriptionSignDialog';
+import { MonitoringSummaryCard } from '@/components/monitoring/MonitoringSummaryCard';
 import { PrescriptionSafetySummaryCard } from '@/components/safety/PrescriptionSafetySummaryCard';
 import { usePrescriptions } from '@/hooks/usePrescriptions';
 import type { PrescriptionItem } from '@/hooks/usePrescriptions';
@@ -101,7 +102,10 @@ export function PrescriptionList({ patientId, patientCode }: PrescriptionListPro
         <Button size="sm" onClick={handleToggleComposer} className="gap-2"><ClipboardPlus className="h-4 w-4" />{composerOpen ? 'Fechar editor' : 'Nova prescrição'}</Button>
       </div>
 
-      <PrescriptionSafetySummaryCard patientId={patientId} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <PrescriptionSafetySummaryCard patientId={patientId} />
+        <MonitoringSummaryCard patientId={patientId} />
+      </div>
 
       {banner && (
         <div role="alert" className="flex items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
