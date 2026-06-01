@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { DrugMonitoringPanel } from '../safety/DrugMonitoringPanel';
 import { PrescriptionSafetyPanel } from '../safety/PrescriptionSafetyPanel';
 import { useMedications } from '../../hooks/useMedications';
 import { useProblemProtocolStatus } from '../../hooks/useProblemProtocolStatus';
@@ -87,6 +88,7 @@ export function ProblemMedicationPanel({ patientId, problem }: ProblemMedication
       </section>
 
       <PrescriptionSafetyPanel medications={medicationContext} protocolCompleted={protocolCompleted} problemTitle={problem.title} />
+      <DrugMonitoringPanel medications={medicationContext} />
     </section>
   );
 }
