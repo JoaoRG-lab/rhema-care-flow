@@ -7,6 +7,7 @@ import {
 } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { PopulationMonitoringCard } from '@/components/monitoring/PopulationMonitoringCard';
 
 interface KPI {
   patients: number;
@@ -63,9 +64,7 @@ function KPICard({ label, value, icon, color, sub }: {
 }) {
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 flex items-start gap-4 shadow-sm">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
-        {icon}
-      </div>
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
       <div>
         <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
         <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100 leading-tight">{value}</p>
@@ -152,12 +151,10 @@ export default function DashboardPage() {
           const ym = d.toISOString().slice(0, 7);
           const label = d.toLocaleString('pt-BR', { month: 'short' });
           const { start, next } = monthBounds(ym);
-
           const [cRes, sRes] = await Promise.all([
             supabase.from('teleconsultas').select('*', { count: 'exact', head: true }).gte('scheduled_date', start).lt('scheduled_date', next),
             supabase.from('score_entries').select('*', { count: 'exact', head: true }).gte('created_at', start).lt('created_at', next),
           ]);
-
           months.push({ label, consultas: cRes.count ?? 0, scores: sRes.count ?? 0 });
         }
         setSeries(months);
@@ -176,12 +173,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Bem-vindo'} 👋
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{greeting}, {profile?.full_name?.split(' ')[0] ?? 'Bem-vindo'} 👋</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
       </div>
 
       {loadError && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">Erro ao carregar dados: {loadError}</div>}
@@ -197,6 +190,8 @@ export default function DashboardPage() {
         </div>
       )}
 
+      <PopulationMonitoringCard />
+
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {clinicalActions.map((action) => <ClinicalActionCard key={action.to} action={action} />)}
       </section>
@@ -206,7 +201,6 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Atividade nos últimos 6 meses</h2>
           {loading ? <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" /> : <ResponsiveContainer width="100%" height={200}><AreaChart data={series} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} /><XAxis dataKey="label" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} /><YAxis tick={{ fontSize: 12 }} tickLine={false} axisLine={false} allowDecimals={false} /><Tooltip /><Area type="monotone" dataKey="consultas" stroke="#0d9488" fill="#0d9488" fillOpacity={0.16} strokeWidth={2} name="Teleconsultas" /><Area type="monotone" dataKey="scores" stroke="#818cf8" fill="#818cf8" fillOpacity={0.16} strokeWidth={2} name="Scores" /></AreaChart></ResponsiveContainer>}
         </div>
-
         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Status das teleconsultas</h2>
           {loading ? <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" /> : dist.length === 0 ? <div className="h-48 flex items-center justify-center text-sm text-gray-400">Sem dados</div> : <ResponsiveContainer width="100%" height={200}><PieChart><Pie data={dist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} paddingAngle={3}>{dist.map((entry, i) => <Cell key={i} fill={entry.color} />)}</Pie><Tooltip formatter={(v) => [`${v} teleconsultas`]} /><Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} /></PieChart></ResponsiveContainer>}
@@ -215,25 +209,16 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 dark:border-gray-800">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Teleconsultas recentes</h2>
-            <Link to="/teleconsulta" className="text-xs text-teal-600 dark:text-teal-400 hover:underline">Ver teleconsultas</Link>
-          </div>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 dark:border-gray-800"><h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Teleconsultas recentes</h2><Link to="/teleconsulta" className="text-xs text-teal-600 dark:text-teal-400 hover:underline">Ver teleconsultas</Link></div>
           {loading ? <div className="px-5 py-10 text-center text-sm text-gray-400">Carregando...</div> : recent.length === 0 ? <div className="px-5 py-10 text-center text-sm text-gray-400">Nenhuma teleconsulta registrada</div> : (
             <ul className="divide-y divide-gray-50 dark:divide-gray-800">
               {recent.map((a) => {
                 const name = a.patient_name || a.patient_cards?.full_name || a.patient_cards?.patient_code || '—';
-                return (
-                  <li key={a.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                    <div><p className="text-sm font-medium text-gray-900 dark:text-gray-100">{name}</p><p className="text-xs text-gray-500 dark:text-gray-500">{a.scheduled_date} · {a.start_time}</p></div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">{a.status}</span>
-                  </li>
-                );
+                return <li key={a.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"><div><p className="text-sm font-medium text-gray-900 dark:text-gray-100">{name}</p><p className="text-xs text-gray-500 dark:text-gray-500">{a.scheduled_date} · {a.start_time}</p></div><span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">{a.status}</span></li>;
               })}
             </ul>
           )}
         </div>
-
         <div className="bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-5 text-white shadow-sm">
           <h2 className="text-lg font-bold mb-2">Ações rápidas</h2>
           <div className="space-y-2 mt-4">
