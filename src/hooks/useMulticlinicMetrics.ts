@@ -5,16 +5,28 @@ import { calculateMulticlinicMetrics, type MulticlinicMetrics } from '@/lib/mult
 
 type CountResult = { count: number | null; error: { message: string } | null };
 
-async function safeCount(table: string, userId: string, configure?: (query: any) => any): Promise<number> {
-  let query = (supabase as unknown as { from: (name: string) => any })
-    .from(table)
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId);
+type CountDiagnostic = { table: string; error: string };
 
-  if (configure) query = configure(query);
-  const { count, error } = await query as CountResult;
-  if (error) return 0;
-  return count ?? 0;
+async function safeCount(table: string, userId: string, configure?: (query: any) => any, diagnostics?: CountDiagnostic[]): Promise<number> {
+  try {
+    let query = (supabase as unknown as { from: (name: string) => any })
+      .from(table)
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (configure) query = configure(query);
+    const { count, error } = await query as CountResult;
+
+    if (error) {
+      diagnostics?.push({ table, error: error.message });
+      return 0;
+    }
+
+    return count ?? 0;
+  } catch (error) {
+    diagnostics?.push({ table, error: error instanceof Error ? error.message : 'Unknown count error' });
+    return 0;
+  }
 }
 
 export function useMulticlinicMetrics() {
@@ -22,15 +34,18 @@ export function useMulticlinicMetrics() {
   const [metrics, setMetrics] = useState<MulticlinicMetrics | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<CountDiagnostic[]>([]);
 
   const fetchMetrics = useCallback(async () => {
     if (!user) {
       setMetrics(null);
+      setDiagnostics([]);
       return;
     }
 
     setLoading(true);
     setError(null);
+    const countDiagnostics: CountDiagnostic[] = [];
 
     try {
       const today = new Date().toISOString().slice(0, 10);
@@ -48,16 +63,16 @@ export function useMulticlinicMetrics() {
         prescriptions,
         signedPrescriptions,
       ] = await Promise.all([
-        safeCount('patient_cards', user.id, (q) => q.eq('active', true)),
-        safeCount('problem_instances', user.id, (q) => q.in('status', ['active', 'monitoring', 'uncertain'])),
-        safeCount('monitoring_events', user.id, (q) => q.neq('status', 'completed').lt('due_date', today)),
-        safeCount('monitoring_events', user.id, (q) => q.neq('status', 'completed').gte('due_date', today).lte('due_date', in30)),
-        safeCount('therapy_safety_checklists', user.id, (q) => q.gte('completion', 90)),
-        safeCount('therapy_safety_checklists', user.id, (q) => q.lt('completion', 90)),
-        safeCount('problem_followups', user.id),
-        safeCount('problem_followups', user.id, (q) => q.lt('due_date', today).neq('status', 'completed')),
-        safeCount('prescriptions', user.id),
-        safeCount('prescriptions', user.id, (q) => q.eq('status', 'signed')),
+        safeCount('patient_cards', user.id, (q) => q.eq('active', true), countDiagnostics),
+        safeCount('problem_instances', user.id, (q) => q.in('status', ['active', 'monitoring', 'uncertain']), countDiagnostics),
+        safeCount('monitoring_events', user.id, (q) => q.neq('status', 'completed').lt('due_date', today), countDiagnostics),
+        safeCount('monitoring_events', user.id, (q) => q.neq('status', 'completed').gte('due_date', today).lte('due_date', in30), countDiagnostics),
+        safeCount('therapy_safety_checklists', user.id, (q) => q.gte('completion', 90), countDiagnostics),
+        safeCount('therapy_safety_checklists', user.id, (q) => q.lt('completion', 90), countDiagnostics),
+        safeCount('problem_followups', user.id, undefined, countDiagnostics),
+        safeCount('problem_followups', user.id, (q) => q.lt('due_date', today).neq('status', 'completed'), countDiagnostics),
+        safeCount('prescriptions', user.id, undefined, countDiagnostics),
+        safeCount('prescriptions', user.id, (q) => q.eq('status', 'signed'), countDiagnostics),
       ]);
 
       setMetrics(calculateMulticlinicMetrics({
@@ -73,9 +88,11 @@ export function useMulticlinicMetrics() {
         prescriptions,
         signedPrescriptions,
       }));
+      setDiagnostics(countDiagnostics);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao carregar métricas multiclínicas.');
       setMetrics(null);
+      setDiagnostics(countDiagnostics);
     } finally {
       setLoading(false);
     }
@@ -85,5 +102,5 @@ export function useMulticlinicMetrics() {
     fetchMetrics();
   }, [fetchMetrics]);
 
-  return { metrics, loading, error, refetch: fetchMetrics };
+  return { metrics, loading, error, diagnostics, refetch: fetchMetrics };
 }
